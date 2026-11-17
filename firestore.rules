@@ -1,0 +1,15 @@
+rules_version = '2';
+
+// Deny everything by default.
+//
+// Rules for each collection are added alongside the feature that needs them,
+// following DATA_MODEL.md. Remember the plan: clients never write votes,
+// counts or lifecycle state, and author IDs and vote totals are never readable
+// during voting.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

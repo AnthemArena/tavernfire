@@ -1,0 +1,137 @@
+/* Design tokens from DESIGN.md */
+:root {
+  --parchment: #f4eee1;
+  --surface: #fbf8f1;
+  --border: #d9cfb8;
+  --chip: #e8dfcb;
+  --ink: #211d18;
+  --body: #3f382f;
+  --muted: #5e564b;
+  --input-border: #b8ac90;
+  --accent: #a93f24;
+  --accent-hover: #7e2d18;
+  --teal: #1d5a57;
+
+  --font-serif: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--parchment);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  margin: 0;
+}
+
+a {
+  color: var(--accent);
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+.container {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.site-header {
+  border-bottom: 1px solid var(--border);
+}
+
+.site-header .container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.brand {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 26px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.brand:hover {
+  color: var(--ink);
+}
+
+.hero {
+  padding: 72px 0 48px;
+}
+
+.hero .kicker {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--teal);
+  margin: 0 0 16px;
+}
+
+.hero h1 {
+  font-size: clamp(36px, 6vw, 56px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+  max-width: 14em;
+}
+
+.hero p {
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--body);
+  max-width: 34em;
+  margin: 0;
+}
+
+.sparks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 32px;
+}
+
+.spark {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 20px;
+  background: var(--chip);
+  border-radius: 8px;
+  padding: 6px 14px;
+}
+
+.status-note {
+  margin-top: 40px;
+  font-size: 14px;
+  color: var(--muted);
+}
