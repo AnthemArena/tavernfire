@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - **Node.js** (current LTS) and **Git**
-- **Java 11 or newer.** The Firestore emulator is a Java program, so it will not start without it. Check with `java -version`; if it is missing, install a JDK such as Temurin (adoptium.net).
+- **Java 21 or newer.** The Firestore emulator is a Java program, so it will not start without it. Check with `java -version`; if it is missing, install Temurin 21 (adoptium.net) and restart VS Code afterwards.
 
 ## First-time setup
 
@@ -45,8 +45,22 @@ npm run dev
 ```
 npm run typecheck
 npm run lint
+npm test            (unit tests for spark keys and request helpers)
+npm run test:rules  (Firestore security rules tests; starts the emulator itself, needs Java)
 npm run build
 ```
+
+`npm run test:rules` starts and stops its own emulator, so stop `npm run emulators` first if the ports are in use.
+
+## Trying the first slice by hand
+
+With the emulators and `npm run dev` running:
+
+1. Open http://localhost:3000 and click **Sign in**. Create an account with an email and password (any fake email works against the emulator), or use Continue with Google, which shows a fake account picker.
+2. Back on the home page, enter three different sparks, pick NPC or Location, and click **Post request**. You land on the request page.
+3. Go back to the board. Your request is listed, with its three sparks, type, poster and time left.
+4. Open http://127.0.0.1:4000 (Emulator UI) to see the `users` and `requests` documents. Check that `sparkKey` and `pairKeys` match your sparks, sorted.
+5. Try breaking it: post with a repeated spark or an empty one and confirm you get a friendly message instead of a request.
 
 ## Security reminders
 

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
+import { AuthProvider } from "@/lib/auth-context";
+import SiteHeader from "@/components/SiteHeader";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -23,7 +25,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
-      <body>{children}</body>
+      <body>
+        <AuthProvider>
+          <SiteHeader />
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   );
 }

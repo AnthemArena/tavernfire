@@ -37,6 +37,7 @@ Require three distinct sparks. (Open decision: allow fewer than three?)
 - `requesterId`: public (the requester is not anonymous)
 - `status`: `open` | `voting` | `revealed` | `closed`
 - `submissionsCloseAt`, `votingClosesAt`, `createdAt`
+- *Current build:* requests are written directly by the signed-in client under strict security rules, and only `createdAt` (server time) is stored. The deadlines are derived in the app as `createdAt` plus 3 days until the lifecycle Cloud Function exists, at which point it stores them and moves requests through `open`, `voting` and `revealed`. Request creation is also due to move into a `createRequest` function (which needs the Blaze plan).
 - `answerCount`: updated by function
 - `moderation`: `ok` | `hidden`
 

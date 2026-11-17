@@ -1,15 +1,99 @@
 rules_version = '2';
 
-// Deny everything by default.
-//
-// Rules for each collection are added alongside the feature that needs them,
-// following DATA_MODEL.md. Remember the plan: clients never write votes,
-// counts or lifecycle state, and author IDs and vote totals are never readable
-// during voting.
+// Deny everything by default; each collection below opens only what it needs.
+// The plan lives in DATA_MODEL.md. Clients never write votes, counts or
+// lifecycle state, and author IDs and vote totals are never readable during
+// voting (those collections arrive with the voting step).
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Moderators are marked with a custom claim set from the Admin SDK.
+    function isModerator() {
+      return signedIn() && request.auth.token.get('role', '') == 'moderator';
+    }
+
+    function validName(v) {
+      return v is string && v.size() >= 1 && v.size() <= 40;
+    }
+
+    function validWord(v) {
+      return v is string && v.size() >= 1 && v.size() <= 30;
+    }
+
+    function validAvatar(d) {
+      return !('avatarUrl' in d)
+        || d.avatarUrl == null
+        || (d.avatarUrl is string && d.avatarUrl.size() <= 500);
+    }
+
+    // Public profiles. Anyone can read; only the owner can create or edit.
+    match /users/{uid} {
+      allow read: if true;
+
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasAll(['displayName', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['displayName', 'avatarUrl', 'createdAt'])
+        && validName(request.resource.data.displayName)
+        && validAvatar(request.resource.data)
+        && request.resource.data.createdAt == request.time;
+
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'avatarUrl'])
+        && validName(request.resource.data.displayName)
+        && validAvatar(request.resource.data);
+
+      allow delete: if false;
+    }
+
+    // A new request must look exactly like what the app sends. The derived
+    // search keys are checked against the three sparks so they cannot disagree.
+    // (Moving creation to a Cloud Function later will replace these checks.)
+    function validNewRequest(d) {
+      return d.keys().hasAll([
+          'sparks', 'sparksNorm', 'sparkKey', 'pairKeys', 'kind', 'note',
+          'requesterId', 'requesterName', 'status', 'moderation',
+          'answerCount', 'createdAt'
+        ])
+        && d.keys().hasOnly([
+          'sparks', 'sparksNorm', 'sparkKey', 'pairKeys', 'kind', 'note',
+          'requesterId', 'requesterName', 'status', 'moderation',
+          'answerCount', 'createdAt'
+        ])
+        && d.requesterId == request.auth.uid
+        && validName(d.requesterName)
+        && d.sparks is list && d.sparks.size() == 3
+        && validWord(d.sparks[0]) && validWord(d.sparks[1]) && validWord(d.sparks[2])
+        && d.sparksNorm is list && d.sparksNorm.size() == 3
+        && validWord(d.sparksNorm[0]) && validWord(d.sparksNorm[1]) && validWord(d.sparksNorm[2])
+        && d.sparksNorm[0] != d.sparksNorm[1]
+        && d.sparksNorm[0] != d.sparksNorm[2]
+        && d.sparksNorm[1] != d.sparksNorm[2]
+        && d.sparkKey == d.sparksNorm[0] + '|' + d.sparksNorm[1] + '|' + d.sparksNorm[2]
+        && d.pairKeys is list && d.pairKeys.size() == 3
+        && d.pairKeys[0] == d.sparksNorm[0] + '|' + d.sparksNorm[1]
+        && d.pairKeys[1] == d.sparksNorm[0] + '|' + d.sparksNorm[2]
+        && d.pairKeys[2] == d.sparksNorm[1] + '|' + d.sparksNorm[2]
+        && d.kind in ['npc', 'location']
+        && d.note is string && d.note.size() <= 300
+        && d.status == 'open'
+        && d.moderation == 'ok'
+        && d.answerCount == 0
+        && d.createdAt == request.time;
+    }
+
+    match /requests/{requestId} {
+      // Hidden requests are only visible to moderators.
+      allow read: if resource.data.moderation == 'ok' || isModerator();
+      allow create: if signedIn() && validNewRequest(request.resource.data);
+      allow update, delete: if false;
     }
   }
 }
