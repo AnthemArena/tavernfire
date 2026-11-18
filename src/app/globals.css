@@ -1047,3 +1047,8 @@ a:hover {
   line-height: 1.4;
   color: var(--muted);
 }
+
+/* The row shows the focus ring, so the dot does not need its own. */
+.kind-option input:focus-visible {
+  outline: none;
+}

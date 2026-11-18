@@ -1,7 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { CATEGORIES, LAUNCHED_CATEGORIES, getCategory, isCategoryId } from "./categories.ts";
+import {
+  CATEGORIES,
+  COMPACT_PICKER_FROM,
+  LAUNCHED_CATEGORIES,
+  getCategory,
+  groupedCategories,
+  isCategoryId,
+  isCompactPicker,
+} from "./categories.ts";
 import { kindLabel, toRequestItem } from "./requests.ts";
 
 test("category ids are unique, lowercase and stable-looking", () => {
@@ -61,4 +69,16 @@ test("the types allowed by firestore.rules are exactly the launched categories",
     const ids = [...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1]).sort();
     assert.deepEqual(ids, expected);
   }
+});
+
+test("the picker goes compact at five launched categories", () => {
+  assert.equal(isCompactPicker(COMPACT_PICKER_FROM - 1), false);
+  assert.equal(isCompactPicker(COMPACT_PICKER_FROM), true);
+});
+
+test("categories are grouped in the order their groups first appear", () => {
+  const groups = groupedCategories(CATEGORIES);
+  const names = groups.map((g) => g.group);
+  assert.equal(new Set(names).size, names.length);
+  assert.equal(groups.flatMap((g) => g.items).length, CATEGORIES.length);
 });

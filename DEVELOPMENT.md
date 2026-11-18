@@ -71,8 +71,8 @@ With the emulators and `npm run dev` running:
 
 ## Adding a request category
 
-1. Add an entry to `CATEGORIES` in `src/lib/categories.ts` (stable `id`, labels, answer wording) with `launched: false`.
-2. When it is ready, set `launched: true` and add its id to the `d.kind in [...]` list in `firestore.rules`.
-3. Run `npm test` (a test fails if the two lists differ) and `npm run test:rules`, then publish the rules.
+1. Add an entry to `CATEGORIES` in `src/lib/categories.ts` (stable `id`, labels, a one-line `description`, `group`, answer wording) with `launched: false`.
+2. **Publish the rules first.** Set `launched: true`, add its id to the `d.kind in [...]` list in `firestore.rules`, run `npm test` (a test fails if the two lists differ) and `npm run test:rules`, then publish the rules.
+3. **Then release the app.** If the app ships first, people can pick the category and every post is refused.
 
-Every category uses the same answer shape (name, description, optional tags); only the wording differs.
+Policy: ids never change, and a launched category is never removed (the app skips requests whose type it does not know, so removing one would make them vanish). Renaming changes only the label. Every category uses the same answer shape (name, description, optional tags); only the wording differs. The post form shows a radio list up to four categories and a grouped drop-down from five (`COMPACT_PICKER_FROM`).

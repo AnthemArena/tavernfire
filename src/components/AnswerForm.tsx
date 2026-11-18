@@ -193,7 +193,7 @@ export default function AnswerForm({
 
       <div className="field">
         <label className="label" htmlFor={`entry-name-${idPart}`}>
-          Name <Counter used={name.length} max={ENTRY_NAME_MAX} />
+          {copy.nameLabel ?? "Name"} <Counter used={name.length} max={ENTRY_NAME_MAX} />
         </label>
         <input
           id={`entry-name-${idPart}`}
@@ -244,6 +244,8 @@ export default function AnswerForm({
           </p>
         )}
       </div>
+
+      {copy.help && <p className="hint">{copy.help}</p>}
 
       <TraitInput
         label={copy.tagsLabel}

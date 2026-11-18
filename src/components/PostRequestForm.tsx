@@ -8,7 +8,13 @@ import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { SparkError, buildSparkFields } from "@/lib/sparks";
 import type { RequestKind } from "@/lib/requests";
-import { LAUNCHED_CATEGORIES } from "@/lib/categories";
+import {
+  DEFAULT_NOTE_PLACEHOLDER,
+  LAUNCHED_CATEGORIES,
+  getCategory,
+  groupedCategories,
+  isCompactPicker,
+} from "@/lib/categories";
 
 const NOTE_MAX = 300;
 // If the server hasn't confirmed the request after this long, say so.
@@ -189,29 +195,57 @@ export default function PostRequestForm() {
             you need.
           </p>
 
-          <fieldset className="field kind-picker">
-            <legend className="label">What do you need?</legend>
-            <div className="kind-options">
-              {LAUNCHED_CATEGORIES.map((c) => (
-                <label
-                  key={c.id}
-                  className={kind === c.id ? "kind-option kind-option-selected" : "kind-option"}
-                >
-                  <input
-                    type="radio"
-                    name="kind"
-                    value={c.id}
-                    checked={kind === c.id}
-                    onChange={() => setKind(c.id as RequestKind)}
-                  />
-                  <span className="kind-text">
-                    <span className="kind-name">{c.fullLabel}</span>
-                    <span className="kind-desc">{c.description}</span>
-                  </span>
-                </label>
-              ))}
+          {isCompactPicker(LAUNCHED_CATEGORIES.length) ? (
+            <div className="field">
+              <label className="label" htmlFor="kind">
+                What do you need?
+              </label>
+              <select
+                id="kind"
+                className="input"
+                value={kind}
+                aria-describedby="kind-description"
+                onChange={(e) => setKind(e.target.value as RequestKind)}
+              >
+                {groupedCategories(LAUNCHED_CATEGORIES).map((g) => (
+                  <optgroup key={g.group} label={g.group}>
+                    {g.items.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.fullLabel}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+              <p className="hint kind-description" id="kind-description" aria-live="polite">
+                {getCategory(kind).description}
+              </p>
             </div>
-          </fieldset>
+          ) : (
+            <fieldset className="field kind-picker">
+              <legend className="label">What do you need?</legend>
+              <div className="kind-options">
+                {LAUNCHED_CATEGORIES.map((c) => (
+                  <label
+                    key={c.id}
+                    className={kind === c.id ? "kind-option kind-option-selected" : "kind-option"}
+                  >
+                    <input
+                      type="radio"
+                      name="kind"
+                      value={c.id}
+                      checked={kind === c.id}
+                      onChange={() => setKind(c.id as RequestKind)}
+                    />
+                    <span className="kind-text">
+                      <span className="kind-name">{c.fullLabel}</span>
+                      <span className="kind-desc">{c.description}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          )}
 
           <div className="field">
             <label className="label" htmlFor="note">
@@ -222,7 +256,7 @@ export default function PostRequestForm() {
               className="input textarea"
               rows={3}
               maxLength={NOTE_MAX}
-              placeholder="Party level, tone, what the scene needs"
+              placeholder={getCategory(kind).notePlaceholder ?? DEFAULT_NOTE_PLACEHOLDER}
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
