@@ -5,9 +5,9 @@ import Link from "next/link";
 import { doc, onSnapshot } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useNow } from "@/lib/use-now";
+import TimeLeft from "@/components/TimeLeft";
 import {
   KIND_LABELS,
-  describeTimeLeft,
   toRequestItem,
   type RequestItem,
 } from "@/lib/requests";
@@ -39,7 +39,11 @@ export default function RequestView({ id }: { id: string }) {
   }, [id]);
 
   if (state.status === "loading") {
-    return <p className="muted page-note">Loading…</p>;
+    return (
+      <p className="muted page-note" role="status">
+        Loading…
+      </p>
+    );
   }
 
   if (state.status === "missing") {
@@ -83,7 +87,7 @@ export default function RequestView({ id }: { id: string }) {
           <strong>{r.answerCount}</strong>{" "}
           {r.answerCount === 1 ? "answer" : "answers"}
         </span>
-        <span>{describeTimeLeft(r.createdAt, now)}</span>
+        <TimeLeft createdAt={r.createdAt} now={now} />
       </div>
 
       <section className="answers" aria-labelledby="answers-title">

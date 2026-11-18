@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { describeTimeLeft, toRequestItem } from "./requests.ts";
+import { describeTimeLeft, isClosingSoon, toRequestItem } from "./requests.ts";
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -14,6 +14,14 @@ test("describeTimeLeft counts down across the 3 day window", () => {
   assert.equal(describeTimeLeft(new Date(now.getTime() - (3 * DAY - 5 * HOUR)), now), "5 hours left");
   assert.equal(describeTimeLeft(new Date(now.getTime() - (3 * DAY - 10 * 60 * 1000)), now), "Closing soon");
   assert.equal(describeTimeLeft(new Date(now.getTime() - 3 * DAY), now), "Answers closed");
+});
+
+test("isClosingSoon is true only in the last 24 hours before closing", () => {
+  assert.equal(isClosingSoon(new Date(now.getTime() - 1 * DAY), now), false);
+  assert.equal(isClosingSoon(new Date(now.getTime() - 2.5 * DAY), now), true);
+  assert.equal(isClosingSoon(new Date(now.getTime() - (3 * DAY - 1 * HOUR)), now), true);
+  assert.equal(isClosingSoon(new Date(now.getTime() - 3 * DAY), now), false);
+  assert.equal(isClosingSoon(new Date(now.getTime() - 4 * DAY), now), false);
 });
 
 test("toRequestItem maps good data and rejects bad data", () => {

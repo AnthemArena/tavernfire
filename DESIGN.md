@@ -36,7 +36,7 @@ All text pairs above meet at least 4.5:1 contrast on their backgrounds; keep it 
 - Pages are fluid, with a centred container up to 1120px and 32px side padding
 - Two columns on desktop (main content, then a 280px sidebar), stacking on narrow screens
 - Touch targets at least 44px high
-- Cards: 14px radius, 1px border, 22 to 24px padding
+- Cards: `.card` 16px radius and 28px padding (20px on screens 480px and narrower); `.request-card` and the how-note 14px radius. Card titles are Fraunces weight 500
 
 ## Screens built in the mockup
 
@@ -56,3 +56,20 @@ All text pairs above meet at least 4.5:1 contrast on their backgrounds; keep it 
 - **Traits** are the author-chosen descriptors on an entry (separate from sparks)
 - Use "Report entry", not "Flag as AI"
 - Use "I used this" for the self-reported usage counter
+
+## Tokens added after the design review
+
+- `--error` #9B2C1A for error text
+- Warning notice: background #F6E9D3, border #A8741A
+- `--control-border` #8A7D60 for input, tab and outline-button borders (meets the 3:1 contrast needed for form controls on parchment and surface). Decorative card borders keep `--border`
+- Placeholder text uses `--muted` at full opacity
+
+## Small components
+
+- **Time pill (`.time-left`):** shows time left on a request; turns `.time-left-soon` (#F6E0D8 background, accent text, 4.84:1) when under 24 hours remain
+- **How-note (`.how-note`):** light note with a serif title and four numbered steps; replaces the dark card
+- **Signed-out form preview:** three disabled, aria-hidden spark inputs (Statue, Time, Glowing) above "Sign in to post"
+
+## Deviations from the design review
+
+See `claude/lead-agent-response-2026-11-18.md` in the Project. In short: header search, the phase strip and board sorting are deferred until the library, lifecycle functions and extra pages exist; the "Request posted" notice is kept but delayed 700ms so it only shows if opening the request is slow.

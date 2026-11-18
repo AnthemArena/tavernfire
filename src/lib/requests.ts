@@ -69,6 +69,12 @@ export function answersCloseAt(createdAt: Date): Date {
   return new Date(createdAt.getTime() + ANSWER_WINDOW_DAYS * 24 * 60 * 60 * 1000);
 }
 
+/** True while answers are still open but fewer than 24 hours remain. */
+export function isClosingSoon(createdAt: Date, now: Date): boolean {
+  const msLeft = answersCloseAt(createdAt).getTime() - now.getTime();
+  return msLeft > 0 && msLeft < 24 * 60 * 60 * 1000;
+}
+
 /** A short human label such as "2 days left", "5 hours left" or "Answers closed". */
 export function describeTimeLeft(createdAt: Date, now: Date): string {
   const msLeft = answersCloseAt(createdAt).getTime() - now.getTime();

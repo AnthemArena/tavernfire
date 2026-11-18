@@ -14,6 +14,7 @@ import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut as firebaseSignOut,
@@ -57,6 +58,7 @@ type AuthContextValue = {
     password: string,
     displayName: string,
   ) => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -117,6 +119,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const sendPasswordReset = useCallback(async (email: string) => {
+    await sendPasswordResetEmail(getFirebaseAuth(), email.trim());
+  }, []);
+
   const signOut = useCallback(async () => {
     await firebaseSignOut(getFirebaseAuth());
   }, []);
@@ -131,12 +137,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithGoogle,
       signInWithEmail,
       signUpWithEmail,
+      sendPasswordReset,
       signOut,
     }),
     // user.displayName can change without the user object changing, so this is
     // recomputed on every provider render (the version bump above triggers one).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [user, loading, user?.displayName, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut],
+    [user, loading, user?.displayName, signInWithGoogle, signInWithEmail, signUpWithEmail, sendPasswordReset, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

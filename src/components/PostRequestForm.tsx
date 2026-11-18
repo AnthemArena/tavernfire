@@ -12,6 +12,7 @@ import { KIND_LABELS, REQUEST_KINDS, type RequestKind } from "@/lib/requests";
 const NOTE_MAX = 300;
 // If the server hasn't confirmed the request after this long, say so.
 const SLOW_AFTER_MS = 8_000;
+const NOTICE_DELAY_MS = 700;
 
 export default function PostRequestForm() {
   const router = useRouter();
@@ -25,6 +26,10 @@ export default function PostRequestForm() {
   const [slow, setSlow] = useState(false);
   // The id of the request we just posted, once the server has confirmed it.
   const [postedId, setPostedId] = useState<string | null>(null);
+  // The "Request posted" notice only appears if opening the request takes a
+  // moment (the first visit to a page can be slow in development), so it never
+  // flashes up just before a quick navigation.
+  const [showPosted, setShowPosted] = useState(false);
 
   function setSpark(index: number, value: string) {
     setSparks((current) => current.map((s, i) => (i === index ? value : s)));
@@ -63,8 +68,7 @@ export default function PostRequestForm() {
       clearTimeout(slowTimer);
       setSlow(false);
       setPostedId(ref.id);
-      setSparks(["", "", ""]);
-      setNote("");
+      setTimeout(() => setShowPosted(true), NOTICE_DELAY_MS);
       router.push(`/requests/${ref.id}`);
     } catch (err) {
       clearTimeout(slowTimer);
@@ -77,6 +81,9 @@ export default function PostRequestForm() {
 
   function postAnother() {
     setPostedId(null);
+    setShowPosted(false);
+    setSparks(["", "", ""]);
+    setNote("");
     setBusy(false);
   }
 
@@ -88,6 +95,21 @@ export default function PostRequestForm() {
         <p className="muted">One moment…</p>
       ) : !user ? (
         <>
+          {/* A look at the form before signing in. Decorative, so hidden from assistive tech. */}
+          <div className="form-row hero-spark-preview" aria-hidden="true">
+            {["Spark one", "Spark two", "Spark three"].map((label, index) => (
+              <div className="field field-spark" key={label}>
+                <div className="label">{label}</div>
+                <input
+                  className="input input-spark"
+                  type="text"
+                  tabIndex={-1}
+                  disabled
+                  placeholder={["Statue", "Time", "Glowing"][index]}
+                />
+              </div>
+            ))}
+          </div>
           <p className="card-lede">
             Sign in to post a request. It takes a few seconds and you can use
             your Google account.
@@ -96,17 +118,18 @@ export default function PostRequestForm() {
             Sign in to post
           </Link>
         </>
-      ) : postedId ? (
+      ) : postedId && showPosted ? (
         <div className="notice notice-success" role="status">
           <p className="notice-title">Request posted</p>
           <p>Opening your request now.</p>
-          <p>
-            <Link href={`/requests/${postedId}`}>Open your request</Link>
-            {" or "}
-            <button type="button" className="btn-link" onClick={postAnother}>
-              post another
+          <div className="notice-actions">
+            <Link className="btn btn-outline" href={`/requests/${postedId}`}>
+              Open your request
+            </Link>
+            <button type="button" className="btn btn-outline" onClick={postAnother}>
+              Post another
             </button>
-          </p>
+          </div>
         </div>
       ) : (
         <form onSubmit={onSubmit} noValidate>

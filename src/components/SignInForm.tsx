@@ -7,8 +7,14 @@ import { friendlyAuthError } from "@/lib/auth-errors";
 
 export default function SignInForm() {
   const router = useRouter();
-  const { user, loading, signInWithGoogle, signInWithEmail, signUpWithEmail } =
-    useAuth();
+  const {
+    user,
+    loading,
+    signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
+    sendPasswordReset,
+  } = useAuth();
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [displayName, setDisplayName] = useState("");
@@ -16,14 +22,30 @@ export default function SignInForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [info, setInfo] = useState<string | null>(null);
 
   // Already signed in (or just finished): go back to the board.
   useEffect(() => {
     if (!loading && user) router.replace("/");
   }, [loading, user, router]);
 
+  function onForgotPassword() {
+    if (email.trim() === "") {
+      setInfo(null);
+      setError("Enter your email above first, then choose Forgot password.");
+      return;
+    }
+    void run(async () => {
+      await sendPasswordReset(email);
+      setInfo(
+        "If an account exists for that email, a reset link is on its way. Check your spam folder too.",
+      );
+    });
+  }
+
   async function run(action: () => Promise<void>) {
     setError(null);
+    setInfo(null);
     setBusy(true);
     try {
       await action();
@@ -115,7 +137,22 @@ export default function SignInForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          {isSignUp ? (
+            <p className="hint">At least 6 characters.</p>
+          ) : (
+            <p className="hint">
+              <button type="button" className="btn-link" onClick={onForgotPassword} disabled={busy}>
+                Forgot password?
+              </button>
+            </p>
+          )}
         </div>
+
+        {info && (
+          <p className="notice notice-success" role="status">
+            {info}
+          </p>
+        )}
 
         {error && (
           <p className="error" role="alert">

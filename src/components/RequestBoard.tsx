@@ -12,9 +12,9 @@ import {
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useNow } from "@/lib/use-now";
+import TimeLeft from "@/components/TimeLeft";
 import {
   KIND_LABELS,
-  describeTimeLeft,
   toRequestItem,
   type RequestItem,
   type RequestKind,
@@ -92,7 +92,9 @@ export default function RequestBoard() {
           Couldn&apos;t load requests right now. Please try again in a moment.
         </p>
       ) : items === null ? (
-        <p className="empty">Loading requests…</p>
+        <p className="empty" role="status">
+          Loading requests…
+        </p>
       ) : visible.length === 0 ? (
         <p className="empty">
           {items.length === 0
@@ -121,7 +123,7 @@ export default function RequestBoard() {
                     {r.answerCount === 1 ? "answer" : "answers"}
                   </span>
                   <span>Posted by {r.requesterName}</span>
-                  <span>{describeTimeLeft(r.createdAt, now)}</span>
+                  <TimeLeft createdAt={r.createdAt} now={now} />
                 </div>
               </Link>
             </li>

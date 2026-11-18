@@ -26,8 +26,8 @@ export default function Home() {
         </div>
 
         <aside className="board-side" aria-label="How it works">
-          <div className="dark-card">
-            <p className="dark-card-kicker">How a request works</p>
+          <div className="how-note">
+            <p className="how-note-title">How a request works</p>
             <ol>
               <li>Answers open for 3 days.</li>
               <li>Voting follows, with authors hidden.</li>
