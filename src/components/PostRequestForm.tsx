@@ -7,7 +7,8 @@ import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { SparkError, buildSparkFields } from "@/lib/sparks";
-import { KIND_LABELS, REQUEST_KINDS, type RequestKind } from "@/lib/requests";
+import type { RequestKind } from "@/lib/requests";
+import { LAUNCHED_CATEGORIES } from "@/lib/categories";
 
 const NOTE_MAX = 300;
 // If the server hasn't confirmed the request after this long, say so.
@@ -107,7 +108,7 @@ export default function PostRequestForm() {
       ) : !user ? (
         <>
           <div className="example-sparks">
-            <p className="example-label">Example request: an NPC or a location</p>
+            <p className="example-label">Example request</p>
             <div className="sparks">
               {["Statue", "Time", "Glowing"].map((word) => (
                 <span className="spark" key={word}>
@@ -190,7 +191,7 @@ export default function PostRequestForm() {
 
           <div className="field">
             <label className="label" htmlFor="kind">
-              I need a
+              What do you need?
             </label>
             <select
               id="kind"
@@ -198,9 +199,9 @@ export default function PostRequestForm() {
               value={kind}
               onChange={(e) => setKind(e.target.value as RequestKind)}
             >
-              {REQUEST_KINDS.map((k) => (
-                <option key={k} value={k}>
-                  {KIND_LABELS[k]}
+              {LAUNCHED_CATEGORIES.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.fullLabel}
                 </option>
               ))}
             </select>

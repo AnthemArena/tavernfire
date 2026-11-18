@@ -4,6 +4,8 @@
 // server-guarded collection (`entryAuthors`) until the reveal. See DATA_MODEL.md.
 
 import { normaliseSpark } from "./sparks.ts";
+import { isCategoryId } from "./categories.ts";
+import type { RequestKind } from "./requests.ts";
 
 export const ENTRY_NAME_MAX = 60;
 export const ENTRY_CONCEPT_MAX = 600;
@@ -33,7 +35,7 @@ export const REPORT_REASON_LABELS: Record<ReportReason, string> = {
 export type EntryItem = {
   id: string;
   requestId: string;
-  kind: "npc" | "location";
+  kind: RequestKind;
   /** When it was posted. A local estimate until the server confirms it. */
   createdAt: Date | null;
   /** True once the author has edited it. */
@@ -112,7 +114,7 @@ export function toEntryItem(
   return {
     id,
     requestId: data.requestId,
-    kind: data.kind === "location" ? "location" : "npc",
+    kind: isCategoryId(data.kind) ? data.kind : "npc",
     createdAt: typeof created?.toDate === "function" ? created.toDate() : null,
     edited: data.editedAt != null,
     name: data.name,

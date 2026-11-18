@@ -32,7 +32,7 @@ Require three distinct sparks. (Open decision: allow fewer than three?)
 ### `requests/{requestId}`
 - `sparks`: the three words as typed, for display
 - `sparksNorm`, `sparkKey`, `pairKeys`: see above
-- `kind`: `npc` | `location` (extend later)
+- `kind`: a category id from `src/lib/categories.ts` (`npc`, `location` today). Ids never change; labels can. firestore.rules lists the launched ids and a test keeps the two in step.
 - `note`: optional context from the requester
 - `requesterId`: public (the requester is not anonymous)
 - `status`: `open` | `voting` | `revealed` | `closed`

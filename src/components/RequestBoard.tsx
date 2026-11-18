@@ -14,8 +14,9 @@ import { getDb } from "@/lib/firebase";
 import { useNow } from "@/lib/use-now";
 import TimeLeft from "@/components/TimeLeft";
 import AnswerCount from "@/components/AnswerCount";
+import { LAUNCHED_CATEGORIES } from "@/lib/categories";
 import {
-  KIND_LABELS,
+  kindLabel,
   toRequestItem,
   type RequestItem,
   type RequestKind,
@@ -25,8 +26,7 @@ type Filter = "all" | RequestKind;
 
 const FILTERS: { value: Filter; label: string }[] = [
   { value: "all", label: "All" },
-  { value: "npc", label: "NPCs" },
-  { value: "location", label: "Locations" },
+  ...LAUNCHED_CATEGORIES.map((c) => ({ value: c.id as Filter, label: c.filterLabel })),
 ];
 
 export default function RequestBoard() {
@@ -118,7 +118,7 @@ export default function RequestBoard() {
                 </div>
                 {r.note && <p className="request-note">{r.note}</p>}
                 <div className="meta">
-                  <span className="badge">{KIND_LABELS[r.kind]}</span>
+                  <span className="badge">{kindLabel(r.kind)}</span>
                   <TimeLeft createdAt={r.createdAt} now={now} />
                   <AnswerCount requestId={r.id} />
                   <span className="meta-poster">Posted by {r.requesterName}</span>

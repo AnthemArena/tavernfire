@@ -2,13 +2,15 @@
 
 export const ANSWER_WINDOW_DAYS = 3;
 
-export const REQUEST_KINDS = ["npc", "location"] as const;
-export type RequestKind = (typeof REQUEST_KINDS)[number];
+import { getCategory, isCategoryId, type CategoryId } from "./categories.ts";
 
-export const KIND_LABELS: Record<RequestKind, string> = {
-  npc: "NPC",
-  location: "Location",
-};
+/** The type of a request. The list of types lives in categories.ts. */
+export type RequestKind = CategoryId;
+
+/** Short label for a type, for badges. */
+export function kindLabel(kind: RequestKind): string {
+  return getCategory(kind).label;
+}
 
 export type RequestItem = {
   id: string;
@@ -41,7 +43,7 @@ export function toRequestItem(
     !Array.isArray(sparks) ||
     sparks.length !== 3 ||
     !sparks.every((s) => typeof s === "string") ||
-    (kind !== "npc" && kind !== "location") ||
+    !isCategoryId(kind) ||
     typeof createdAt?.toDate !== "function"
   ) {
     return null;

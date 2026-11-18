@@ -14,11 +14,17 @@ import { normaliseSpark } from "@/lib/sparks";
  * you typed but didn't confirm can still be included when the form is sent.
  */
 export default function TraitInput({
+  label,
+  placeholder,
   traits,
   onChange,
   draft,
   onDraftChange,
 }: {
+  /** What the tags are called for this category, e.g. "Traits". */
+  label: string;
+  /** Placeholder when the box is empty. */
+  placeholder: string;
   traits: string[];
   onChange: (next: string[]) => void;
   draft: string;
@@ -48,21 +54,21 @@ export default function TraitInput({
   return (
     <div className="field">
       <label className="label" htmlFor={id}>
-        Traits (optional){" "}
+        {label} (optional){" "}
         <span className="counter" aria-hidden="true">
           {traits.length} of {ENTRY_TRAITS_MAX}
         </span>
       </label>
 
       {traits.length > 0 && (
-        <ul className="trait-list trait-list-editable" aria-label="Your traits">
+        <ul className="trait-list trait-list-editable" aria-label={`Your ${label.toLowerCase()}`}>
           {traits.map((trait) => (
             <li className="trait" key={trait}>
               {trait}
               <button
                 type="button"
                 className="trait-remove"
-                aria-label={`Remove trait ${trait}`}
+                aria-label={`Remove ${trait}`}
                 onClick={() => onChange(traits.filter((t) => t !== trait))}
               >
                 <span aria-hidden="true">×</span>
@@ -80,7 +86,7 @@ export default function TraitInput({
         maxLength={ENTRY_TRAIT_MAX}
         disabled={full}
         placeholder={
-          full ? "That's all five" : traits.length > 0 ? "Add another trait" : "e.g. patient, grieving, cold"
+          full ? "That's all five" : traits.length > 0 ? "Add another" : placeholder
         }
         onChange={(e) => onDraftChange(e.target.value.replace(",", ""))}
         onKeyDown={onKeyDown}
@@ -89,9 +95,9 @@ export default function TraitInput({
       />
       <p className="hint" id={`${id}-hint`}>
         <span className="visually-hidden" aria-live="polite">
-          {traits.length} of {ENTRY_TRAITS_MAX} traits.
+          {traits.length} of {ENTRY_TRAITS_MAX} {label.toLowerCase()}.
         </span>
-        Press Enter or comma to add up to 5. Traits aren&apos;t sparks.
+        Press Enter or comma to add up to 5. {label} aren&apos;t sparks.
       </p>
     </div>
   );

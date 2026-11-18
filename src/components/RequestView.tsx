@@ -8,7 +8,7 @@ import { useNow } from "@/lib/use-now";
 import TimeLeft from "@/components/TimeLeft";
 import Answers from "@/components/Answers";
 import {
-  KIND_LABELS,
+  kindLabel,
   toRequestItem,
   type RequestItem,
 } from "@/lib/requests";
@@ -82,7 +82,7 @@ export default function RequestView({ id }: { id: string }) {
       {r.note && <p className="request-lede">{r.note}</p>}
 
       <div className="meta">
-        <span className="badge">{KIND_LABELS[r.kind]}</span>
+        <span className="badge">{kindLabel(r.kind)}</span>
         <span>Posted by {r.requesterName}</span>
         <TimeLeft createdAt={r.createdAt} now={now} />
       </div>

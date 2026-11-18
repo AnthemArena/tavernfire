@@ -68,3 +68,11 @@ With the emulators and `npm run dev` running:
 - Never commit a service account key (a JSON file with a private key). The `.gitignore` blocks the common names, but check before you commit.
 - `firestore.rules` is deny-by-default. Rules for each collection are added with the feature that needs them, following `DATA_MODEL.md`.
 - Deploying rules to the real project is a separate step (`npx firebase deploy --only firestore:rules`) and is not part of local development.
+
+## Adding a request category
+
+1. Add an entry to `CATEGORIES` in `src/lib/categories.ts` (stable `id`, labels, answer wording) with `launched: false`.
+2. When it is ready, set `launched: true` and add its id to the `d.kind in [...]` list in `firestore.rules`.
+3. Run `npm test` (a test fails if the two lists differ) and `npm run test:rules`, then publish the rules.
+
+Every category uses the same answer shape (name, description, optional tags); only the wording differs.

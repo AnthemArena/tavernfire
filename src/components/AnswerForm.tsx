@@ -14,17 +14,7 @@ import {
 } from "@/lib/entries";
 import type { RequestItem } from "@/lib/requests";
 import TraitInput from "@/components/TraitInput";
-
-const COPY = {
-  npc: {
-    name: "e.g. Vhane, the Last Hour",
-    concept: "Who are they? What do they look like, and what do they want?",
-  },
-  location: {
-    name: "e.g. The Hollow Observatory",
-    concept: "What is this place like? What is hidden here?",
-  },
-} as const;
+import { getCategory } from "@/lib/categories";
 
 function Counter({ used, max }: { used: number; max: number }) {
   return (
@@ -62,7 +52,7 @@ export default function AnswerForm({
   onCancel?: () => void;
 }) {
   const { user } = useAuth();
-  const copy = COPY[editing?.kind ?? request?.kind ?? "npc"];
+  const copy = getCategory(editing?.kind ?? request?.kind ?? "npc").answer;
   const idPart = editing?.id ?? "new";
 
   const [name, setName] = useState(editing?.name ?? "");
@@ -211,7 +201,7 @@ export default function AnswerForm({
           className={nameError ? "input input-error" : "input"}
           type="text"
           maxLength={ENTRY_NAME_MAX}
-          placeholder={copy.name}
+          placeholder={copy.namePlaceholder}
           value={name}
           aria-invalid={nameError ? true : undefined}
           aria-describedby={nameError ? `entry-name-error-${idPart}` : undefined}
@@ -238,7 +228,7 @@ export default function AnswerForm({
           className={conceptError ? "input textarea input-error" : "input textarea"}
           rows={5}
           maxLength={ENTRY_CONCEPT_MAX}
-          placeholder={copy.concept}
+          placeholder={copy.conceptPlaceholder}
           value={concept}
           aria-invalid={conceptError ? true : undefined}
           aria-describedby={conceptError ? `entry-concept-error-${idPart}` : undefined}
@@ -256,6 +246,8 @@ export default function AnswerForm({
       </div>
 
       <TraitInput
+        label={copy.tagsLabel}
+        placeholder={copy.tagsPlaceholder}
         traits={traits}
         onChange={(t) => {
           setTraits(t);
