@@ -135,6 +135,39 @@ service cloud.firestore {
         || (list[i] is string && list[i].size() >= 1 && list[i].size() <= 24);
     }
 
+    // The parts of an entry a person writes (shared by creating and editing).
+    function validEntryContent(d) {
+      return d.name is string && d.name.size() >= 1 && d.name.size() <= 60
+        && d.concept is string && d.concept.size() >= 1 && d.concept.size() <= 600
+        && d.traits is list && d.traits.size() <= 5
+        && d.traitsNorm is list && d.traitsNorm.size() == d.traits.size()
+        && traitOk(d.traits, 0) && traitOk(d.traits, 1) && traitOk(d.traits, 2)
+        && traitOk(d.traits, 3) && traitOk(d.traits, 4)
+        && traitOk(d.traitsNorm, 0) && traitOk(d.traitsNorm, 1) && traitOk(d.traitsNorm, 2)
+        && traitOk(d.traitsNorm, 3) && traitOk(d.traitsNorm, 4);
+    }
+
+    // Editing your own entry. Allowed only:
+    //  - by the person whose private marker names this entry,
+    //  - within 24 hours of posting (measured from createdAt, which never changes,
+    //    so editing does not restart the clock; keep in step with
+    //    ENTRY_EDIT_WINDOW_HOURS in src/lib/entries.ts),
+    //  - while the request still accepts answers,
+    //  - if nobody has reported the entry (a report adds an entryFlags document),
+    //  - changing only name, concept, traits and traitsNorm, and stamping editedAt.
+    function validEntryEdit(n, o, entryId) {
+      let rq = get(/databases/$(database)/documents/requests/$(o.requestId)).data;
+      let lock = get(/databases/$(database)/documents/requests/$(o.requestId)/answerLocks/$(request.auth.uid)).data;
+      return lock.entryId == entryId
+        && o.moderation == 'ok'
+        && n.diff(o).affectedKeys().hasOnly(['name', 'concept', 'traits', 'traitsNorm', 'editedAt'])
+        && n.editedAt == request.time
+        && request.time < o.createdAt + duration.value(24, 'h')
+        && request.time < rq.createdAt + duration.value(3, 'd')
+        && !exists(/databases/$(database)/documents/entryFlags/$(entryId))
+        && validEntryContent(n);
+    }
+
     // An entry (an answer). It never holds its author. The request it answers is
     // looked up, so the checks below cannot be dodged by sending a different
     // kind, different sparks, or answering after the 3-day window.
@@ -161,14 +194,7 @@ service cloud.firestore {
         && d.sparkKey == rq.sparkKey
         && d.sparksNorm == rq.sparksNorm
         && d.pairKeys == rq.pairKeys
-        && d.name is string && d.name.size() >= 1 && d.name.size() <= 60
-        && d.concept is string && d.concept.size() >= 1 && d.concept.size() <= 600
-        && d.traits is list && d.traits.size() <= 5
-        && d.traitsNorm is list && d.traitsNorm.size() == d.traits.size()
-        && traitOk(d.traits, 0) && traitOk(d.traits, 1) && traitOk(d.traits, 2)
-        && traitOk(d.traits, 3) && traitOk(d.traits, 4)
-        && traitOk(d.traitsNorm, 0) && traitOk(d.traitsNorm, 1) && traitOk(d.traitsNorm, 2)
-        && traitOk(d.traitsNorm, 3) && traitOk(d.traitsNorm, 4)
+        && validEntryContent(d)
         && d.moderation == 'ok'
         && d.createdAt == request.time;
     }
@@ -176,6 +202,23 @@ service cloud.firestore {
     match /entries/{entryId} {
       allow read: if resource.data.moderation == 'ok' || isModerator();
       allow create: if signedIn() && validNewEntry(request.resource.data, entryId);
+      allow update: if signedIn() && validEntryEdit(request.resource.data, resource.data, entryId);
+      allow delete: if false;
+    }
+
+    // A flag that locks an entry against edits once anyone has reported it. The
+    // reporter writes it right after their report (the report must exist). It is
+    // never readable by members, so nobody learns which entries were reported.
+    match /entryFlags/{entryId} {
+      allow read: if isModerator();
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['entryId', 'reportId', 'createdAt'])
+        && request.resource.data.keys().hasAll(['entryId', 'reportId', 'createdAt'])
+        && request.resource.data.entryId == entryId
+        && request.resource.data.reportId is string
+        && request.resource.data.createdAt == request.time
+        && get(/databases/$(database)/documents/reports/$(request.resource.data.reportId)).data.entryId == entryId
+        && get(/databases/$(database)/documents/reports/$(request.resource.data.reportId)).data.reporterId == request.auth.uid;
       allow update, delete: if false;
     }
 

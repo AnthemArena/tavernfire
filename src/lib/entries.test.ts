@@ -2,6 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   answerMarkerPath,
+  describeEditTimeLeft,
+  editableUntil,
   buildEntryFields,
   orderForViewer,
   toEntryItem,
@@ -47,6 +49,9 @@ test("toEntryItem rejects malformed data and tolerates missing optional fields",
   assert.deepEqual(item, {
     id: "a",
     requestId: "r",
+    kind: "npc",
+    createdAt: null,
+    edited: false,
     name: "n",
     concept: "c",
     traits: [],
@@ -80,4 +85,21 @@ test("your own entry is pinned first", () => {
   ]);
   const out = orderForViewer([{ id: "a" }, { id: "b" }], keys, Math.random, "b");
   assert.deepEqual(out.map((x) => x.id), ["b", "a"]);
+});
+
+test("the edit window is 24 hours from posting, capped by when answers close", () => {
+  const posted = new Date("2026-11-18T10:00:00Z");
+  const farClose = new Date("2026-11-21T10:00:00Z");
+  assert.equal(editableUntil({ createdAt: posted }, farClose)?.toISOString(), "2026-11-19T10:00:00.000Z");
+  const soonClose = new Date("2026-11-18T12:00:00Z");
+  assert.equal(editableUntil({ createdAt: posted }, soonClose)?.toISOString(), "2026-11-18T12:00:00.000Z");
+  assert.equal(editableUntil({ createdAt: null }, farClose), null);
+});
+
+test("edit time left reads naturally", () => {
+  const now = new Date("2026-11-18T10:00:00Z");
+  assert.equal(describeEditTimeLeft(new Date("2026-11-19T09:30:00Z"), now), "23 hours left");
+  assert.equal(describeEditTimeLeft(new Date("2026-11-18T11:30:00Z"), now), "1 hour left");
+  assert.equal(describeEditTimeLeft(new Date("2026-11-18T10:47:00Z"), now), "47 min left");
+  assert.equal(describeEditTimeLeft(new Date("2026-11-18T10:00:00Z"), now), null);
 });

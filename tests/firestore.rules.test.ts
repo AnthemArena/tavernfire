@@ -452,6 +452,181 @@ describe("answers: reading", () => {
   });
 });
 
+/** Puts an entry and its private marker in place, as if it had been posted at `postedAt`. */
+async function seedPostedAnswer(entryId: string, authorId: string, postedAt: Date, requestId = "r1") {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, "entries", entryId), { ...newEntryData(requestId), createdAt: postedAt });
+    await setDoc(doc(db, ...answerMarkerPath(requestId, authorId)), {
+      authorId,
+      requestId,
+      entryId,
+      createdAt: postedAt,
+    });
+  });
+}
+
+const HOUR = 60 * 60 * 1000;
+
+function edit(overrides: Record<string, unknown> = {}) {
+  return {
+    name: "Vhane, the Last Hour (revised)",
+    concept: "A statue-keeper who stopped time in her temple, and regrets it.",
+    traits: ["Patient"],
+    traitsNorm: ["patient"],
+    editedAt: serverTimestamp(),
+    ...overrides,
+  };
+}
+
+describe("answers: editing your own entry", () => {
+  test("the author can edit within 24 hours", async () => {
+    await seedRequest("r1");
+    await seedPostedAnswer("e1", "bob", new Date(Date.now() - 2 * HOUR));
+    const db = env.authenticatedContext("bob").firestore();
+    await assertSucceeds(updateDoc(doc(db, "entries", "e1"), edit()));
+  });
+
+  test("editing does not restart the clock: the window runs from the original posting", async () => {
+    await seedRequest("r1");
+    await seedPostedAnswer("e1", "bob", new Date(Date.now() - 25 * HOUR));
+    const db = env.authenticatedContext("bob").firestore();
+    await assertFails(updateDoc(doc(db, "entries", "e1"), edit()));
+  });
+
+  test("not after answers close, even inside 24 hours", async () => {
+    await seedRequest("r1");
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await updateDoc(doc(ctx.firestore(), "requests", "r1"), {
+        createdAt: new Date(Date.now() - 3.5 * DAY),
+      });
+    });
+    await seedPostedAnswer("e1", "bob", new Date(Date.now() - 1 * HOUR));
+    const db = env.authenticatedContext("bob").firestore();
+    await assertFails(updateDoc(doc(db, "entries", "e1"), edit()));
+  });
+
+  test("only the author can edit, and signed-out visitors cannot", async () => {
+    await seedRequest("r1");
+    await seedPostedAnswer("e1", "bob", new Date(Date.now() - 1 * HOUR));
+    await assertFails(updateDoc(doc(env.authenticatedContext("carol").firestore(), "entries", "e1"), edit()));
+    await assertFails(updateDoc(doc(env.unauthenticatedContext().firestore(), "entries", "e1"), edit()));
+  });
+
+  test("only name, description and traits can change, and editedAt must be the server time", async () => {
+    await seedRequest("r1");
+    await seedPostedAnswer("e1", "bob", new Date(Date.now() - 1 * HOUR));
+    const db = env.authenticatedContext("bob").firestore();
+    const ref = doc(db, "entries", "e1");
+    await assertFails(updateDoc(ref, edit({ kind: "location" })));
+    await assertFails(updateDoc(ref, edit({ requestId: "r2" })));
+    await assertFails(updateDoc(ref, edit({ sparkKey: "a|b|c" })));
+    await assertFails(updateDoc(ref, edit({ moderation: "hidden" })));
+    await assertFails(updateDoc(ref, edit({ createdAt: new Date() })));
+    await assertFails(updateDoc(ref, edit({ authorId: "bob" })));
+    await assertFails(updateDoc(ref, edit({ editedAt: new Date() })));
+    await assertFails(updateDoc(ref, { name: "No editedAt stamp" }));
+  });
+
+  test("an edit must still be a valid entry", async () => {
+    await seedRequest("r1");
+    await seedPostedAnswer("e1", "bob", new Date(Date.now() - 1 * HOUR));
+    const ref = doc(env.authenticatedContext("bob").firestore(), "entries", "e1");
+    await assertFails(updateDoc(ref, edit({ name: "" })));
+    await assertFails(updateDoc(ref, edit({ concept: "x".repeat(601) })));
+    await assertFails(
+      updateDoc(ref, edit({ traits: ["a", "b", "c", "d", "e", "f"], traitsNorm: ["a", "b", "c", "d", "e", "f"] })),
+    );
+  });
+
+  test("entries still cannot be deleted", async () => {
+    await seedRequest("r1");
+    await seedPostedAnswer("e1", "bob", new Date(Date.now() - 1 * HOUR));
+    await assertFails(deleteDoc(doc(env.authenticatedContext("bob").firestore(), "entries", "e1")));
+  });
+
+  test("once an entry has been reported, it can no longer be edited", async () => {
+    await seedRequest("r1");
+    await seedPostedAnswer("e1", "bob", new Date(Date.now() - 1 * HOUR));
+    const carol = env.authenticatedContext("carol").firestore();
+    await assertSucceeds(
+      setDoc(doc(carol, "reports", "e1_carol"), {
+        entryId: "e1",
+        reporterId: "carol",
+        reason: "ai_generated",
+        details: "",
+        status: "open",
+        createdAt: serverTimestamp(),
+      }),
+    );
+    await assertSucceeds(
+      setDoc(doc(carol, "entryFlags", "e1"), {
+        entryId: "e1",
+        reportId: "e1_carol",
+        createdAt: serverTimestamp(),
+      }),
+    );
+    const bob = env.authenticatedContext("bob").firestore();
+    await assertFails(updateDoc(doc(bob, "entries", "e1"), edit()));
+  });
+});
+
+describe("report flags", () => {
+  async function seedReport(entryId: string, reporter: string) {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "reports", `${entryId}_${reporter}`), {
+        entryId,
+        reporterId: reporter,
+        reason: "spam",
+        details: "",
+        status: "open",
+        createdAt: new Date(),
+      });
+    });
+  }
+
+  const flag = (entryId: string, reportId: string, overrides: Record<string, unknown> = {}) => ({
+    entryId,
+    reportId,
+    createdAt: serverTimestamp(),
+    ...overrides,
+  });
+
+  test("a flag needs a real report by the same person", async () => {
+    await seedRequest("r1");
+    await seedPostedAnswer("e1", "bob", new Date());
+    const carol = env.authenticatedContext("carol").firestore();
+    // No report yet.
+    await assertFails(setDoc(doc(carol, "entryFlags", "e1"), flag("e1", "e1_carol")));
+    await seedReport("e1", "carol");
+    // Someone else cannot use carol's report.
+    await assertFails(setDoc(doc(env.authenticatedContext("dave").firestore(), "entryFlags", "e1"), flag("e1", "e1_carol")));
+    await assertSucceeds(setDoc(doc(carol, "entryFlags", "e1"), flag("e1", "e1_carol")));
+  });
+
+  test("a flag cannot be created twice, edited, deleted or read by members", async () => {
+    await seedRequest("r1");
+    await seedPostedAnswer("e1", "bob", new Date());
+    await seedReport("e1", "carol");
+    const carol = env.authenticatedContext("carol").firestore();
+    await assertSucceeds(setDoc(doc(carol, "entryFlags", "e1"), flag("e1", "e1_carol")));
+    await assertFails(setDoc(doc(carol, "entryFlags", "e1"), flag("e1", "e1_carol")));
+    await assertFails(deleteDoc(doc(carol, "entryFlags", "e1")));
+    await assertFails(getDoc(doc(carol, "entryFlags", "e1")));
+    await assertFails(getDoc(doc(env.authenticatedContext("bob").firestore(), "entryFlags", "e1")));
+  });
+
+  test("a flag must name its own entry and carry the server time", async () => {
+    await seedRequest("r1");
+    await seedPostedAnswer("e1", "bob", new Date());
+    await seedReport("e1", "carol");
+    const carol = env.authenticatedContext("carol").firestore();
+    await assertFails(setDoc(doc(carol, "entryFlags", "e2"), flag("e1", "e1_carol")));
+    await assertFails(setDoc(doc(carol, "entryFlags", "e1"), flag("e1", "e1_carol", { createdAt: new Date() })));
+    await assertFails(setDoc(doc(carol, "entryFlags", "e1"), flag("e1", "e1_carol", { extra: 1 })));
+  });
+});
+
 describe("reports", () => {
   const report = (uid: string, entryId: string, overrides: Record<string, unknown> = {}) => ({
     entryId,

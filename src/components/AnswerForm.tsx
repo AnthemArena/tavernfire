@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { collection, doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { collection, doc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -10,6 +10,7 @@ import {
   answerMarkerPath,
   buildEntryFields,
   cleanTrait,
+  type EntryItem,
 } from "@/lib/entries";
 import type { RequestItem } from "@/lib/requests";
 import TraitInput from "@/components/TraitInput";
@@ -35,11 +36,18 @@ function Counter({ used, max }: { used: number; max: number }) {
 
 export default function AnswerForm({
   request,
+  editing,
   onCancel,
   resumeEntryId,
   onSubmitted,
+  onSaved,
 }: {
-  request: RequestItem;
+  /** The request being answered (needed to write a new answer). */
+  request?: RequestItem;
+  /** Set to edit this existing entry in place instead of writing a new one. */
+  editing?: EntryItem;
+  /** Called once an edit has been saved. */
+  onSaved?: () => void;
   /** Set when an earlier attempt saved the private marker but not the entry. */
   resumeEntryId?: string | null;
   /** Called once the entry has been saved, so the page can confirm it. */
@@ -48,11 +56,12 @@ export default function AnswerForm({
   onCancel?: () => void;
 }) {
   const { user } = useAuth();
-  const copy = COPY[request.kind];
+  const copy = COPY[editing?.kind ?? request?.kind ?? "npc"];
+  const idPart = editing?.id ?? "new";
 
-  const [name, setName] = useState("");
-  const [concept, setConcept] = useState("");
-  const [traits, setTraits] = useState<string[]>([]);
+  const [name, setName] = useState(editing?.name ?? "");
+  const [concept, setConcept] = useState(editing?.concept ?? "");
+  const [traits, setTraits] = useState<string[]>(editing?.traits ?? []);
   const [traitDraft, setTraitDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -75,6 +84,28 @@ export default function AnswerForm({
     }
 
     setBusy(true);
+
+    if (editing) {
+      try {
+        await updateDoc(doc(getDb(), "entries", editing.id), {
+          name: fields.name,
+          concept: fields.concept,
+          traits: fields.traits,
+          traitsNorm: fields.traitsNorm,
+          editedAt: serverTimestamp(),
+        });
+        onSaved?.();
+      } catch (err) {
+        console.error("Could not save changes", err);
+        setError(
+          "Couldn't save your changes. The edit window may have just ended, or this entry can no longer be edited.",
+        );
+        setBusy(false);
+      }
+      return;
+    }
+
+    if (!request) return;
     try {
       const db = getDb();
       const entryId = resumeEntryId ?? doc(collection(db, "entries")).id;
@@ -114,18 +145,20 @@ export default function AnswerForm({
 
   return (
     <form className="card answer-form" onSubmit={onSubmit} noValidate>
-      <h3 className="card-title">Write your answer</h3>
-      <p className="card-lede">
-        Write it yourself. Entries are anonymous until voting ends, and they
-        stay in the library afterwards.
-      </p>
+      <h3 className="card-title">{editing ? "Edit your answer" : "Write your answer"}</h3>
+      {!editing && (
+        <p className="card-lede">
+          Write it yourself. Entries are anonymous until voting ends, and they
+          stay in the library afterwards.
+        </p>
+      )}
 
       <div className="field">
-        <label className="label" htmlFor="entry-name">
+        <label className="label" htmlFor={`entry-name-${idPart}`}>
           Name <Counter used={name.length} max={ENTRY_NAME_MAX} />
         </label>
         <input
-          id="entry-name"
+          id={`entry-name-${idPart}`}
           className="input"
           type="text"
           maxLength={ENTRY_NAME_MAX}
@@ -136,11 +169,11 @@ export default function AnswerForm({
       </div>
 
       <div className="field">
-        <label className="label" htmlFor="entry-concept">
+        <label className="label" htmlFor={`entry-concept-${idPart}`}>
           Description <Counter used={concept.length} max={ENTRY_CONCEPT_MAX} />
         </label>
         <textarea
-          id="entry-concept"
+          id={`entry-concept-${idPart}`}
           className="input textarea"
           rows={5}
           maxLength={ENTRY_CONCEPT_MAX}
@@ -165,7 +198,13 @@ export default function AnswerForm({
 
       <div className="form-actions">
         <button type="submit" className="btn btn-primary" disabled={busy}>
-          {busy ? "Submitting…" : "Submit answer"}
+          {editing
+            ? busy
+              ? "Saving…"
+              : "Save changes"
+            : busy
+              ? "Submitting…"
+              : "Submit answer"}
         </button>
         {onCancel && (
           <button type="button" className="btn btn-outline" onClick={onCancel} disabled={busy}>

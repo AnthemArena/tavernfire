@@ -936,3 +936,14 @@ a:hover {
   border: 1px solid #a8741a;
   color: var(--ink);
 }
+
+.entry-edited {
+  color: var(--muted);
+}
+
+.entry-saved {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--teal);
+  font-weight: 600;
+}

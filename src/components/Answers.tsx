@@ -6,7 +6,13 @@ import { collection, doc, onSnapshot, query, where } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { useNow } from "@/lib/use-now";
-import { answerMarkerPath, orderForViewer, toEntryItem, type EntryItem } from "@/lib/entries";
+import {
+  answerMarkerPath,
+  editableUntil,
+  orderForViewer,
+  toEntryItem,
+  type EntryItem,
+} from "@/lib/entries";
 import { answersCloseAt, type RequestItem } from "@/lib/requests";
 import AnswerForm from "@/components/AnswerForm";
 import EntryCard from "@/components/EntryCard";
@@ -38,7 +44,7 @@ export default function Answers({ request }: { request: RequestItem }) {
       ),
       (snap) => {
         const items = snap.docs
-          .map((d) => toEntryItem(d.id, d.data()))
+          .map((d) => toEntryItem(d.id, d.data({ serverTimestamps: "estimate" })))
           .filter((e): e is EntryItem => e !== null);
         setEntries(orderForViewer(items, orderKeys.current));
         setLoadError(false);
@@ -79,7 +85,8 @@ export default function Answers({ request }: { request: RequestItem }) {
   const mine = markedEntryId && list.some((e) => e.id === markedEntryId) ? markedEntryId : null;
   const unfinished = markedEntryId !== null && mine === null && entries !== null;
   const isRequester = signedInUid !== null && signedInUid === request.requesterId;
-  const closed = now.getTime() > 0 && now >= answersCloseAt(request.createdAt);
+  const closeAt = answersCloseAt(request.createdAt);
+  const closed = now.getTime() > 0 && now >= closeAt;
   const shown = mine
     ? [...list.filter((e) => e.id === mine), ...list.filter((e) => e.id !== mine)]
     : list;
@@ -110,8 +117,8 @@ export default function Answers({ request }: { request: RequestItem }) {
     // Their entry is pinned at the top, marked "Your entry".
     action = justSubmitted ? (
       <p className="notice notice-success" role="status">
-        <span className="notice-title">Your answer is in.</span> Entries
-        can&apos;t be changed once submitted.
+        <span className="notice-title">Your answer is in.</span> You can edit
+        it for 24 hours after posting (never once answers close).
       </p>
     ) : null;
   } else if (unfinished && !closed) {
@@ -183,7 +190,13 @@ export default function Answers({ request }: { request: RequestItem }) {
             <ul className="entry-list">
               {shown.map((e) => (
                 <li key={e.id}>
-                  <EntryCard entry={e} isMine={e.id === mine} reported={reportedIds.has(e.id)} />
+                  <EntryCard
+                    entry={e}
+                    isMine={e.id === mine}
+                    reported={reportedIds.has(e.id)}
+                    now={now}
+                    editUntil={e.id === mine ? editableUntil(e, closeAt) : null}
+                  />
                 </li>
               ))}
             </ul>

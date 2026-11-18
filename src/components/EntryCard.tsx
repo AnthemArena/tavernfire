@@ -5,11 +5,13 @@ import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import {
+  describeEditTimeLeft,
   REPORT_REASONS,
   REPORT_REASON_LABELS,
   type EntryItem,
   type ReportReason,
 } from "@/lib/entries";
+import AnswerForm from "@/components/AnswerForm";
 
 // Note for the voting step: while a request is open or in voting, this card must
 // never receive or render an author name, an author id or a vote total, not even
@@ -36,6 +38,17 @@ function ReportForm({ entryId, onClose }: { entryId: string; onClose: () => void
         status: "open",
         createdAt: serverTimestamp(),
       });
+      // Lock the entry against edits now that someone has reported it. If another
+      // report already did, this write is refused, which is fine.
+      try {
+        await setDoc(doc(getDb(), "entryFlags", entryId), {
+          entryId,
+          reportId: `${entryId}_${user.uid}`,
+          createdAt: serverTimestamp(),
+        });
+      } catch {
+        // already flagged by an earlier report
+      }
       // The page's live listener marks the card as reported.
       onClose();
     } catch (err) {
@@ -98,13 +111,35 @@ export default function EntryCard({
   entry,
   isMine,
   reported,
+  now,
+  editUntil,
 }: {
   entry: EntryItem;
   isMine: boolean;
   reported: boolean;
+  now: Date;
+  /** When the author's edit window ends; null if it is not known yet. */
+  editUntil: Date | null;
 }) {
   const { user } = useAuth();
   const [reporting, setReporting] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const timeLeft = editUntil ? describeEditTimeLeft(editUntil, now) : null;
+
+  if (isMine && editing) {
+    return (
+      <AnswerForm
+        editing={entry}
+        onCancel={() => setEditing(false)}
+        onSaved={() => {
+          setEditing(false);
+          setSaved(true);
+        }}
+      />
+    );
+  }
 
   return (
     <article className="card entry-card" aria-labelledby={`entry-${entry.id}`}>
@@ -130,7 +165,17 @@ export default function EntryCard({
       <div className="entry-foot">
         <span className="entry-anon">
           {isMine ? "You wrote this" : "Author revealed after voting"}
+          {entry.edited && <span className="entry-edited"> · Edited</span>}
         </span>
+
+        {isMine &&
+          (timeLeft ? (
+            <button type="button" className="btn-link btn-link-action" onClick={() => setEditing(true)}>
+              Edit · {timeLeft}
+            </button>
+          ) : (
+            <span className="entry-anon">Entries are locked 24 hours after posting.</span>
+          ))}
 
         {!isMine &&
           user &&
@@ -150,6 +195,12 @@ export default function EntryCard({
             )
           ))}
       </div>
+
+      {saved && isMine && (
+        <p className="entry-saved" role="status">
+          Saved.
+        </p>
+      )}
 
       {reporting && !reported && (
         <ReportForm entryId={entry.id} onClose={() => setReporting(false)} />

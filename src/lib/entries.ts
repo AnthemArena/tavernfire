@@ -10,6 +10,9 @@ export const ENTRY_CONCEPT_MAX = 600;
 export const ENTRY_TRAITS_MAX = 5;
 export const ENTRY_TRAIT_MAX = 24;
 
+/** How long after posting the author can edit. Keep in step with firestore.rules (validEntryEdit). */
+export const ENTRY_EDIT_WINDOW_HOURS = 24;
+
 export const REPORT_REASONS = [
   "ai_generated",
   "plagiarism",
@@ -30,6 +33,11 @@ export const REPORT_REASON_LABELS: Record<ReportReason, string> = {
 export type EntryItem = {
   id: string;
   requestId: string;
+  kind: "npc" | "location";
+  /** When it was posted. A local estimate until the server confirms it. */
+  createdAt: Date | null;
+  /** True once the author has edited it. */
+  edited: boolean;
   name: string;
   concept: string;
   traits: string[];
@@ -100,9 +108,13 @@ export function toEntryItem(
   ) {
     return null;
   }
+  const created = data.createdAt as { toDate?: () => Date } | null | undefined;
   return {
     id,
     requestId: data.requestId,
+    kind: data.kind === "location" ? "location" : "npc",
+    createdAt: typeof created?.toDate === "function" ? created.toDate() : null,
+    edited: data.editedAt != null,
     name: data.name,
     concept: data.concept,
     traits: Array.isArray(data.traits)
@@ -141,4 +153,27 @@ export function orderForViewer<T extends { id: string }>(
     if (b.id === pinnedId) return 1;
     return (keys.get(a.id) ?? 0) - (keys.get(b.id) ?? 0);
   });
+}
+
+/**
+ * The moment the author's edit window ends: 24 hours after posting, but never
+ * later than when the request stops accepting answers. Null if the posting time
+ * is not known yet.
+ */
+export function editableUntil(entry: Pick<EntryItem, "createdAt">, answersCloseAt: Date): Date | null {
+  if (!entry.createdAt) return null;
+  const windowEnd = entry.createdAt.getTime() + ENTRY_EDIT_WINDOW_HOURS * 60 * 60 * 1000;
+  return new Date(Math.min(windowEnd, answersCloseAt.getTime()));
+}
+
+/** "23 hours left", "45 min left", or null when the window is over. */
+export function describeEditTimeLeft(until: Date, now: Date): string | null {
+  const ms = until.getTime() - now.getTime();
+  if (ms <= 0) return null;
+  const hour = 60 * 60 * 1000;
+  if (ms >= hour) {
+    const hours = Math.floor(ms / hour);
+    return hours === 1 ? "1 hour left" : `${hours} hours left`;
+  }
+  return `${Math.max(1, Math.floor(ms / 60_000))} min left`;
 }
