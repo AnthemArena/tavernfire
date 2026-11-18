@@ -73,3 +73,13 @@ All text pairs above meet at least 4.5:1 contrast on their backgrounds; keep it 
 ## Deviations from the design review
 
 See `claude/lead-agent-response-2026-11-18.md` in the Project. In short: header search, the phase strip and board sorting are deferred until the library, lifecycle functions and extra pages exist; the "Request posted" notice is kept but delayed 700ms so it only shows if opening the request is slow.
+
+## Answers (Slice A)
+
+- **Entry card:** name (Fraunces 700, 22px), description (16px, 65ch max, line breaks kept), trait pills, "At your table" panel, then a footer with "Author revealed after voting" and "Report entry". Your own entry is pinned first with a "Your entry" badge and has no report link.
+- **Trait pills:** 13px Inter 500, teal #1D5A57 on #E6EFE9 with a teal border (6.7:1). Deliberately small and rounded so they never read as spark chips.
+- **"At your table":** `--chip` background, teal uppercase kicker (6.0:1).
+- **Answer form:** name, description, traits (Enter or comma adds a pill; each pill has a 28px remove button), GM line; live counters ("n of 60/600/300", "n of 5 traits"); NPC and Location have different placeholders.
+- **States:** signed out ("Sign in to answer"), requester ("This is your request"), already answered (form gone, entry pinned), answers closed, none (form shown directly), one, many, reported.
+- **Left out on purpose until they work:** vote button, Save to collection, I used this, "Used in N games".
+- Order is random per viewer and fixed for the session.

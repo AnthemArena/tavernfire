@@ -6,6 +6,7 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useNow } from "@/lib/use-now";
 import TimeLeft from "@/components/TimeLeft";
+import Answers from "@/components/Answers";
 import {
   KIND_LABELS,
   toRequestItem,
@@ -90,15 +91,7 @@ export default function RequestView({ id }: { id: string }) {
         <TimeLeft createdAt={r.createdAt} now={now} />
       </div>
 
-      <section className="answers" aria-labelledby="answers-title">
-        <h2 id="answers-title" className="section-title">
-          Answers
-        </h2>
-        <p className="empty">
-          No answers yet. Entries written for these three sparks will appear
-          here.
-        </p>
-      </section>
+      <Answers request={r} />
     </article>
   );
 }

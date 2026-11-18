@@ -674,7 +674,192 @@ a:hover {
 
 .answers .section-title {
   font-size: 28px;
+  margin-bottom: 0;
+}
+
+.answers-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
   margin-bottom: 16px;
+}
+
+.answers-count {
+  margin: 0;
+  font-size: 14px;
+}
+
+.answers-prompt {
+  margin: 0 0 20px;
+}
+
+/* Keep the reading column narrower than the full container. */
+.entry-list,
+.answer-form {
+  max-width: 720px;
+}
+
+.entry-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.answer-form {
+  margin-bottom: 24px;
+}
+
+.counter {
+  float: right;
+  font-weight: 500;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-link-action {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.entry-card {
+  padding: 24px;
+}
+
+.entry-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 10px;
+}
+
+.entry-name {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.badge-mine {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.entry-concept {
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--body);
+  max-width: 65ch;
+  margin: 0 0 14px;
+  white-space: pre-line;
+}
+
+/* Traits: small teal pills, clearly unlike the large sand spark chips. */
+.trait-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 0;
+}
+
+.trait-list-editable {
+  margin-bottom: 10px;
+}
+
+.trait {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--teal);
+  background: #e6efe9;
+  border: 1px solid var(--teal);
+  border-radius: 99px;
+  padding: 3px 12px;
+}
+
+.trait-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: -4px -8px -4px 4px;
+  border: 0;
+  border-radius: 99px;
+  background: none;
+  color: var(--teal);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.trait-remove:hover {
+  background: #d3e2d9;
+}
+
+.at-your-table {
+  background: var(--chip);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  max-width: 65ch;
+}
+
+.at-your-table p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.at-your-table .at-your-table-kicker {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--teal);
+  margin-bottom: 4px;
+}
+
+.entry-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+
+.entry-anon,
+.entry-reported {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.report-form {
+  margin-top: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.notice-plain {
+  background: var(--chip);
+  border: 1px solid var(--border);
+  color: var(--ink);
 }
 
 .page-note {

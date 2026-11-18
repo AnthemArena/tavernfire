@@ -4,6 +4,10 @@ rules_version = '2';
 // The plan lives in DATA_MODEL.md. Clients never write votes, counts or
 // lifecycle state, and author IDs and vote totals are never readable during
 // voting (those collections arrive with the voting step).
+//
+// Answers are written straight from the app in one batch (entry, private
+// author row, private answer marker, answerCount bump); the rules below tie
+// those four writes together. Voting and the reveal still need Cloud Functions.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -89,10 +93,131 @@ service cloud.firestore {
         && d.createdAt == request.time;
     }
 
+    // The private marker that says "this person has answered this request".
+    // Its id is requestId_uid, so a second answer would be a second create on
+    // the same document, which rules refuse. It is never readable.
+    function lockPath(requestId, uid) {
+      return /databases/$(database)/documents/answerLocks/$(requestId + '_' + uid);
+    }
+
     match /requests/{requestId} {
       // Hidden requests are only visible to moderators.
       allow read: if resource.data.moderation == 'ok' || isModerator();
       allow create: if signedIn() && validNewRequest(request.resource.data);
+
+      // The only client change allowed: bump answerCount by one, in the same
+      // batch that creates the person's answer marker for this request.
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answerCount'])
+        && request.resource.data.answerCount == resource.data.answerCount + 1
+        && !exists(lockPath(requestId, request.auth.uid))
+        && existsAfter(lockPath(requestId, request.auth.uid));
+
+      allow delete: if false;
+    }
+
+    function traitOk(list, i) {
+      return list.size() <= i
+        || (list[i] is string && list[i].size() >= 1 && list[i].size() <= 24);
+    }
+
+    // An entry (an answer). It never holds its author: that goes in
+    // entryAuthors, written in the same batch and unreadable by other people.
+    // The request it answers is looked up, so the checks below cannot be dodged
+    // by sending a different kind, different sparks, or answering after the
+    // 3-day window.
+    function validNewEntry(d, entryId) {
+      let rq = get(/databases/$(database)/documents/requests/$(d.requestId)).data;
+      let author = getAfter(/databases/$(database)/documents/entryAuthors/$(entryId)).data;
+      return d.keys().hasOnly([
+          'requestId', 'kind', 'name', 'concept', 'hook', 'traits', 'traitsNorm',
+          'sparksNorm', 'sparkKey', 'pairKeys', 'moderation', 'createdAt'
+        ])
+        && d.keys().hasAll([
+          'requestId', 'kind', 'name', 'concept', 'hook', 'traits', 'traitsNorm',
+          'sparksNorm', 'sparkKey', 'pairKeys', 'moderation', 'createdAt'
+        ])
+        && d.requestId is string
+        && rq.moderation == 'ok'
+        && rq.status == 'open'
+        && request.time < rq.createdAt + duration.value(3, 'd')
+        && rq.requesterId != request.auth.uid
+        && d.kind == rq.kind
+        && d.sparkKey == rq.sparkKey
+        && d.sparksNorm == rq.sparksNorm
+        && d.pairKeys == rq.pairKeys
+        && d.name is string && d.name.size() >= 1 && d.name.size() <= 60
+        && d.concept is string && d.concept.size() >= 1 && d.concept.size() <= 600
+        && d.hook is string && d.hook.size() >= 1 && d.hook.size() <= 300
+        && d.traits is list && d.traits.size() <= 5
+        && d.traitsNorm is list && d.traitsNorm.size() == d.traits.size()
+        && traitOk(d.traits, 0) && traitOk(d.traits, 1) && traitOk(d.traits, 2)
+        && traitOk(d.traits, 3) && traitOk(d.traits, 4)
+        && traitOk(d.traitsNorm, 0) && traitOk(d.traitsNorm, 1) && traitOk(d.traitsNorm, 2)
+        && traitOk(d.traitsNorm, 3) && traitOk(d.traitsNorm, 4)
+        && d.moderation == 'ok'
+        && d.createdAt == request.time
+        && author.authorId == request.auth.uid
+        && author.requestId == d.requestId
+        && existsAfter(lockPath(d.requestId, request.auth.uid));
+    }
+
+    match /entries/{entryId} {
+      allow read: if resource.data.moderation == 'ok' || isModerator();
+      allow create: if signedIn() && validNewEntry(request.resource.data, entryId);
+      allow update, delete: if false;
+    }
+
+    // Who wrote which entry. People can read only their own rows (so the page
+    // can show "Your entry"); nobody else can see authors until the reveal.
+    match /entryAuthors/{entryId} {
+      allow read: if signedIn()
+        && (resource.data.authorId == request.auth.uid || isModerator());
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['authorId', 'requestId', 'createdAt'])
+        && request.resource.data.keys().hasAll(['authorId', 'requestId', 'createdAt'])
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.requestId is string
+        && request.resource.data.createdAt == request.time
+        && existsAfter(/databases/$(database)/documents/entries/$(entryId))
+        && getAfter(/databases/$(database)/documents/entries/$(entryId)).data.requestId
+            == request.resource.data.requestId;
+      allow update, delete: if false;
+    }
+
+    match /answerLocks/{lockId} {
+      allow read: if false;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['authorId', 'requestId', 'entryId', 'createdAt'])
+        && request.resource.data.keys().hasAll(['authorId', 'requestId', 'entryId', 'createdAt'])
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.requestId is string
+        && request.resource.data.entryId is string
+        && lockId == request.resource.data.requestId + '_' + request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && existsAfter(/databases/$(database)/documents/entries/$(request.resource.data.entryId))
+        && getAfter(/databases/$(database)/documents/entries/$(request.resource.data.entryId)).data.requestId
+            == request.resource.data.requestId;
+      allow update, delete: if false;
+    }
+
+    // Reports ("Report entry"). The id is entryId_reporterUid, so each person
+    // can report an entry once. Only the reporter and moderators can read them.
+    match /reports/{reportId} {
+      allow read: if signedIn()
+        && (resource.data.reporterId == request.auth.uid || isModerator());
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['entryId', 'reporterId', 'reason', 'details', 'status', 'createdAt'])
+        && request.resource.data.keys().hasAll(['entryId', 'reporterId', 'reason', 'details', 'status', 'createdAt'])
+        && request.resource.data.reporterId == request.auth.uid
+        && request.resource.data.entryId is string
+        && reportId == request.resource.data.entryId + '_' + request.auth.uid
+        && request.resource.data.reason in ['ai_generated', 'plagiarism', 'spam', 'abuse', 'other']
+        && request.resource.data.details is string
+        && request.resource.data.details.size() <= 500
+        && request.resource.data.status == 'open'
+        && request.resource.data.createdAt == request.time
+        && exists(/databases/$(database)/documents/entries/$(request.resource.data.entryId));
       allow update, delete: if false;
     }
   }

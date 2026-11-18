@@ -57,6 +57,8 @@ Lifecycle: `open` (about 3 days) to `voting` to `revealed`. Entries stay in the 
 - **Added at reveal by function:** `authorId`, `authorName`, `voteCount`, `rank`
 - `usedCount`: self-reported uses, updated by function
 
+> **Current build (answers, Slice A):** entries are written straight from the app, with no Cloud Function, in one batch of four writes that security rules only accept together: the entry (no author on it), `entryAuthors/{entryId}`, `answerLocks/{requestId}_{uid}` and `requests/{id}.answerCount + 1`. The rules look up the request, so an entry must match its kind and sparks, the requester cannot answer their own request, answers must arrive inside the 3-day window, and the lock document (a create-only marker) allows one answer per person per request. People can read only their own `entryAuthors` rows. Entries have random ids, so no author appears in any entry id. `traitsNorm` is normalised by the app and only length-checked by the rules. Voting, the reveal, `usedCount` and "I used this" still need Cloud Functions.
+
 ### `entryAuthors/{entryId}` (server-only)
 - `authorId`, `requestId`
 - No client read or write access. Read by functions for the reveal, for rate limits, and for moderation.
@@ -75,6 +77,7 @@ Lifecycle: `open` (about 3 days) to `voting` to `revealed`. Entries stay in the 
 - Owner reads and writes; shared collections are readable by link.
 
 ### `reports/{reportId}`
+- *Current build:* written by the app with id `entryId_reporterUid` (one report per person per entry); readable by the reporter and moderators.
 - `entryId`, `reporterId`, `reason`: `ai_generated` | `plagiarism` | `spam` | `abuse` | `other`, `details`, `status`: `open` | `dismissed` | `actioned`, `createdAt`, `handledBy`
 - Create via function (rate limited). Readable by moderators only. Reporter identity is never exposed to authors.
 
@@ -131,7 +134,7 @@ Search ranking: exact triple, then two-of-three, then one spark; sparks outrank 
 ## Open decisions
 
 - Allow fewer than three sparks per request?
-- Can a requester answer their own request? Can a user submit more than one entry per request?
+- ~~Can a requester answer their own request? Can a user submit more than one entry per request?~~ Decided: no, and no (one entry each). Entries are readable while a request is open, with authors hidden.
 - Minimum number of entries or votes before a request reveals?
 - Is gender, age and species a spark or a separate optional filter?
 - Which type-specific template fields launch with NPC and location?
