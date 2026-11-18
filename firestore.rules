@@ -98,37 +98,36 @@ service cloud.firestore {
       allow read: if resource.data.moderation == 'ok' || isModerator();
       allow create: if signedIn() && validNewRequest(request.resource.data);
       allow update, delete: if false;
+
+      // Answering is two writes, in this order, each checked against what
+      // already exists:
+      //   1. requests/{requestId}/answerLocks/{uid}: a private "I'm answering
+      //      this request" marker. It records which entry id is mine, so it
+      //      doubles as the hidden author record until the reveal. Create-only,
+      //      and keyed by the person, so a second answer is refused.
+      //   2. entries/{entryId}: the public entry, accepted only if the person's
+      //      marker names this entry id. The entry never holds its author.
+      match /answerLocks/{uid} {
+        // Only the person it belongs to (and moderators) can read it.
+        allow read: if signedIn() && (uid == request.auth.uid || isModerator());
+        allow create: if signedIn() && uid == request.auth.uid
+          && validLock(request.resource.data, requestId);
+        allow update, delete: if false;
+      }
     }
 
-    // Answering is two writes, in this order, each checked against what already
-    // exists:
-    //   1. answerLocks/{requestId}_{uid}: a private "I'm answering this request"
-    //      marker. It also records which entry id is mine, and so doubles as the
-    //      hidden author record until the reveal. Create-only, and the id holds
-    //      the request and the person, so a second answer is refused.
-    //   2. entries/{entryId}: the public entry, accepted only if the person's
-    //      marker names this entry id. The entry never holds its author.
-    function validLock(d, lockId) {
-      let rq = get(/databases/$(database)/documents/requests/$(d.requestId)).data;
+    function validLock(d, requestId) {
+      let rq = get(/databases/$(database)/documents/requests/$(requestId)).data;
       return d.keys().hasOnly(['authorId', 'requestId', 'entryId', 'createdAt'])
         && d.keys().hasAll(['authorId', 'requestId', 'entryId', 'createdAt'])
         && d.authorId == request.auth.uid
-        && d.requestId is string
+        && d.requestId == requestId
         && d.entryId is string && d.entryId.size() >= 1 && d.entryId.size() <= 40
-        && lockId == d.requestId + '_' + request.auth.uid
         && d.createdAt == request.time
         && rq.moderation == 'ok'
         && rq.status == 'open'
         && request.time < rq.createdAt + duration.value(3, 'd')
         && rq.requesterId != request.auth.uid;
-    }
-
-    match /answerLocks/{lockId} {
-      // Only the person it belongs to (and moderators) can read it.
-      allow read: if signedIn()
-        && (resource == null || resource.data.authorId == request.auth.uid || isModerator());
-      allow create: if signedIn() && validLock(request.resource.data, lockId);
-      allow update, delete: if false;
     }
 
     function traitOk(list, i) {
@@ -141,8 +140,7 @@ service cloud.firestore {
     // kind, different sparks, or answering after the 3-day window.
     function validNewEntry(d, entryId) {
       let rq = get(/databases/$(database)/documents/requests/$(d.requestId)).data;
-      let lockId = d.requestId + '_' + request.auth.uid;
-      let lock = get(/databases/$(database)/documents/answerLocks/$(lockId)).data;
+      let lock = get(/databases/$(database)/documents/requests/$(d.requestId)/answerLocks/$(request.auth.uid)).data;
       return d.keys().hasOnly([
           'requestId', 'kind', 'name', 'concept', 'hook', 'traits', 'traitsNorm',
           'sparksNorm', 'sparkKey', 'pairKeys', 'moderation', 'createdAt'

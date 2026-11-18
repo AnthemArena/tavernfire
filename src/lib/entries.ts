@@ -121,9 +121,15 @@ export function toEntryItem(
   };
 }
 
-/** The id of the private "you already answered" marker for one person and one request. */
-export function answerLockId(requestId: string, uid: string): string {
-  return `${requestId}_${uid}`;
+/**
+ * Where the private "I'm answering this request" marker lives: a document keyed
+ * by the person, under the request. Use as doc(db, ...answerMarkerPath(r, uid)).
+ */
+export function answerMarkerPath(
+  requestId: string,
+  uid: string,
+): [string, string, string, string] {
+  return ["requests", requestId, "answerLocks", uid];
 }
 
 /**

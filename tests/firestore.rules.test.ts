@@ -25,7 +25,7 @@ import {
   increment,
 } from "firebase/firestore";
 import { buildSparkFields } from "../src/lib/sparks.ts";
-import { buildEntryFields, answerLockId } from "../src/lib/entries.ts";
+import { buildEntryFields, answerMarkerPath } from "../src/lib/entries.ts";
 
 let env: RulesTestEnvironment;
 
@@ -213,6 +213,12 @@ describe("users", () => {
 
 const DAY = 24 * 60 * 60 * 1000;
 
+/** The spark keys an entry carries (the app does not copy the display words). */
+function entrySparkFields(words: string[]) {
+  const { sparksNorm, sparkKey, pairKeys } = buildSparkFields(words);
+  return { sparksNorm, sparkKey, pairKeys };
+}
+
 function newEntryData(requestId: string, overrides: Record<string, unknown> = {}) {
   return {
     requestId,
@@ -223,7 +229,7 @@ function newEntryData(requestId: string, overrides: Record<string, unknown> = {}
       hook: "Offers the party one frozen minute, at a price.",
       traits: ["Patient", "Grieving"],
     }),
-    ...buildSparkFields(["Statue", "Time", "Glowing"]),
+    ...entrySparkFields(["Statue", "Time", "Glowing"]),
     moderation: "ok",
     createdAt: serverTimestamp(),
     ...overrides,
@@ -256,7 +262,7 @@ async function submitAnswer(
 ) {
   if (!opts.skipLock) {
     await setDoc(
-      doc(db, "answerLocks", answerLockId(requestId, uid)),
+      doc(db, ...answerMarkerPath(requestId, uid)),
       lockData(uid, requestId, entryId, opts.lock),
     );
   }
@@ -313,11 +319,11 @@ describe("answers: submitting", () => {
     await seedRequest("r1");
     const db = env.authenticatedContext("bob").firestore();
     await assertSucceeds(
-      setDoc(doc(db, "answerLocks", answerLockId("r1", "bob")), lockData("bob", "r1", "e1")),
+      setDoc(doc(db, ...answerMarkerPath("r1", "bob")), lockData("bob", "r1", "e1")),
     );
     await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { kind: "location" })));
     await assertFails(
-      setDoc(doc(db, "entries", "e1"), newEntryData("r1", buildSparkFields(["Dragon", "Cave", "Cold"]))),
+      setDoc(doc(db, "entries", "e1"), newEntryData("r1", entrySparkFields(["Dragon", "Cave", "Cold"]))),
     );
     // The correct entry still goes through.
     await assertSucceeds(setDoc(doc(db, "entries", "e1"), newEntryData("r1")));
@@ -330,7 +336,7 @@ describe("answers: submitting", () => {
     await assertFails(submitAnswer(bob, "bob", "r1", "e1", { skipLock: true }));
     // Marker names a different entry id.
     await assertSucceeds(
-      setDoc(doc(bob, "answerLocks", answerLockId("r1", "bob")), lockData("bob", "r1", "other")),
+      setDoc(doc(bob, ...answerMarkerPath("r1", "bob")), lockData("bob", "r1", "other")),
     );
     await assertFails(setDoc(doc(bob, "entries", "e1"), newEntryData("r1")));
     // Someone else cannot use bob's marker.
@@ -342,13 +348,13 @@ describe("answers: submitting", () => {
     await seedRequest("r1");
     const bob = env.authenticatedContext("bob").firestore();
     await assertFails(
-      setDoc(doc(bob, "answerLocks", answerLockId("r1", "bob")), lockData("bob", "r1", "e1", { authorId: "alice" })),
+      setDoc(doc(bob, ...answerMarkerPath("r1", "bob")), lockData("bob", "r1", "e1", { authorId: "alice" })),
     );
     await assertFails(
-      setDoc(doc(bob, "answerLocks", answerLockId("r1", "alice")), lockData("alice", "r1", "e1")),
+      setDoc(doc(bob, ...answerMarkerPath("r1", "alice")), lockData("alice", "r1", "e1")),
     );
     await assertFails(
-      setDoc(doc(bob, "answerLocks", "r1_bob"), lockData("bob", "r1", "e1", { createdAt: new Date() })),
+      setDoc(doc(bob, ...answerMarkerPath("r1", "bob")), lockData("bob", "r1", "e1", { createdAt: new Date() })),
     );
   });
 
@@ -356,7 +362,7 @@ describe("answers: submitting", () => {
     await seedRequest("r1");
     const db = env.authenticatedContext("bob").firestore();
     await assertSucceeds(
-      setDoc(doc(db, "answerLocks", answerLockId("r1", "bob")), lockData("bob", "r1", "e1")),
+      setDoc(doc(db, ...answerMarkerPath("r1", "bob")), lockData("bob", "r1", "e1")),
     );
     await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { authorId: "bob" })));
     await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { voteCount: 99 })));
@@ -368,7 +374,7 @@ describe("answers: submitting", () => {
     await seedRequest("r1");
     const db = env.authenticatedContext("bob").firestore();
     await assertSucceeds(
-      setDoc(doc(db, "answerLocks", answerLockId("r1", "bob")), lockData("bob", "r1", "e1")),
+      setDoc(doc(db, ...answerMarkerPath("r1", "bob")), lockData("bob", "r1", "e1")),
     );
     await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { name: "" })));
     await assertFails(
@@ -395,7 +401,7 @@ describe("answers: reading", () => {
         ...newEntryData("r1", overrides),
         createdAt: new Date(),
       });
-      await setDoc(doc(db, "answerLocks", answerLockId("r1", authorId)), {
+      await setDoc(doc(db, ...answerMarkerPath("r1", authorId)), {
         authorId,
         requestId: "r1",
         entryId,
@@ -423,16 +429,16 @@ describe("answers: reading", () => {
     await seedEntry("e1", "bob");
     await seedEntry("e2", "carol");
     const bob = env.authenticatedContext("bob").firestore();
-    const mine = await assertSucceeds(getDoc(doc(bob, "answerLocks", answerLockId("r1", "bob"))));
+    const mine = await assertSucceeds(getDoc(doc(bob, ...answerMarkerPath("r1", "bob"))));
     assert(mine.exists());
     // A person who has not answered can check their own (empty) slot.
     const dave = env.authenticatedContext("dave").firestore();
-    const none = await assertSucceeds(getDoc(doc(dave, "answerLocks", answerLockId("r1", "dave"))));
+    const none = await assertSucceeds(getDoc(doc(dave, ...answerMarkerPath("r1", "dave"))));
     assert(!none.exists());
     // Nobody can read another person's marker, or list the collection.
-    await assertFails(getDoc(doc(bob, "answerLocks", answerLockId("r1", "carol"))));
-    await assertFails(getDocs(collection(bob, "answerLocks")));
-    await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), "answerLocks", answerLockId("r1", "bob"))));
+    await assertFails(getDoc(doc(bob, ...answerMarkerPath("r1", "carol"))));
+    await assertFails(getDocs(collection(bob, "requests", "r1", "answerLocks")));
+    await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), ...answerMarkerPath("r1", "bob"))));
   });
 
   test("entries and markers cannot be edited or deleted", async () => {
@@ -441,8 +447,8 @@ describe("answers: reading", () => {
     const db = env.authenticatedContext("bob").firestore();
     await assertFails(updateDoc(doc(db, "entries", "e1"), { name: "Changed" }));
     await assertFails(deleteDoc(doc(db, "entries", "e1")));
-    await assertFails(updateDoc(doc(db, "answerLocks", answerLockId("r1", "bob")), { entryId: "e9" }));
-    await assertFails(deleteDoc(doc(db, "answerLocks", answerLockId("r1", "bob"))));
+    await assertFails(updateDoc(doc(db, ...answerMarkerPath("r1", "bob")), { entryId: "e9" }));
+    await assertFails(deleteDoc(doc(db, ...answerMarkerPath("r1", "bob"))));
   });
 });
 

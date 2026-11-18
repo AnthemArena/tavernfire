@@ -6,7 +6,7 @@ import { collection, doc, onSnapshot, query, where } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { useNow } from "@/lib/use-now";
-import { answerLockId, orderForViewer, toEntryItem, type EntryItem } from "@/lib/entries";
+import { answerMarkerPath, orderForViewer, toEntryItem, type EntryItem } from "@/lib/entries";
 import { answersCloseAt, type RequestItem } from "@/lib/requests";
 import AnswerForm from "@/components/AnswerForm";
 import EntryCard from "@/components/EntryCard";
@@ -54,7 +54,7 @@ export default function Answers({ request }: { request: RequestItem }) {
   useEffect(() => {
     if (!uid) return;
     return onSnapshot(
-      doc(getDb(), "answerLocks", answerLockId(request.id, uid)),
+      doc(getDb(), ...answerMarkerPath(request.id, uid)),
       (snap) => setMyEntryId(snap.exists() ? (snap.get("entryId") as string) : null),
       (err) => console.error("Could not check your entry", err),
     );

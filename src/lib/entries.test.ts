@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  answerLockId,
+  answerMarkerPath,
   buildEntryFields,
   orderForViewer,
   toEntryItem,
@@ -56,8 +56,8 @@ test("toEntryItem rejects malformed data and tolerates missing optional fields",
   });
 });
 
-test("the answer marker id combines request and person", () => {
-  assert.equal(answerLockId("req1", "uid9"), "req1_uid9");
+test("the answer marker sits under the request, keyed by the person", () => {
+  assert.deepEqual(answerMarkerPath("req1", "uid9"), ["requests", "req1", "answerLocks", "uid9"]);
 });
 
 test("viewer order is random but stable across updates", () => {

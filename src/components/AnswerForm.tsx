@@ -8,7 +8,7 @@ import {
   ENTRY_CONCEPT_MAX,
   ENTRY_HOOK_MAX,
   ENTRY_NAME_MAX,
-  answerLockId,
+  answerMarkerPath,
   buildEntryFields,
   cleanTrait,
 } from "@/lib/entries";
@@ -85,7 +85,7 @@ export default function AnswerForm({
       // author, and stops a second answer). Then the public entry, which carries
       // no author. Security rules check each against what already exists.
       if (!resumeEntryId) {
-        await setDoc(doc(db, "answerLocks", answerLockId(request.id, user.uid)), {
+        await setDoc(doc(db, ...answerMarkerPath(request.id, user.uid)), {
           authorId: user.uid,
           requestId: request.id,
           entryId,
