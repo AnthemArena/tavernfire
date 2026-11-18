@@ -115,13 +115,13 @@ export default function RequestBoard() {
                       </span>
                     ))}
                   </div>
-                  <span className="badge">{KIND_LABELS[r.kind]}</span>
                 </div>
                 {r.note && <p className="request-note">{r.note}</p>}
                 <div className="meta">
+                  <span className="badge">{KIND_LABELS[r.kind]}</span>
                   <TimeLeft createdAt={r.createdAt} now={now} />
                   <AnswerCount requestId={r.id} />
-                  <span>Posted by {r.requesterName}</span>
+                  <span className="meta-poster">Posted by {r.requesterName}</span>
                 </div>
               </Link>
             </li>

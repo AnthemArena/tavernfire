@@ -19,7 +19,7 @@ Someone posts three sparks and what they need. The community answers with someth
 ## How it works
 
 1. **Post a request.** Choose three sparks and a type (NPC or location at launch). Optionally add context, such as party level or tone.
-2. **The community answers.** Each entry follows a short template: name, concept, up to five traits, and a one-line "How a GM could use it".
+2. **The community answers.** Each entry follows a short template: name, description, and up to five optional traits. (A "How a GM could use it" line was tried and removed: the request already says what is needed, so it mostly repeated the description.)
 3. **Voting.** Entries are shown in random order. Authors and vote totals stay hidden until voting closes, so people vote on the idea and early leaders do not sway later voters.
 4. **Reveal.** Authors are revealed and winners highlighted.
 5. **Everything is kept.** Every entry stays filed under its three sparks and remains searchable and saveable.

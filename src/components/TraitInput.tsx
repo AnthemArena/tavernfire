@@ -48,7 +48,10 @@ export default function TraitInput({
   return (
     <div className="field">
       <label className="label" htmlFor={id}>
-        Traits (optional)
+        Traits (optional){" "}
+        <span className="counter" aria-hidden="true">
+          {traits.length} of {ENTRY_TRAITS_MAX}
+        </span>
       </label>
 
       {traits.length > 0 && (
@@ -76,16 +79,18 @@ export default function TraitInput({
         value={draft}
         maxLength={ENTRY_TRAIT_MAX}
         disabled={full}
-        placeholder={full ? "That's all five" : "e.g. patient, grieving, cold"}
+        placeholder={
+          full ? "That's all five" : traits.length > 0 ? "Add another trait" : "e.g. patient, grieving, cold"
+        }
         onChange={(e) => onDraftChange(e.target.value.replace(",", ""))}
         onKeyDown={onKeyDown}
         onBlur={commit}
         aria-describedby={`${id}-hint`}
       />
       <p className="hint" id={`${id}-hint`}>
-        <span aria-live="polite">
+        <span className="visually-hidden" aria-live="polite">
           {traits.length} of {ENTRY_TRAITS_MAX} traits.
-        </span>{" "}
+        </span>
         Press Enter or comma to add one. Traits describe your entry and help
         people find it; they are separate from the three sparks.
       </p>

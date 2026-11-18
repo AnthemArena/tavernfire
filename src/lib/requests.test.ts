@@ -45,3 +45,9 @@ test("toRequestItem maps good data and rejects bad data", () => {
   assert.equal(toRequestItem("r3", { ...good, sparks: ["only", "two"] }), null);
   assert.equal(toRequestItem("r4", { ...good, createdAt: null }), null);
 });
+
+test("never shows more than the full window when createdAt is ahead of the clock", () => {
+  const now = new Date("2026-11-18T10:00:00Z");
+  const ahead = new Date(now.getTime() + 5_000); // created 5 seconds "in the future"
+  assert.equal(describeTimeLeft(ahead, now), "3 days left");
+});

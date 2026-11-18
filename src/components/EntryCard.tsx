@@ -127,15 +127,10 @@ export default function EntryCard({
         </ul>
       )}
 
-      {entry.hook && (
-        <div className="at-your-table">
-          <p className="at-your-table-kicker">At your table</p>
-          <p>{entry.hook}</p>
-        </div>
-      )}
-
       <div className="entry-foot">
-        <span className="entry-anon">Author revealed after voting</span>
+        <span className="entry-anon">
+          {isMine ? "You wrote this" : "Author revealed after voting"}
+        </span>
 
         {!isMine &&
           user &&

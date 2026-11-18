@@ -25,6 +25,7 @@ export default function Answers({ request }: { request: RequestItem }) {
   const [myEntryId, setMyEntryId] = useState<string | null>(null);
   const [reportedIds, setReportedIds] = useState<Set<string>>(new Set());
   const [formOpen, setFormOpen] = useState(false);
+  const [justSubmitted, setJustSubmitted] = useState(false);
   // Random order that stays fixed for this viewer while the page is open.
   const orderKeys = useRef(new Map<string, number>());
 
@@ -101,12 +102,18 @@ export default function Answers({ request }: { request: RequestItem }) {
   } else if (isRequester) {
     action = (
       <p className="notice notice-plain">
-        This is your request, so you can&apos;t answer it. Answers will appear
-        below as people write them.
+        This is your request, so you can&apos;t answer it.
+        {list.length === 0 && " Answers will appear below as people write them."}
       </p>
     );
   } else if (mine) {
-    action = null; // their entry is pinned at the top, marked "Your entry"
+    // Their entry is pinned at the top, marked "Your entry".
+    action = justSubmitted ? (
+      <p className="notice notice-success" role="status">
+        <span className="notice-title">Your answer is in.</span> Entries
+        can&apos;t be changed once submitted.
+      </p>
+    ) : null;
   } else if (unfinished && !closed) {
     showingForm = true;
     action = (
@@ -114,7 +121,11 @@ export default function Answers({ request }: { request: RequestItem }) {
         <p className="notice notice-warn" role="status">
           Your last answer didn&apos;t finish saving. Please send it again.
         </p>
-        <AnswerForm request={request} resumeEntryId={markedEntryId} />
+        <AnswerForm
+          request={request}
+          resumeEntryId={markedEntryId}
+          onSubmitted={() => setJustSubmitted(true)}
+        />
       </>
     );
   } else if (closed) {
@@ -125,6 +136,7 @@ export default function Answers({ request }: { request: RequestItem }) {
       <AnswerForm
         request={request}
         onCancel={entries.length > 0 ? () => setFormOpen(false) : undefined}
+        onSubmitted={() => setJustSubmitted(true)}
       />
     );
   } else if (entries !== null) {
@@ -145,8 +157,8 @@ export default function Answers({ request }: { request: RequestItem }) {
         </h2>
         {entries !== null && entries.length > 0 && (
           <p className="muted answers-count" role="status">
-            {entries.length} {entries.length === 1 ? "answer" : "answers"}, in
-            random order
+            {entries.length} {entries.length === 1 ? "answer" : "answers"}
+            {entries.length > 1 && ", in random order"}
           </p>
         )}
       </div>

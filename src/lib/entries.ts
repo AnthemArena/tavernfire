@@ -7,7 +7,6 @@ import { normaliseSpark } from "./sparks.ts";
 
 export const ENTRY_NAME_MAX = 60;
 export const ENTRY_CONCEPT_MAX = 600;
-export const ENTRY_HOOK_MAX = 300;
 export const ENTRY_TRAITS_MAX = 5;
 export const ENTRY_TRAIT_MAX = 24;
 
@@ -33,14 +32,12 @@ export type EntryItem = {
   requestId: string;
   name: string;
   concept: string;
-  hook: string;
   traits: string[];
 };
 
 export type EntryFields = {
   name: string;
   concept: string;
-  hook: string;
   traits: string[];
   traitsNorm: string[];
 };
@@ -57,12 +54,10 @@ export function cleanTrait(raw: string): string {
 export function buildEntryFields(input: {
   name: string;
   concept: string;
-  hook: string;
   traits: string[];
 }): EntryFields {
   const name = input.name.trim();
   const concept = input.concept.trim();
-  const hook = input.hook.trim();
 
   if (name === "") throw new Error("Give your entry a name.");
   if (name.length > ENTRY_NAME_MAX) {
@@ -71,10 +66,6 @@ export function buildEntryFields(input: {
   if (concept === "") throw new Error("Describe your entry.");
   if (concept.length > ENTRY_CONCEPT_MAX) {
     throw new Error(`The description can be up to ${ENTRY_CONCEPT_MAX} characters.`);
-  }
-  if (hook === "") throw new Error("Add a line on how a GM could use it.");
-  if (hook.length > ENTRY_HOOK_MAX) {
-    throw new Error(`The GM line can be up to ${ENTRY_HOOK_MAX} characters.`);
   }
 
   const traits: string[] = [];
@@ -94,7 +85,7 @@ export function buildEntryFields(input: {
     throw new Error(`Choose up to ${ENTRY_TRAITS_MAX} traits.`);
   }
 
-  return { name, concept, hook, traits, traitsNorm };
+  return { name, concept, traits, traitsNorm };
 }
 
 /** Convert a Firestore document into an EntryItem, or null if it is malformed. */
@@ -114,7 +105,6 @@ export function toEntryItem(
     requestId: data.requestId,
     name: data.name,
     concept: data.concept,
-    hook: typeof data.hook === "string" ? data.hook : "",
     traits: Array.isArray(data.traits)
       ? (data.traits as unknown[]).filter((t): t is string => typeof t === "string")
       : [],

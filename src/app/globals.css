@@ -618,6 +618,20 @@ a:hover {
 }
 
 @media (max-width: 480px) {
+  /* Keep the signed-in header on one row: the name can go, Sign out stays. */
+  .signed-in-as {
+    display: none;
+  }
+
+  /* Board cards: the poster is on the request page; keep the meta row short. */
+  .meta-poster {
+    display: none;
+  }
+
+  .form-actions .btn-primary {
+    flex: 1 1 100%;
+  }
+
   .request-card {
     padding: 18px 20px;
   }
@@ -695,9 +709,13 @@ a:hover {
   margin: 0 0 20px;
 }
 
-/* Keep the reading column narrower than the full container. */
+/* One shared reading column for everything under "Answers". */
 .entry-list,
-.answer-form {
+.answer-form,
+.answers-head,
+.answers > .notice,
+.answers > .empty,
+.answers-prompt {
   max-width: 720px;
 }
 
@@ -808,32 +826,19 @@ a:hover {
   cursor: pointer;
 }
 
+/* Extends the tap area to 44px tall without making the pill bigger. */
+.trait-remove {
+  position: relative;
+}
+
+.trait-remove::after {
+  content: "";
+  position: absolute;
+  inset: -8px -6px;
+}
+
 .trait-remove:hover {
   background: #d3e2d9;
-}
-
-.at-your-table {
-  background: var(--chip);
-  border-radius: 10px;
-  padding: 14px 16px;
-  margin-bottom: 14px;
-  max-width: 65ch;
-}
-
-.at-your-table p {
-  margin: 0;
-  font-size: 15px;
-  line-height: 1.5;
-  color: var(--ink);
-}
-
-.at-your-table .at-your-table-kicker {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--teal);
-  margin-bottom: 4px;
 }
 
 .entry-foot {
@@ -842,6 +847,17 @@ a:hover {
   align-items: center;
   justify-content: space-between;
   gap: 4px 16px;
+}
+
+/* "Report entry" is findable but quiet: muted text, underlined, 44px tall. */
+.entry-foot .btn-link {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.entry-foot .btn-link:hover {
+  color: var(--ink);
 }
 
 .entry-anon,

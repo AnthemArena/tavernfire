@@ -142,11 +142,11 @@ service cloud.firestore {
       let rq = get(/databases/$(database)/documents/requests/$(d.requestId)).data;
       let lock = get(/databases/$(database)/documents/requests/$(d.requestId)/answerLocks/$(request.auth.uid)).data;
       return d.keys().hasOnly([
-          'requestId', 'kind', 'name', 'concept', 'hook', 'traits', 'traitsNorm',
+          'requestId', 'kind', 'name', 'concept', 'traits', 'traitsNorm',
           'sparksNorm', 'sparkKey', 'pairKeys', 'moderation', 'createdAt'
         ])
         && d.keys().hasAll([
-          'requestId', 'kind', 'name', 'concept', 'hook', 'traits', 'traitsNorm',
+          'requestId', 'kind', 'name', 'concept', 'traits', 'traitsNorm',
           'sparksNorm', 'sparkKey', 'pairKeys', 'moderation', 'createdAt'
         ])
         && d.requestId is string
@@ -163,7 +163,6 @@ service cloud.firestore {
         && d.pairKeys == rq.pairKeys
         && d.name is string && d.name.size() >= 1 && d.name.size() <= 60
         && d.concept is string && d.concept.size() >= 1 && d.concept.size() <= 600
-        && d.hook is string && d.hook.size() >= 1 && d.hook.size() <= 300
         && d.traits is list && d.traits.size() <= 5
         && d.traitsNorm is list && d.traitsNorm.size() == d.traits.size()
         && traitOk(d.traits, 0) && traitOk(d.traits, 1) && traitOk(d.traits, 2)

@@ -6,7 +6,6 @@ import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import {
   ENTRY_CONCEPT_MAX,
-  ENTRY_HOOK_MAX,
   ENTRY_NAME_MAX,
   answerMarkerPath,
   buildEntryFields,
@@ -19,12 +18,10 @@ const COPY = {
   npc: {
     name: "e.g. Vhane, the Last Hour",
     concept: "Who are they? What do they look like, and what do they want?",
-    hook: "e.g. Offers the party one frozen minute, at a price.",
   },
   location: {
     name: "e.g. The Hollow Observatory",
     concept: "What is this place like? What is hidden here?",
-    hook: "e.g. A safe place to hide from pursuers, if the party can bear the silence.",
   },
 } as const;
 
@@ -40,10 +37,13 @@ export default function AnswerForm({
   request,
   onCancel,
   resumeEntryId,
+  onSubmitted,
 }: {
   request: RequestItem;
   /** Set when an earlier attempt saved the private marker but not the entry. */
   resumeEntryId?: string | null;
+  /** Called once the entry has been saved, so the page can confirm it. */
+  onSubmitted?: () => void;
   /** Shown only when there is something else on the page to go back to. */
   onCancel?: () => void;
 }) {
@@ -52,7 +52,6 @@ export default function AnswerForm({
 
   const [name, setName] = useState("");
   const [concept, setConcept] = useState("");
-  const [hook, setHook] = useState("");
   const [traits, setTraits] = useState<string[]>([]);
   const [traitDraft, setTraitDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +68,7 @@ export default function AnswerForm({
 
     let fields;
     try {
-      fields = buildEntryFields({ name, concept, hook, traits: allTraits });
+      fields = buildEntryFields({ name, concept, traits: allTraits });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Check your answer and try again.");
       return;
@@ -102,6 +101,7 @@ export default function AnswerForm({
         moderation: "ok",
         createdAt: serverTimestamp(),
       });
+      onSubmitted?.();
       // The live listener on the page now shows the new entry as "Your entry".
     } catch (err) {
       console.error("Could not submit answer", err);
@@ -156,21 +156,6 @@ export default function AnswerForm({
         draft={traitDraft}
         onDraftChange={setTraitDraft}
       />
-
-      <div className="field">
-        <label className="label" htmlFor="entry-hook">
-          How a GM could use it <Counter used={hook.length} max={ENTRY_HOOK_MAX} />
-        </label>
-        <textarea
-          id="entry-hook"
-          className="input textarea"
-          rows={2}
-          maxLength={ENTRY_HOOK_MAX}
-          placeholder={copy.hook}
-          value={hook}
-          onChange={(e) => setHook(e.target.value)}
-        />
-      </div>
 
       {error && (
         <p className="error" role="alert">

@@ -226,7 +226,6 @@ function newEntryData(requestId: string, overrides: Record<string, unknown> = {}
     ...buildEntryFields({
       name: "Vhane, the Last Hour",
       concept: "A statue-keeper who stopped time in her temple.",
-      hook: "Offers the party one frozen minute, at a price.",
       traits: ["Patient", "Grieving"],
     }),
     ...entrySparkFields(["Statue", "Time", "Glowing"]),
@@ -366,6 +365,7 @@ describe("answers: submitting", () => {
     );
     await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { authorId: "bob" })));
     await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { voteCount: 99 })));
+    await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { hook: "An old field" })));
     await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { moderation: "hidden" })));
     await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { createdAt: new Date() })));
   });

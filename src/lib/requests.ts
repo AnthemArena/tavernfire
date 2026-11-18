@@ -77,11 +77,15 @@ export function isClosingSoon(createdAt: Date, now: Date): boolean {
 
 /** A short human label such as "2 days left", "5 hours left" or "Answers closed". */
 export function describeTimeLeft(createdAt: Date, now: Date): string {
-  const msLeft = answersCloseAt(createdAt).getTime() - now.getTime();
-  if (msLeft <= 0) return "Answers closed";
-
   const hour = 60 * 60 * 1000;
   const day = 24 * hour;
+  // Never show more than the full window, even if this device's clock is a little
+  // behind the server's (a request can then look like it was created "in the future").
+  const msLeft = Math.min(
+    answersCloseAt(createdAt).getTime() - now.getTime(),
+    ANSWER_WINDOW_DAYS * day,
+  );
+  if (msLeft <= 0) return "Answers closed";
 
   if (msLeft >= day) {
     const days = Math.ceil(msLeft / day);

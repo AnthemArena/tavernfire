@@ -10,7 +10,6 @@ import {
 const base = {
   name: "Vhane, the Last Hour",
   concept: "A statue-keeper who stopped time in her temple.",
-  hook: "Offers the party one frozen minute, at a price.",
   traits: ["Patient", " grieving "],
 };
 
@@ -25,10 +24,9 @@ test("drops blank and repeated traits", () => {
   assert.deepEqual(f.traitsNorm, ["cold", "wary"]);
 });
 
-test("requires a name, a description and a GM line", () => {
+test("requires a name and a description", () => {
   assert.throws(() => buildEntryFields({ ...base, name: " " }), /name/);
   assert.throws(() => buildEntryFields({ ...base, concept: "" }), /Describe/);
-  assert.throws(() => buildEntryFields({ ...base, hook: "" }), /GM/);
 });
 
 test("enforces length and trait limits", () => {
@@ -51,7 +49,6 @@ test("toEntryItem rejects malformed data and tolerates missing optional fields",
     requestId: "r",
     name: "n",
     concept: "c",
-    hook: "",
     traits: [],
   });
 });

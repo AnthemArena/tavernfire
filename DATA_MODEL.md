@@ -45,7 +45,7 @@ Lifecycle: `open` (about 3 days) to `voting` to `revealed`. Entries stay in the 
 
 ### `entries/{entryId}` (top-level, so the whole library is queryable)
 - `requestId`, `kind`
-- `name`, `concept`, `hook` ("How a GM could use it")
+- `name`, `concept` (a "How a GM could use it" `hook` field was removed; it can return as an optional field)
 - `traits`: up to 5, as typed
 - `traitsNorm`: normalised, for search
 - Type-specific fields. NPC: `appearance`, `motivation`. Location: `mood`, `secrets`, `exits`. Keep these optional and small.
