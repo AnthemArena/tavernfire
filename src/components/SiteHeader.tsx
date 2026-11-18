@@ -1,14 +1,39 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 
-export default function SiteHeader() {
-  const { user, displayName, loading, signOut } = useAuth();
+/** Reads the route, so it sits in its own Suspense boundary. */
+function MainNav() {
   const pathname = usePathname();
   const onRequests = pathname === "/" || pathname.startsWith("/requests");
-  const onSignIn = pathname === "/signin";
+  return (
+    <nav className="nav" aria-label="Main">
+      <Link
+        href="/"
+        className={onRequests ? "nav-current" : undefined}
+        aria-current={onRequests ? "page" : undefined}
+      >
+        Requests
+      </Link>
+    </nav>
+  );
+}
+
+function SignInButton() {
+  const pathname = usePathname();
+  if (pathname === "/signin") return null;
+  return (
+    <Link className="btn btn-dark" href="/signin">
+      Sign in
+    </Link>
+  );
+}
+
+export default function SiteHeader() {
+  const { user, displayName, loading, signOut } = useAuth();
 
   return (
     <header className="site-header">
@@ -17,15 +42,15 @@ export default function SiteHeader() {
           Tavernfire
         </Link>
 
-        <nav className="nav" aria-label="Main">
-          <Link
-            href="/"
-            className={onRequests ? "nav-current" : undefined}
-            aria-current={onRequests ? "page" : undefined}
-          >
-            Requests
-          </Link>
-        </nav>
+        <Suspense
+          fallback={
+            <nav className="nav" aria-label="Main">
+              <Link href="/">Requests</Link>
+            </nav>
+          }
+        >
+          <MainNav />
+        </Suspense>
 
         <div className="header-actions">
           {loading ? null : user ? (
@@ -35,10 +60,10 @@ export default function SiteHeader() {
                 Sign out
               </button>
             </>
-          ) : onSignIn ? null : (
-            <Link className="btn btn-dark" href="/signin">
-              Sign in
-            </Link>
+          ) : (
+            <Suspense fallback={null}>
+              <SignInButton />
+            </Suspense>
           )}
         </div>
       </div>
