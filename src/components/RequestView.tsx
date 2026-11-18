@@ -84,10 +84,6 @@ export default function RequestView({ id }: { id: string }) {
       <div className="meta">
         <span className="badge">{KIND_LABELS[r.kind]}</span>
         <span>Posted by {r.requesterName}</span>
-        <span>
-          <strong>{r.answerCount}</strong>{" "}
-          {r.answerCount === 1 ? "answer" : "answers"}
-        </span>
         <TimeLeft createdAt={r.createdAt} now={now} />
       </div>
 

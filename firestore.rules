@@ -5,9 +5,9 @@ rules_version = '2';
 // lifecycle state, and author IDs and vote totals are never readable during
 // voting (those collections arrive with the voting step).
 //
-// Answers are written straight from the app in one batch (entry, private
-// author row, private answer marker, answerCount bump); the rules below tie
-// those four writes together. Voting and the reveal still need Cloud Functions.
+// Answers are written straight from the app as two writes (a private marker,
+// then the entry); the rules below tie them together. Voting and the reveal
+// still need Cloud Functions.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -93,27 +93,42 @@ service cloud.firestore {
         && d.createdAt == request.time;
     }
 
-    // The private marker that says "this person has answered this request".
-    // Its id is requestId_uid, so a second answer would be a second create on
-    // the same document, which rules refuse. It is never readable.
-    function lockPath(requestId, uid) {
-      return /databases/$(database)/documents/answerLocks/$(requestId + '_' + uid);
-    }
-
     match /requests/{requestId} {
       // Hidden requests are only visible to moderators.
       allow read: if resource.data.moderation == 'ok' || isModerator();
       allow create: if signedIn() && validNewRequest(request.resource.data);
+      allow update, delete: if false;
+    }
 
-      // The only client change allowed: bump answerCount by one, in the same
-      // batch that creates the person's answer marker for this request.
-      allow update: if signedIn()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answerCount'])
-        && request.resource.data.answerCount == resource.data.answerCount + 1
-        && !exists(lockPath(requestId, request.auth.uid))
-        && existsAfter(lockPath(requestId, request.auth.uid));
+    // Answering is two writes, in this order, each checked against what already
+    // exists:
+    //   1. answerLocks/{requestId}_{uid}: a private "I'm answering this request"
+    //      marker. It also records which entry id is mine, and so doubles as the
+    //      hidden author record until the reveal. Create-only, and the id holds
+    //      the request and the person, so a second answer is refused.
+    //   2. entries/{entryId}: the public entry, accepted only if the person's
+    //      marker names this entry id. The entry never holds its author.
+    function validLock(d, lockId) {
+      let rq = get(/databases/$(database)/documents/requests/$(d.requestId)).data;
+      return d.keys().hasOnly(['authorId', 'requestId', 'entryId', 'createdAt'])
+        && d.keys().hasAll(['authorId', 'requestId', 'entryId', 'createdAt'])
+        && d.authorId == request.auth.uid
+        && d.requestId is string
+        && d.entryId is string && d.entryId.size() >= 1 && d.entryId.size() <= 40
+        && lockId == d.requestId + '_' + request.auth.uid
+        && d.createdAt == request.time
+        && rq.moderation == 'ok'
+        && rq.status == 'open'
+        && request.time < rq.createdAt + duration.value(3, 'd')
+        && rq.requesterId != request.auth.uid;
+    }
 
-      allow delete: if false;
+    match /answerLocks/{lockId} {
+      // Only the person it belongs to (and moderators) can read it.
+      allow read: if signedIn()
+        && (resource == null || resource.data.authorId == request.auth.uid || isModerator());
+      allow create: if signedIn() && validLock(request.resource.data, lockId);
+      allow update, delete: if false;
     }
 
     function traitOk(list, i) {
@@ -121,14 +136,13 @@ service cloud.firestore {
         || (list[i] is string && list[i].size() >= 1 && list[i].size() <= 24);
     }
 
-    // An entry (an answer). It never holds its author: that goes in
-    // entryAuthors, written in the same batch and unreadable by other people.
-    // The request it answers is looked up, so the checks below cannot be dodged
-    // by sending a different kind, different sparks, or answering after the
-    // 3-day window.
+    // An entry (an answer). It never holds its author. The request it answers is
+    // looked up, so the checks below cannot be dodged by sending a different
+    // kind, different sparks, or answering after the 3-day window.
     function validNewEntry(d, entryId) {
       let rq = get(/databases/$(database)/documents/requests/$(d.requestId)).data;
-      let author = getAfter(/databases/$(database)/documents/entryAuthors/$(entryId)).data;
+      let lockId = d.requestId + '_' + request.auth.uid;
+      let lock = get(/databases/$(database)/documents/answerLocks/$(lockId)).data;
       return d.keys().hasOnly([
           'requestId', 'kind', 'name', 'concept', 'hook', 'traits', 'traitsNorm',
           'sparksNorm', 'sparkKey', 'pairKeys', 'moderation', 'createdAt'
@@ -138,6 +152,9 @@ service cloud.firestore {
           'sparksNorm', 'sparkKey', 'pairKeys', 'moderation', 'createdAt'
         ])
         && d.requestId is string
+        && lock.authorId == request.auth.uid
+        && lock.requestId == d.requestId
+        && lock.entryId == entryId
         && rq.moderation == 'ok'
         && rq.status == 'open'
         && request.time < rq.createdAt + duration.value(3, 'd')
@@ -156,48 +173,12 @@ service cloud.firestore {
         && traitOk(d.traitsNorm, 0) && traitOk(d.traitsNorm, 1) && traitOk(d.traitsNorm, 2)
         && traitOk(d.traitsNorm, 3) && traitOk(d.traitsNorm, 4)
         && d.moderation == 'ok'
-        && d.createdAt == request.time
-        && author.authorId == request.auth.uid
-        && author.requestId == d.requestId
-        && existsAfter(lockPath(d.requestId, request.auth.uid));
+        && d.createdAt == request.time;
     }
 
     match /entries/{entryId} {
       allow read: if resource.data.moderation == 'ok' || isModerator();
       allow create: if signedIn() && validNewEntry(request.resource.data, entryId);
-      allow update, delete: if false;
-    }
-
-    // Who wrote which entry. People can read only their own rows (so the page
-    // can show "Your entry"); nobody else can see authors until the reveal.
-    match /entryAuthors/{entryId} {
-      allow read: if signedIn()
-        && (resource.data.authorId == request.auth.uid || isModerator());
-      allow create: if signedIn()
-        && request.resource.data.keys().hasOnly(['authorId', 'requestId', 'createdAt'])
-        && request.resource.data.keys().hasAll(['authorId', 'requestId', 'createdAt'])
-        && request.resource.data.authorId == request.auth.uid
-        && request.resource.data.requestId is string
-        && request.resource.data.createdAt == request.time
-        && existsAfter(/databases/$(database)/documents/entries/$(entryId))
-        && getAfter(/databases/$(database)/documents/entries/$(entryId)).data.requestId
-            == request.resource.data.requestId;
-      allow update, delete: if false;
-    }
-
-    match /answerLocks/{lockId} {
-      allow read: if false;
-      allow create: if signedIn()
-        && request.resource.data.keys().hasOnly(['authorId', 'requestId', 'entryId', 'createdAt'])
-        && request.resource.data.keys().hasAll(['authorId', 'requestId', 'entryId', 'createdAt'])
-        && request.resource.data.authorId == request.auth.uid
-        && request.resource.data.requestId is string
-        && request.resource.data.entryId is string
-        && lockId == request.resource.data.requestId + '_' + request.auth.uid
-        && request.resource.data.createdAt == request.time
-        && existsAfter(/databases/$(database)/documents/entries/$(request.resource.data.entryId))
-        && getAfter(/databases/$(database)/documents/entries/$(request.resource.data.entryId)).data.requestId
-            == request.resource.data.requestId;
       allow update, delete: if false;
     }
 

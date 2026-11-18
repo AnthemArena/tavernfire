@@ -13,6 +13,7 @@ import {
 import { getDb } from "@/lib/firebase";
 import { useNow } from "@/lib/use-now";
 import TimeLeft from "@/components/TimeLeft";
+import AnswerCount from "@/components/AnswerCount";
 import {
   KIND_LABELS,
   toRequestItem,
@@ -119,10 +120,7 @@ export default function RequestBoard() {
                 {r.note && <p className="request-note">{r.note}</p>}
                 <div className="meta">
                   <TimeLeft createdAt={r.createdAt} now={now} />
-                  <span>
-                    <strong>{r.answerCount}</strong>{" "}
-                    {r.answerCount === 1 ? "answer" : "answers"}
-                  </span>
+                  <AnswerCount requestId={r.id} />
                   <span>Posted by {r.requesterName}</span>
                 </div>
               </Link>

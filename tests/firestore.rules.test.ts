@@ -22,7 +22,6 @@ import {
   setDoc,
   updateDoc,
   where,
-  writeBatch,
   increment,
 } from "firebase/firestore";
 import { buildSparkFields } from "../src/lib/sparks.ts";
@@ -233,7 +232,17 @@ function newEntryData(requestId: string, overrides: Record<string, unknown> = {}
 
 type Db = ReturnType<ReturnType<RulesTestEnvironment["authenticatedContext"]>["firestore"]>;
 
-/** Mirrors what the app sends: entry, author row, answer marker and count bump, in one batch. */
+function lockData(uid: string, requestId: string, entryId: string, overrides: Record<string, unknown> = {}) {
+  return {
+    authorId: uid,
+    requestId,
+    entryId,
+    createdAt: serverTimestamp(),
+    ...overrides,
+  };
+}
+
+/** Mirrors what the app sends: first the private marker, then the entry. */
 async function submitAnswer(
   db: Db,
   uid: string,
@@ -241,36 +250,17 @@ async function submitAnswer(
   entryId: string,
   opts: {
     entry?: Record<string, unknown>;
-    author?: Record<string, unknown>;
-    lock?: Record<string, unknown> | null;
-    skipAuthor?: boolean;
-    skipBump?: boolean;
-    bump?: number;
+    lock?: Record<string, unknown>;
+    skipLock?: boolean;
   } = {},
 ) {
-  const batch = writeBatch(db);
-  batch.set(doc(db, "entries", entryId), newEntryData(requestId, opts.entry));
-  if (!opts.skipAuthor) {
-    batch.set(doc(db, "entryAuthors", entryId), {
-      authorId: uid,
-      requestId,
-      createdAt: serverTimestamp(),
-      ...opts.author,
-    });
+  if (!opts.skipLock) {
+    await setDoc(
+      doc(db, "answerLocks", answerLockId(requestId, uid)),
+      lockData(uid, requestId, entryId, opts.lock),
+    );
   }
-  if (opts.lock !== null) {
-    batch.set(doc(db, "answerLocks", answerLockId(requestId, uid)), {
-      authorId: uid,
-      requestId,
-      entryId,
-      createdAt: serverTimestamp(),
-      ...opts.lock,
-    });
-  }
-  if (!opts.skipBump) {
-    batch.update(doc(db, "requests", requestId), { answerCount: increment(opts.bump ?? 1) });
-  }
-  return batch.commit();
+  await setDoc(doc(db, "entries", entryId), newEntryData(requestId, opts.entry));
 }
 
 describe("answers: submitting", () => {
@@ -313,7 +303,7 @@ describe("answers: submitting", () => {
     await assertFails(submitAnswer(db, "bob", "r1", "e1"));
   });
 
-  test("answers to a hidden or non-open request are refused", async () => {
+  test("answers to a hidden request are refused", async () => {
     await seedRequest("hidden", { moderation: "hidden" });
     const db = env.authenticatedContext("bob").firestore();
     await assertFails(submitAnswer(db, "bob", "hidden", "e1"));
@@ -322,61 +312,78 @@ describe("answers: submitting", () => {
   test("the entry must match the request's kind and sparks", async () => {
     await seedRequest("r1");
     const db = env.authenticatedContext("bob").firestore();
-    await assertFails(submitAnswer(db, "bob", "r1", "e1", { entry: { kind: "location" } }));
-    await assertFails(
-      submitAnswer(db, "bob", "r1", "e2", {
-        entry: buildSparkFields(["Dragon", "Cave", "Cold"]),
-      }),
+    await assertSucceeds(
+      setDoc(doc(db, "answerLocks", answerLockId("r1", "bob")), lockData("bob", "r1", "e1")),
     );
+    await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { kind: "location" })));
+    await assertFails(
+      setDoc(doc(db, "entries", "e1"), newEntryData("r1", buildSparkFields(["Dragon", "Cave", "Cold"]))),
+    );
+    // The correct entry still goes through.
+    await assertSucceeds(setDoc(doc(db, "entries", "e1"), newEntryData("r1")));
   });
 
-  test("the author row and the answer marker are both required", async () => {
+  test("an entry needs the person's own marker, and the marker must name that entry id", async () => {
     await seedRequest("r1");
-    const db = env.authenticatedContext("bob").firestore();
-    await assertFails(submitAnswer(db, "bob", "r1", "e1", { skipAuthor: true }));
-    await assertFails(submitAnswer(db, "bob", "r1", "e2", { lock: null }));
+    const bob = env.authenticatedContext("bob").firestore();
+    // No marker at all.
+    await assertFails(submitAnswer(bob, "bob", "r1", "e1", { skipLock: true }));
+    // Marker names a different entry id.
+    await assertSucceeds(
+      setDoc(doc(bob, "answerLocks", answerLockId("r1", "bob")), lockData("bob", "r1", "other")),
+    );
+    await assertFails(setDoc(doc(bob, "entries", "e1"), newEntryData("r1")));
+    // Someone else cannot use bob's marker.
+    const carol = env.authenticatedContext("carol").firestore();
+    await assertFails(setDoc(doc(carol, "entries", "other"), newEntryData("r1")));
   });
 
-  test("cannot record someone else as the author", async () => {
+  test("cannot create a marker for someone else or with the wrong id", async () => {
     await seedRequest("r1");
-    const db = env.authenticatedContext("bob").firestore();
-    await assertFails(submitAnswer(db, "bob", "r1", "e1", { author: { authorId: "alice" } }));
+    const bob = env.authenticatedContext("bob").firestore();
+    await assertFails(
+      setDoc(doc(bob, "answerLocks", answerLockId("r1", "bob")), lockData("bob", "r1", "e1", { authorId: "alice" })),
+    );
+    await assertFails(
+      setDoc(doc(bob, "answerLocks", answerLockId("r1", "alice")), lockData("alice", "r1", "e1")),
+    );
+    await assertFails(
+      setDoc(doc(bob, "answerLocks", "r1_bob"), lockData("bob", "r1", "e1", { createdAt: new Date() })),
+    );
   });
 
   test("the entry itself cannot carry an author, votes or extra fields", async () => {
     await seedRequest("r1");
     const db = env.authenticatedContext("bob").firestore();
-    await assertFails(submitAnswer(db, "bob", "r1", "e1", { entry: { authorId: "bob" } }));
-    await assertFails(submitAnswer(db, "bob", "r1", "e2", { entry: { voteCount: 99 } }));
-    await assertFails(submitAnswer(db, "bob", "r1", "e3", { entry: { moderation: "hidden" } }));
-  });
-
-  test("createdAt must be the server time", async () => {
-    await seedRequest("r1");
-    const db = env.authenticatedContext("bob").firestore();
-    await assertFails(submitAnswer(db, "bob", "r1", "e1", { entry: { createdAt: new Date() } }));
+    await assertSucceeds(
+      setDoc(doc(db, "answerLocks", answerLockId("r1", "bob")), lockData("bob", "r1", "e1")),
+    );
+    await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { authorId: "bob" })));
+    await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { voteCount: 99 })));
+    await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { moderation: "hidden" })));
+    await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { createdAt: new Date() })));
   });
 
   test("rejects an empty name, too many traits and over-long text", async () => {
     await seedRequest("r1");
     const db = env.authenticatedContext("bob").firestore();
-    await assertFails(submitAnswer(db, "bob", "r1", "e1", { entry: { name: "" } }));
-    await assertFails(
-      submitAnswer(db, "bob", "r1", "e2", {
-        entry: { traits: ["a", "b", "c", "d", "e", "f"], traitsNorm: ["a", "b", "c", "d", "e", "f"] },
-      }),
+    await assertSucceeds(
+      setDoc(doc(db, "answerLocks", answerLockId("r1", "bob")), lockData("bob", "r1", "e1")),
     );
-    await assertFails(submitAnswer(db, "bob", "r1", "e3", { entry: { concept: "x".repeat(601) } }));
+    await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { name: "" })));
+    await assertFails(
+      setDoc(
+        doc(db, "entries", "e1"),
+        newEntryData("r1", { traits: ["a", "b", "c", "d", "e", "f"], traitsNorm: ["a", "b", "c", "d", "e", "f"] }),
+      ),
+    );
+    await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { concept: "x".repeat(601) })));
   });
 
-  test("the count can only go up by one, and only with an answer", async () => {
+  test("the answer count on a request cannot be changed from the app", async () => {
     await seedRequest("r1");
     const db = env.authenticatedContext("bob").firestore();
     await assertFails(updateDoc(doc(db, "requests", "r1"), { answerCount: increment(1) }));
-    await assertFails(submitAnswer(db, "bob", "r1", "e1", { bump: 5 }));
-    await assertFails(
-      updateDoc(doc(db, "requests", "r1"), { answerCount: increment(1), status: "revealed" }),
-    );
   });
 });
 
@@ -388,9 +395,10 @@ describe("answers: reading", () => {
         ...newEntryData("r1", overrides),
         createdAt: new Date(),
       });
-      await setDoc(doc(db, "entryAuthors", entryId), {
+      await setDoc(doc(db, "answerLocks", answerLockId("r1", authorId)), {
         authorId,
         requestId: "r1",
+        entryId,
         createdAt: new Date(),
       });
     });
@@ -410,37 +418,31 @@ describe("answers: reading", () => {
     await assertFails(getDoc(doc(db, "entries", "e2")));
   });
 
-  test("people see only their own author row, nobody else's", async () => {
+  test("a person can read their own marker, and nobody else's", async () => {
     await seedRequest("r1");
     await seedEntry("e1", "bob");
     await seedEntry("e2", "carol");
     const bob = env.authenticatedContext("bob").firestore();
-    const mine = await assertSucceeds(
-      getDocs(
-        query(collection(bob, "entryAuthors"), where("requestId", "==", "r1"), where("authorId", "==", "bob")),
-      ),
-    );
-    assert(mine.size === 1);
-    await assertFails(getDoc(doc(bob, "entryAuthors", "e2")));
-    await assertFails(getDocs(query(collection(bob, "entryAuthors"), where("requestId", "==", "r1"))));
-    await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), "entryAuthors", "e1")));
+    const mine = await assertSucceeds(getDoc(doc(bob, "answerLocks", answerLockId("r1", "bob"))));
+    assert(mine.exists());
+    // A person who has not answered can check their own (empty) slot.
+    const dave = env.authenticatedContext("dave").firestore();
+    const none = await assertSucceeds(getDoc(doc(dave, "answerLocks", answerLockId("r1", "dave"))));
+    assert(!none.exists());
+    // Nobody can read another person's marker, or list the collection.
+    await assertFails(getDoc(doc(bob, "answerLocks", answerLockId("r1", "carol"))));
+    await assertFails(getDocs(collection(bob, "answerLocks")));
+    await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), "answerLocks", answerLockId("r1", "bob"))));
   });
 
-  test("answer markers are never readable", async () => {
-    await seedRequest("r1");
-    const db = env.authenticatedContext("bob").firestore();
-    await assertSucceeds(submitAnswer(db, "bob", "r1", "e1"));
-    await assertFails(getDoc(doc(db, "answerLocks", answerLockId("r1", "bob"))));
-  });
-
-  test("entries and author rows cannot be edited or deleted", async () => {
+  test("entries and markers cannot be edited or deleted", async () => {
     await seedRequest("r1");
     await seedEntry("e1", "bob");
     const db = env.authenticatedContext("bob").firestore();
     await assertFails(updateDoc(doc(db, "entries", "e1"), { name: "Changed" }));
     await assertFails(deleteDoc(doc(db, "entries", "e1")));
-    await assertFails(updateDoc(doc(db, "entryAuthors", "e1"), { authorId: "carol" }));
-    await assertFails(deleteDoc(doc(db, "entryAuthors", "e1")));
+    await assertFails(updateDoc(doc(db, "answerLocks", answerLockId("r1", "bob")), { entryId: "e9" }));
+    await assertFails(deleteDoc(doc(db, "answerLocks", answerLockId("r1", "bob"))));
   });
 });
 

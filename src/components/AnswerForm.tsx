@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { collection, doc, increment, serverTimestamp, writeBatch } from "firebase/firestore";
+import { collection, doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -39,8 +39,11 @@ function Counter({ used, max }: { used: number; max: number }) {
 export default function AnswerForm({
   request,
   onCancel,
+  resumeEntryId,
 }: {
   request: RequestItem;
+  /** Set when an earlier attempt saved the private marker but not the entry. */
+  resumeEntryId?: string | null;
   /** Shown only when there is something else on the page to go back to. */
   onCancel?: () => void;
 }) {
@@ -75,12 +78,21 @@ export default function AnswerForm({
     setBusy(true);
     try {
       const db = getDb();
-      const entryRef = doc(collection(db, "entries"));
-      // One batch: the entry (no author on it), a private author row, a private
-      // "already answered" marker, and the request's answer count. Security
-      // rules only accept the four together.
-      const batch = writeBatch(db);
-      batch.set(entryRef, {
+      const entryId = resumeEntryId ?? doc(collection(db, "entries")).id;
+
+      // Two writes, in order. First a private marker that says "this person is
+      // answering this request with this entry id" (it also records the hidden
+      // author, and stops a second answer). Then the public entry, which carries
+      // no author. Security rules check each against what already exists.
+      if (!resumeEntryId) {
+        await setDoc(doc(db, "answerLocks", answerLockId(request.id, user.uid)), {
+          authorId: user.uid,
+          requestId: request.id,
+          entryId,
+          createdAt: serverTimestamp(),
+        });
+      }
+      await setDoc(doc(db, "entries", entryId), {
         requestId: request.id,
         kind: request.kind,
         ...fields,
@@ -90,24 +102,11 @@ export default function AnswerForm({
         moderation: "ok",
         createdAt: serverTimestamp(),
       });
-      batch.set(doc(db, "entryAuthors", entryRef.id), {
-        authorId: user.uid,
-        requestId: request.id,
-        createdAt: serverTimestamp(),
-      });
-      batch.set(doc(db, "answerLocks", answerLockId(request.id, user.uid)), {
-        authorId: user.uid,
-        requestId: request.id,
-        entryId: entryRef.id,
-        createdAt: serverTimestamp(),
-      });
-      batch.update(doc(db, "requests", request.id), { answerCount: increment(1) });
-      await batch.commit();
       // The live listener on the page now shows the new entry as "Your entry".
     } catch (err) {
       console.error("Could not submit answer", err);
       setError(
-        "Couldn't submit your answer. Answers may have just closed, or you may already have answered this request. Check your connection and try again.",
+        "Couldn't submit your answer. Answers may have just closed, or you may already have answered this request. If your connection dropped, try again: nothing is lost on this page.",
       );
       setBusy(false);
     }

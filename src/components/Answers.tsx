@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { collection, doc, onSnapshot, query, where } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { useNow } from "@/lib/use-now";
-import { orderForViewer, toEntryItem, type EntryItem } from "@/lib/entries";
+import { answerLockId, orderForViewer, toEntryItem, type EntryItem } from "@/lib/entries";
 import { answersCloseAt, type RequestItem } from "@/lib/requests";
 import AnswerForm from "@/components/AnswerForm";
 import EntryCard from "@/components/EntryCard";
@@ -49,16 +49,13 @@ export default function Answers({ request }: { request: RequestItem }) {
     );
   }, [request.id]);
 
-  // Which entry (if any) is mine. Readable only by me, so nobody else's authors show.
+  // My private answer marker, if any. Only I can read it, so nobody else's
+  // authorship shows. It names my entry id.
   useEffect(() => {
     if (!uid) return;
     return onSnapshot(
-      query(
-        collection(getDb(), "entryAuthors"),
-        where("requestId", "==", request.id),
-        where("authorId", "==", uid),
-      ),
-      (snap) => setMyEntryId(snap.docs[0]?.id ?? null),
+      doc(getDb(), "answerLocks", answerLockId(request.id, uid)),
+      (snap) => setMyEntryId(snap.exists() ? (snap.get("entryId") as string) : null),
       (err) => console.error("Could not check your entry", err),
     );
   }, [request.id, uid]);
@@ -74,10 +71,14 @@ export default function Answers({ request }: { request: RequestItem }) {
   }, [uid]);
 
   const signedInUid = loading ? null : uid;
-  const mine = signedInUid ? myEntryId : null;
+  const markedEntryId = signedInUid ? myEntryId : null;
+  const list = entries ?? [];
+  // My entry exists once it shows up in the list; the marker alone means an
+  // earlier attempt saved the marker but not the entry.
+  const mine = markedEntryId && list.some((e) => e.id === markedEntryId) ? markedEntryId : null;
+  const unfinished = markedEntryId !== null && mine === null && entries !== null;
   const isRequester = signedInUid !== null && signedInUid === request.requesterId;
   const closed = now.getTime() > 0 && now >= answersCloseAt(request.createdAt);
-  const list = entries ?? [];
   const shown = mine
     ? [...list.filter((e) => e.id === mine), ...list.filter((e) => e.id !== mine)]
     : list;
@@ -106,6 +107,16 @@ export default function Answers({ request }: { request: RequestItem }) {
     );
   } else if (mine) {
     action = null; // their entry is pinned at the top, marked "Your entry"
+  } else if (unfinished && !closed) {
+    showingForm = true;
+    action = (
+      <>
+        <p className="notice notice-warn" role="status">
+          Your last answer didn&apos;t finish saving. Please send it again.
+        </p>
+        <AnswerForm request={request} resumeEntryId={markedEntryId} />
+      </>
+    );
   } else if (closed) {
     action = <p className="notice notice-plain">Answers for this request have closed.</p>;
   } else if (entries !== null && (entries.length === 0 || formOpen)) {
