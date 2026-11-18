@@ -18,6 +18,24 @@ export type SparkFields = {
   pairKeys: string[];
 };
 
+/**
+ * A problem with the sparks, with enough detail to point at the box that is
+ * wrong. `message` is safe to show to the person typing.
+ */
+export class SparkError extends Error {
+  /** Which spark box (0 to 2) is the problem, or null if it is about all three. */
+  readonly index: number | null;
+  /** A corrected word the person can accept in one tap, if there is an obvious one. */
+  readonly fix: string | null;
+
+  constructor(message: string, index: number | null = null, fix: string | null = null) {
+    super(message);
+    this.name = "SparkError";
+    this.index = index;
+    this.fix = fix;
+  }
+}
+
 /** Lowercase, tidy and strip punctuation. Returns "" if nothing usable is left. */
 export function normaliseSpark(raw: string): string {
   return raw
@@ -35,7 +53,7 @@ export function normaliseSpark(raw: string): string {
  */
 export function buildSparkFields(input: string[]): SparkFields {
   if (input.length !== SPARK_COUNT) {
-    throw new Error("Choose three sparks.");
+    throw new SparkError("Choose three sparks.");
   }
 
   const sparks = input.map((s) => s.trim());
@@ -43,18 +61,30 @@ export function buildSparkFields(input: string[]): SparkFields {
 
   for (let i = 0; i < norm.length; i++) {
     if (norm[i] === "") {
-      throw new Error("Each spark needs a word.");
+      throw new SparkError("Each spark needs a word.", i);
     }
     if (norm[i].includes(" ")) {
-      throw new Error("A spark is a single word. Use a hyphen for joined words.");
+      const joined = sparks[i].split(/\s+/).join("-");
+      throw new SparkError(
+        `"${sparks[i]}" is more than one word. A spark is a single word; use a hyphen for joined words.`,
+        i,
+        joined.length <= SPARK_MAX_LENGTH ? joined : null,
+      );
     }
     if (sparks[i].length > SPARK_MAX_LENGTH) {
-      throw new Error(`Sparks can be up to ${SPARK_MAX_LENGTH} characters long.`);
+      throw new SparkError(
+        `"${sparks[i]}" is too long. Sparks can be up to ${SPARK_MAX_LENGTH} characters.`,
+        i,
+      );
     }
   }
 
-  if (new Set(norm).size !== SPARK_COUNT) {
-    throw new Error("Use three different sparks.");
+  const seen = new Set<string>();
+  for (let i = 0; i < norm.length; i++) {
+    if (seen.has(norm[i])) {
+      throw new SparkError(`"${sparks[i]}" is already one of your sparks. Use three different words.`, i);
+    }
+    seen.add(norm[i]);
   }
 
   const sparksNorm = [...norm].sort();

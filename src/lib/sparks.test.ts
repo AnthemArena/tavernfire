@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildSparkFields, normaliseSpark } from "./sparks.ts";
+import { SparkError, buildSparkFields, normaliseSpark } from "./sparks.ts";
 
 test("normaliseSpark lowercases, trims and strips punctuation", () => {
   assert.equal(normaliseSpark("  Glowing! "), "glowing");
@@ -32,7 +32,27 @@ test("the same three sparks in any order give the same keys", () => {
 test("rejects empty, duplicate, multi-word and over-long sparks", () => {
   assert.throws(() => buildSparkFields(["a", "b", ""]), /needs a word/);
   assert.throws(() => buildSparkFields(["Time", "time", "Glowing"]), /different/);
-  assert.throws(() => buildSparkFields(["ice cream", "b", "c"]), /single word/);
+  assert.throws(() => buildSparkFields(["ice cream", "b", "c"]), /more than one word/);
   assert.throws(() => buildSparkFields(["a".repeat(31), "b", "c"]), /30 characters/);
   assert.throws(() => buildSparkFields(["a", "b"]), /three sparks/);
+});
+
+test("errors say which spark is wrong and offer a one-tap fix for joined words", () => {
+  try {
+    buildSparkFields(["Statue", "3 Heads", "Glowing"]);
+    assert.fail("should have thrown");
+  } catch (err) {
+    assert.ok(err instanceof SparkError);
+    assert.equal(err.index, 1);
+    assert.equal(err.fix, "3-Heads");
+    assert.match(err.message, /"3 Heads"/);
+  }
+  try {
+    buildSparkFields(["Time", "Statue", "time"]);
+    assert.fail("should have thrown");
+  } catch (err) {
+    assert.ok(err instanceof SparkError);
+    assert.equal(err.index, 2);
+    assert.equal(err.fix, null);
+  }
 });

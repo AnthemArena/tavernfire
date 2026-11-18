@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
-import { buildSparkFields } from "@/lib/sparks";
+import { SparkError, buildSparkFields } from "@/lib/sparks";
 import { KIND_LABELS, REQUEST_KINDS, type RequestKind } from "@/lib/requests";
 
 const NOTE_MAX = 300;
@@ -22,6 +22,9 @@ export default function PostRequestForm() {
   const [kind, setKind] = useState<RequestKind>("npc");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // When the problem is with one spark box, which one, and a suggested fix.
+  const [sparkProblem, setSparkProblem] = useState<{ index: number; message: string; fix: string | null } | null>(null);
+  const sparkInputs = useRef<(HTMLInputElement | null)[]>([]);
   const [busy, setBusy] = useState(false);
   const [slow, setSlow] = useState(false);
   // The id of the request we just posted, once the server has confirmed it.
@@ -33,18 +36,26 @@ export default function PostRequestForm() {
 
   function setSpark(index: number, value: string) {
     setSparks((current) => current.map((s, i) => (i === index ? value : s)));
+    if (sparkProblem?.index === index) setSparkProblem(null);
   }
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (!user) return;
     setError(null);
+    setSparkProblem(null);
 
     let fields;
     try {
       fields = buildSparkFields(sparks);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Check your sparks and try again.");
+      if (err instanceof SparkError && err.index !== null) {
+        // Point at the box that is wrong, and move focus to it.
+        setSparkProblem({ index: err.index, message: err.message, fix: err.fix });
+        sparkInputs.current[err.index]?.focus();
+      } else {
+        setError(err instanceof Error ? err.message : "Check your sparks and try again.");
+      }
       return;
     }
 
@@ -136,17 +147,42 @@ export default function PostRequestForm() {
                 </label>
                 <input
                   id={`spark-${index}`}
-                  className="input input-spark"
+                  ref={(el) => {
+                    sparkInputs.current[index] = el;
+                  }}
+                  className={
+                    sparkProblem?.index === index ? "input input-spark input-error" : "input input-spark"
+                  }
                   type="text"
                   maxLength={30}
                   autoComplete="off"
                   placeholder={["Statue", "Time", "Glowing"][index]}
                   value={value}
+                  aria-invalid={sparkProblem?.index === index ? true : undefined}
+                  aria-describedby={sparkProblem?.index === index ? "spark-problem" : undefined}
                   onChange={(e) => setSpark(index, e.target.value)}
                 />
               </div>
             ))}
           </div>
+          {sparkProblem && (
+            <div className="error spark-problem" id="spark-problem" role="alert">
+              <p>{sparkProblem.message}</p>
+              {sparkProblem.fix && (
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => {
+                    setSpark(sparkProblem.index, sparkProblem.fix ?? "");
+                    setSparkProblem(null);
+                    sparkInputs.current[sparkProblem.index]?.focus();
+                  }}
+                >
+                  Use {sparkProblem.fix}
+                </button>
+              )}
+            </div>
+          )}
           <p className="hint">
             Broad words invite surprises. Narrow words get you closer to what
             you need.

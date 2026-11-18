@@ -103,7 +103,7 @@ export default function Answers({ request }: { request: RequestItem }) {
     action = (
       <p className="notice notice-plain">
         This is your request, so you can&apos;t answer it.
-        {list.length === 0 && " Answers will appear below as people write them."}
+        {list.length === 0 && " Answers will appear here."}
       </p>
     );
   } else if (mine) {
@@ -174,7 +174,7 @@ export default function Answers({ request }: { request: RequestItem }) {
       ) : (
         <>
           {action}
-          {entries.length === 0 && !showingForm && (
+          {entries.length === 0 && !showingForm && !isRequester && (
             <p className="empty">
               No answers yet. Entries written for these three sparks will appear here.
             </p>

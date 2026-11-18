@@ -91,8 +91,7 @@ export default function TraitInput({
         <span className="visually-hidden" aria-live="polite">
           {traits.length} of {ENTRY_TRAITS_MAX} traits.
         </span>
-        Press Enter or comma to add one. Traits describe your entry and help
-        people find it; they are separate from the three sparks.
+        Press Enter or comma to add up to 5. Traits aren&apos;t sparks.
       </p>
     </div>
   );

@@ -236,7 +236,7 @@ a:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 48px;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .hero-copy {
@@ -345,6 +345,19 @@ a:hover {
   color: var(--muted);
   line-height: 1.4;
   margin: 8px 0 16px;
+}
+
+.input-error {
+  border-color: var(--error);
+  box-shadow: 0 0 0 1px var(--error);
+}
+
+.spark-problem {
+  margin: 0 0 14px;
+}
+
+.spark-problem p {
+  margin: 0 0 10px;
 }
 
 .error {
@@ -628,7 +641,8 @@ a:hover {
     display: none;
   }
 
-  .form-actions .btn-primary {
+  .form-actions .btn-primary,
+  .notice-actions .btn {
     flex: 1 1 100%;
   }
 
