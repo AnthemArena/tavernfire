@@ -118,7 +118,7 @@ export default function Answers({ request }: { request: RequestItem }) {
     action = justSubmitted ? (
       <p className="notice notice-success" role="status">
         <span className="notice-title">Your answer is in.</span> You can edit
-        it for 24 hours after posting (never once answers close).
+        it for up to 24 hours, or until answers close.
       </p>
     ) : null;
   } else if (unfinished && !closed) {

@@ -604,6 +604,20 @@ describe("report flags", () => {
     await assertSucceeds(setDoc(doc(carol, "entryFlags", "e1"), flag("e1", "e1_carol")));
   });
 
+  test("a moderator can lift a flag, after which the author can edit again", async () => {
+    await seedRequest("r1");
+    await seedPostedAnswer("e1", "bob", new Date(Date.now() - 1 * HOUR));
+    await seedReport("e1", "carol");
+    const carol = env.authenticatedContext("carol").firestore();
+    await assertSucceeds(setDoc(doc(carol, "entryFlags", "e1"), flag("e1", "e1_carol")));
+    const bob = env.authenticatedContext("bob").firestore();
+    await assertFails(updateDoc(doc(bob, "entries", "e1"), edit()));
+    await assertFails(deleteDoc(doc(carol, "entryFlags", "e1")));
+    const mod = env.authenticatedContext("mod", { role: "moderator" }).firestore();
+    await assertSucceeds(deleteDoc(doc(mod, "entryFlags", "e1")));
+    await assertSucceeds(updateDoc(doc(bob, "entries", "e1"), edit()));
+  });
+
   test("a flag cannot be created twice, edited, deleted or read by members", async () => {
     await seedRequest("r1");
     await seedPostedAnswer("e1", "bob", new Date());

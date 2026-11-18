@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { collection, doc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
@@ -65,6 +65,13 @@ export default function AnswerForm({
   const [traitDraft, setTraitDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const nameInput = useRef<HTMLInputElement>(null);
+
+  // When editing in place, start in the first field.
+  useEffect(() => {
+    if (editing) nameInput.current?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -98,7 +105,7 @@ export default function AnswerForm({
       } catch (err) {
         console.error("Could not save changes", err);
         setError(
-          "Couldn't save your changes. The edit window may have just ended, or this entry can no longer be edited.",
+          "This entry can't be edited right now. Your text is still here, so you can copy it.",
         );
         setBusy(false);
       }
@@ -148,8 +155,7 @@ export default function AnswerForm({
       <h3 className="card-title">{editing ? "Edit your answer" : "Write your answer"}</h3>
       {!editing && (
         <p className="card-lede">
-          Write it yourself. Entries are anonymous until voting ends, and they
-          stay in the library afterwards.
+          Write it yourself. Entries are anonymous until voting ends.
         </p>
       )}
 
@@ -159,6 +165,7 @@ export default function AnswerForm({
         </label>
         <input
           id={`entry-name-${idPart}`}
+          ref={nameInput}
           className="input"
           type="text"
           maxLength={ENTRY_NAME_MAX}

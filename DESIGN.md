@@ -77,7 +77,7 @@ See `claude/lead-agent-response-2026-11-18.md` in the Project. In short: header 
 
 ## Answers (Slice A)
 
-- **Entry card:** name (Fraunces 700, 22px), description (16px, 65ch max, line breaks kept), trait pills, then a footer with "Author revealed after voting" and a quiet "Report entry" (muted, underlined, 44px tall). Your own entry is pinned first with a "Your entry" badge, says "You wrote this", and has no report link. After submitting, a "Your answer is in. You can edit it for 24 hours after posting (never once answers close)." notice appears.
+- **Entry card:** name (Fraunces 700, 22px), description (16px, 65ch max, line breaks kept), trait pills, then a footer with "Author revealed after voting" and a quiet "Report entry" (muted, underlined, 44px tall). Your own entry is pinned first with a "Your entry" badge, says "You wrote this", and has no report link. After submitting, a "Your answer is in. You can edit it for up to 24 hours, or until answers close." notice appears.
 - **Trait pills:** 13px Inter 500, teal #1D5A57 on #E6EFE9 with a teal border (6.7:1). Deliberately small and rounded so they never read as spark chips.
 - **Answer form:** name, description, traits (Enter or comma adds a pill; each pill has a remove button with a 44px tap area), no "How a GM could use it" field; live counters at the top right of each label ("n of 60", "n of 600", "n of 5"); NPC and Location have different placeholders.
 - **States:** signed out ("Sign in to answer"), requester ("This is your request"), already answered (form gone, entry pinned), answers closed, none (form shown directly), one, many, reported.
@@ -88,7 +88,7 @@ See `claude/lead-agent-response-2026-11-18.md` in the Project. In short: header 
 
 ## Editing your own answer
 
-- Your own card shows a quiet "Edit · 23 hours left" link. It opens the answer form, pre-filled, in place of the card, with "Save changes" and "Cancel" and the same counters; a "Saved." line follows.
+- Your own card shows a quiet "Edit · 23 hours left" link. It opens the answer form, pre-filled, in place of the card, with "Save changes" and "Cancel" and the same counters; "Saved" then appears in the footer line ("You wrote this · Edited · Saved", announced to screen readers). Focus moves to the first field when the form opens and returns to the Edit link after Save or Cancel. If a save is refused, the form keeps the typed text and says "This entry can't be edited right now."
 - The window is 24 hours from the original posting (editing never restarts it) and ends early when the request stops accepting answers. After it ends the link is replaced by "Entries are locked 24 hours after posting."
 - Only name, description and traits can change. An edited entry shows a small muted "· Edited" after the author line, to everyone.
 - Reporting an entry locks it against edits (the author is not told it was reported; a refused save just says it can no longer be edited).

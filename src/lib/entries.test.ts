@@ -1,6 +1,9 @@
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
+import { ANSWER_WINDOW_DAYS } from "./requests.ts";
 import {
+  ENTRY_EDIT_WINDOW_HOURS,
   answerMarkerPath,
   describeEditTimeLeft,
   editableUntil,
@@ -102,4 +105,20 @@ test("edit time left reads naturally", () => {
   assert.equal(describeEditTimeLeft(new Date("2026-11-18T11:30:00Z"), now), "1 hour left");
   assert.equal(describeEditTimeLeft(new Date("2026-11-18T10:47:00Z"), now), "47 min left");
   assert.equal(describeEditTimeLeft(new Date("2026-11-18T10:00:00Z"), now), null);
+});
+
+// The same numbers appear in firestore.rules, where they cannot import from here.
+// A mismatch would fail silently, so these tests keep them in step.
+const rules = readFileSync(new URL("../../firestore.rules", import.meta.url), "utf8");
+
+test("the entry edit window in firestore.rules matches ENTRY_EDIT_WINDOW_HOURS", () => {
+  const hours = [...rules.matchAll(/duration\.value\((\d+), 'h'\)/g)].map((m) => Number(m[1]));
+  assert.ok(hours.length > 0, "no hour window found in firestore.rules");
+  for (const h of hours) assert.equal(h, ENTRY_EDIT_WINDOW_HOURS);
+});
+
+test("the answer window in firestore.rules matches ANSWER_WINDOW_DAYS", () => {
+  const days = [...rules.matchAll(/duration\.value\((\d+), 'd'\)/g)].map((m) => Number(m[1]));
+  assert.ok(days.length > 0, "no day window found in firestore.rules");
+  for (const d of days) assert.equal(d, ANSWER_WINDOW_DAYS);
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
@@ -126,14 +126,29 @@ export default function EntryCard({
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  const editButton = useRef<HTMLButtonElement>(null);
+  const restoreFocus = useRef(false);
+
+  // After saving or cancelling an edit, put keyboard focus back on the Edit link.
+  useEffect(() => {
+    if (!editing && restoreFocus.current) {
+      restoreFocus.current = false;
+      editButton.current?.focus();
+    }
+  }, [editing]);
+
   const timeLeft = editUntil ? describeEditTimeLeft(editUntil, now) : null;
 
   if (isMine && editing) {
     return (
       <AnswerForm
         editing={entry}
-        onCancel={() => setEditing(false)}
+        onCancel={() => {
+          restoreFocus.current = true;
+          setEditing(false);
+        }}
         onSaved={() => {
+          restoreFocus.current = true;
           setEditing(false);
           setSaved(true);
         }}
@@ -166,11 +181,24 @@ export default function EntryCard({
         <span className="entry-anon">
           {isMine ? "You wrote this" : "Author revealed after voting"}
           {entry.edited && <span className="entry-edited"> · Edited</span>}
+          {isMine && (
+            <span className="entry-saved" role="status">
+              {saved ? " · Saved" : ""}
+            </span>
+          )}
         </span>
 
         {isMine &&
           (timeLeft ? (
-            <button type="button" className="btn-link btn-link-action" onClick={() => setEditing(true)}>
+            <button
+              ref={editButton}
+              type="button"
+              className="btn-link btn-link-action"
+              onClick={() => {
+                setSaved(false);
+                setEditing(true);
+              }}
+            >
               Edit · {timeLeft}
             </button>
           ) : (
@@ -195,12 +223,6 @@ export default function EntryCard({
             )
           ))}
       </div>
-
-      {saved && isMine && (
-        <p className="entry-saved" role="status">
-          Saved.
-        </p>
-      )}
 
       {reporting && !reported && (
         <ReportForm entryId={entry.id} onClose={() => setReporting(false)} />

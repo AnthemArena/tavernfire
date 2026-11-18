@@ -219,7 +219,10 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time
         && get(/databases/$(database)/documents/reports/$(request.resource.data.reportId)).data.entryId == entryId
         && get(/databases/$(database)/documents/reports/$(request.resource.data.reportId)).data.reporterId == request.auth.uid;
-      allow update, delete: if false;
+      allow update: if false;
+      // A moderator who dismisses the report removes the flag, so the author can
+      // edit again (if their window has not ended).
+      allow delete: if isModerator();
     }
 
     // Reports ("Report entry"). The id is entryId_reporterUid, so each person
