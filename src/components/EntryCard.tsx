@@ -6,6 +6,7 @@ import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import {
   describeEditTimeLeft,
+  ENTRY_EDIT_WINDOW_HOURS,
   REPORT_REASONS,
   REPORT_REASON_LABELS,
   type EntryItem,
@@ -113,6 +114,7 @@ export default function EntryCard({
   reported,
   now,
   editUntil,
+  answersClosed,
 }: {
   entry: EntryItem;
   isMine: boolean;
@@ -120,11 +122,20 @@ export default function EntryCard({
   now: Date;
   /** When the author's edit window ends; null if it is not known yet. */
   editUntil: Date | null;
+  /** True once the request has stopped accepting answers. */
+  answersClosed: boolean;
 }) {
   const { user } = useAuth();
   const [reporting, setReporting] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // "Saved" is only a short confirmation; "Edited" stays.
+  useEffect(() => {
+    if (!saved) return;
+    const timer = setTimeout(() => setSaved(false), 4000);
+    return () => clearTimeout(timer);
+  }, [saved]);
 
   const editButton = useRef<HTMLButtonElement>(null);
   const restoreFocus = useRef(false);
@@ -202,7 +213,11 @@ export default function EntryCard({
               Edit · {timeLeft}
             </button>
           ) : (
-            <span className="entry-anon">Entries are locked 24 hours after posting.</span>
+            <span className="entry-anon">
+              {answersClosed
+                ? "Answers have closed, so this entry is locked."
+                : `Entries are locked ${ENTRY_EDIT_WINDOW_HOURS} hours after posting.`}
+            </span>
           ))}
 
         {!isMine &&

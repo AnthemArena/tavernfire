@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { collection, doc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+import { collection, doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -41,6 +41,8 @@ export default function AnswerForm({
   resumeEntryId,
   onSubmitted,
   onSaved,
+  onAlreadyAnswered,
+  onFailed,
 }: {
   /** The request being answered (needed to write a new answer). */
   request?: RequestItem;
@@ -52,6 +54,10 @@ export default function AnswerForm({
   resumeEntryId?: string | null;
   /** Called once the entry has been saved, so the page can confirm it. */
   onSubmitted?: () => void;
+  /** Called when the write was refused because this person already answered. */
+  onAlreadyAnswered?: () => void;
+  /** Called when an attempt failed here, so the page does not repeat the news. */
+  onFailed?: () => void;
   /** Shown only when there is something else on the page to go back to. */
   onCancel?: () => void;
 }) {
@@ -64,8 +70,13 @@ export default function AnswerForm({
   const [traits, setTraits] = useState<string[]>(editing?.traits ?? []);
   const [traitDraft, setTraitDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [conceptError, setConceptError] = useState<string | null>(null);
+  // After a refused edit, Save stays off until the person changes something.
+  const [refused, setRefused] = useState(false);
   const [busy, setBusy] = useState(false);
   const nameInput = useRef<HTMLInputElement>(null);
+  const conceptInput = useRef<HTMLTextAreaElement>(null);
 
   // When editing in place, start in the first field.
   useEffect(() => {
@@ -77,6 +88,18 @@ export default function AnswerForm({
     event.preventDefault();
     if (!user || busy) return;
     setError(null);
+    setNameError(null);
+    setConceptError(null);
+
+    // Check each field on its own, so the message sits beside the box it is about.
+    const missingName = name.trim() === "";
+    const missingConcept = concept.trim() === "";
+    if (missingName || missingConcept) {
+      if (missingName) setNameError("Give your entry a name.");
+      if (missingConcept) setConceptError("Describe your entry.");
+      (missingName ? nameInput : conceptInput).current?.focus();
+      return;
+    }
 
     // Include a trait that was typed but not yet confirmed with Enter.
     const pending = cleanTrait(traitDraft);
@@ -105,8 +128,9 @@ export default function AnswerForm({
       } catch (err) {
         console.error("Could not save changes", err);
         setError(
-          "This entry can't be edited right now. Your text is still here, so you can copy it.",
+          "This entry can't be edited right now. It may have been locked, or answers may have closed. Your text is still here, so you can copy it.",
         );
+        setRefused(true);
         setBusy(false);
       }
       return;
@@ -143,8 +167,21 @@ export default function AnswerForm({
       // The live listener on the page now shows the new entry as "Your entry".
     } catch (err) {
       console.error("Could not submit answer", err);
+      // If a different entry of mine already holds the private marker, this is
+      // a second answer (for example from another tab). Retrying would always
+      // fail, so hand over to the page instead of offering "try again".
+      try {
+        const marker = await getDoc(doc(getDb(), ...answerMarkerPath(request.id, user.uid)));
+        if (marker.exists() && marker.get("entryId") !== resumeEntryId) {
+          onAlreadyAnswered?.();
+          return;
+        }
+      } catch {
+        // Could not check; fall through to the general message.
+      }
+      onFailed?.();
       setError(
-        "Couldn't submit your answer. Answers may have just closed, or you may already have answered this request. If your connection dropped, try again: nothing is lost on this page.",
+        "Couldn't submit your answer. Answers may have just closed, or your connection dropped. Your text is still here, so you can try again.",
       );
       setBusy(false);
     }
@@ -166,13 +203,24 @@ export default function AnswerForm({
         <input
           id={`entry-name-${idPart}`}
           ref={nameInput}
-          className="input"
+          className={nameError ? "input input-error" : "input"}
           type="text"
           maxLength={ENTRY_NAME_MAX}
           placeholder={copy.name}
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          aria-invalid={nameError ? true : undefined}
+          aria-describedby={nameError ? `entry-name-error-${idPart}` : undefined}
+          onChange={(e) => {
+            setName(e.target.value);
+            setNameError(null);
+            setRefused(false);
+          }}
         />
+        {nameError && (
+          <p className="error field-error" id={`entry-name-error-${idPart}`} role="alert">
+            {nameError}
+          </p>
+        )}
       </div>
 
       <div className="field">
@@ -181,20 +229,38 @@ export default function AnswerForm({
         </label>
         <textarea
           id={`entry-concept-${idPart}`}
-          className="input textarea"
+          ref={conceptInput}
+          className={conceptError ? "input textarea input-error" : "input textarea"}
           rows={5}
           maxLength={ENTRY_CONCEPT_MAX}
           placeholder={copy.concept}
           value={concept}
-          onChange={(e) => setConcept(e.target.value)}
+          aria-invalid={conceptError ? true : undefined}
+          aria-describedby={conceptError ? `entry-concept-error-${idPart}` : undefined}
+          onChange={(e) => {
+            setConcept(e.target.value);
+            setConceptError(null);
+            setRefused(false);
+          }}
         />
+        {conceptError && (
+          <p className="error field-error" id={`entry-concept-error-${idPart}`} role="alert">
+            {conceptError}
+          </p>
+        )}
       </div>
 
       <TraitInput
         traits={traits}
-        onChange={setTraits}
+        onChange={(t) => {
+          setTraits(t);
+          setRefused(false);
+        }}
         draft={traitDraft}
-        onDraftChange={setTraitDraft}
+        onDraftChange={(d) => {
+          setTraitDraft(d);
+          setRefused(false);
+        }}
       />
 
       {error && (
@@ -204,7 +270,7 @@ export default function AnswerForm({
       )}
 
       <div className="form-actions">
-        <button type="submit" className="btn btn-primary" disabled={busy}>
+        <button type="submit" className="btn btn-primary" disabled={busy || refused}>
           {editing
             ? busy
               ? "Saving…"

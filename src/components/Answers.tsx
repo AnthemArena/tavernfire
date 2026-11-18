@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useNow } from "@/lib/use-now";
 import {
   answerMarkerPath,
+  ENTRY_EDIT_WINDOW_HOURS,
   editableUntil,
   orderForViewer,
   toEntryItem,
@@ -32,6 +33,10 @@ export default function Answers({ request }: { request: RequestItem }) {
   const [reportedIds, setReportedIds] = useState<Set<string>>(new Set());
   const [formOpen, setFormOpen] = useState(false);
   const [justSubmitted, setJustSubmitted] = useState(false);
+  const [alreadyAnswered, setAlreadyAnswered] = useState(false);
+  // True once an attempt has failed on this page, so the "didn't finish" notice
+  // (meant for a returning visitor) does not repeat the form's own message.
+  const [failedHere, setFailedHere] = useState(false);
   // Random order that stays fixed for this viewer while the page is open.
   const orderKeys = useRef(new Map<string, number>());
 
@@ -115,36 +120,40 @@ export default function Answers({ request }: { request: RequestItem }) {
     );
   } else if (mine) {
     // Their entry is pinned at the top, marked "Your entry".
-    action = justSubmitted ? (
+    action = alreadyAnswered ? (
+      <p className="notice notice-plain" role="status">
+        You&apos;ve already answered this request. Your entry is below.
+      </p>
+    ) : justSubmitted ? (
       <p className="notice notice-success" role="status">
         <span className="notice-title">Your answer is in.</span> You can edit
-        it for up to 24 hours, or until answers close.
+        it for up to {ENTRY_EDIT_WINDOW_HOURS} hours, or until answers close.
       </p>
     ) : null;
-  } else if (unfinished && !closed) {
+  } else if (closed) {
+    action = <p className="notice notice-plain">Answers for this request have closed.</p>;
+  } else if (entries !== null && (unfinished || entries.length === 0 || formOpen)) {
+    // One form in one place, so what the person typed survives a failed attempt
+    // (a failed second write makes the private marker appear, which would
+    // otherwise swap the form for a new, empty one).
     showingForm = true;
     action = (
       <>
-        <p className="notice notice-warn" role="status">
-          Your last answer didn&apos;t finish saving. Please send it again.
-        </p>
+        {unfinished && !failedHere && (
+          <p className="notice notice-warn" role="status">
+            Your last answer didn&apos;t finish saving. Please send it again.
+          </p>
+        )}
         <AnswerForm
+          key="new-answer"
           request={request}
           resumeEntryId={markedEntryId}
+          onCancel={entries.length > 0 && !unfinished ? () => setFormOpen(false) : undefined}
           onSubmitted={() => setJustSubmitted(true)}
+          onAlreadyAnswered={() => setAlreadyAnswered(true)}
+          onFailed={() => setFailedHere(true)}
         />
       </>
-    );
-  } else if (closed) {
-    action = <p className="notice notice-plain">Answers for this request have closed.</p>;
-  } else if (entries !== null && (entries.length === 0 || formOpen)) {
-    showingForm = true;
-    action = (
-      <AnswerForm
-        request={request}
-        onCancel={entries.length > 0 ? () => setFormOpen(false) : undefined}
-        onSubmitted={() => setJustSubmitted(true)}
-      />
     );
   } else if (entries !== null) {
     action = (
@@ -165,7 +174,8 @@ export default function Answers({ request }: { request: RequestItem }) {
         {entries !== null && entries.length > 0 && (
           <p className="muted answers-count" role="status">
             {entries.length} {entries.length === 1 ? "answer" : "answers"}
-            {entries.length > 1 && ", in random order"}
+            {entries.length > 1 &&
+              (mine ? ", yours first, the rest in random order" : ", in random order")}
           </p>
         )}
       </div>
@@ -196,6 +206,7 @@ export default function Answers({ request }: { request: RequestItem }) {
                     reported={reportedIds.has(e.id)}
                     now={now}
                     editUntil={e.id === mine ? editableUntil(e, closeAt) : null}
+                    answersClosed={closed}
                   />
                 </li>
               ))}
