@@ -16,6 +16,7 @@ test("every category has all its wording filled in", () => {
       c.label,
       c.fullLabel,
       c.filterLabel,
+      c.description,
       c.answer.namePlaceholder,
       c.answer.conceptPlaceholder,
       c.answer.tagsLabel,

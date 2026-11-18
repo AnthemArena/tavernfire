@@ -981,3 +981,69 @@ a:hover {
     padding-right: 10px;
   }
 }
+
+/* Request type picker: each option says what it is for */
+.kind-picker {
+  border: 0;
+  margin: 0 0 20px;
+  padding: 0;
+  min-width: 0;
+}
+
+.kind-picker .label {
+  padding: 0;
+  margin-bottom: 8px;
+}
+
+.kind-options {
+  display: grid;
+  gap: 8px;
+}
+
+.kind-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid var(--control-border);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.kind-option input {
+  margin: 3px 0 0;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  accent-color: var(--accent);
+}
+
+.kind-option-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.kind-option:has(input:focus-visible) {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+.kind-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kind-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.kind-desc {
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--muted);
+}

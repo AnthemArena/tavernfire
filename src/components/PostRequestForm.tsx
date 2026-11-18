@@ -189,23 +189,29 @@ export default function PostRequestForm() {
             you need.
           </p>
 
-          <div className="field">
-            <label className="label" htmlFor="kind">
-              What do you need?
-            </label>
-            <select
-              id="kind"
-              className="input"
-              value={kind}
-              onChange={(e) => setKind(e.target.value as RequestKind)}
-            >
+          <fieldset className="field kind-picker">
+            <legend className="label">What do you need?</legend>
+            <div className="kind-options">
               {LAUNCHED_CATEGORIES.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.fullLabel}
-                </option>
+                <label
+                  key={c.id}
+                  className={kind === c.id ? "kind-option kind-option-selected" : "kind-option"}
+                >
+                  <input
+                    type="radio"
+                    name="kind"
+                    value={c.id}
+                    checked={kind === c.id}
+                    onChange={() => setKind(c.id as RequestKind)}
+                  />
+                  <span className="kind-text">
+                    <span className="kind-name">{c.fullLabel}</span>
+                    <span className="kind-desc">{c.description}</span>
+                  </span>
+                </label>
               ))}
-            </select>
-          </div>
+            </div>
+          </fieldset>
 
           <div className="field">
             <label className="label" htmlFor="note">

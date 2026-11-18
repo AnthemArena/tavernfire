@@ -30,6 +30,8 @@ export type Category = {
   fullLabel: string;
   /** Label for the board filter, e.g. "NPCs". */
   filterLabel: string;
+  /** One line, shown beside the option on the post form, saying what it is for. */
+  description: string;
   launched: boolean;
   answer: CategoryAnswerCopy;
 };
@@ -40,6 +42,7 @@ export const CATEGORIES = [
     label: "NPC",
     fullLabel: "Non-player character (NPC)",
     filterLabel: "NPCs",
+    description: "A character the GM plays: who they are, how they look, what they want.",
     launched: true,
     answer: {
       namePlaceholder: "e.g. Vhane, the Last Hour",
@@ -53,6 +56,7 @@ export const CATEGORIES = [
     label: "Location",
     fullLabel: "Location",
     filterLabel: "Locations",
+    description: "A place: what it is like, and what is hidden there.",
     launched: true,
     answer: {
       namePlaceholder: "e.g. The Hollow Observatory",
