@@ -202,7 +202,7 @@ export default function PostRequestForm() {
               </label>
               <select
                 id="kind"
-                className="input"
+                className="input select"
                 value={kind}
                 aria-describedby="kind-description"
                 onChange={(e) => setKind(e.target.value as RequestKind)}

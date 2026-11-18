@@ -105,7 +105,8 @@ export const CATEGORIES = [
     label: "Creature",
     fullLabel: "Creature",
     filterLabel: "Creatures",
-    description: "A monster or animal: how it looks, how it behaves, and what it wants.",
+    description:
+      "A monster or animal: how it looks, how it behaves, and what it wants. If it talks and schemes, ask for an NPC.",
     launched: false,
     group: "Characters",
     notePlaceholder: "Where it lives, how dangerous it should be, party level",
@@ -114,6 +115,24 @@ export const CATEGORIES = [
       conceptPlaceholder: "What is it? How does it look and behave, and where does it live?",
       tagsLabel: "Traits",
       tagsPlaceholder: "e.g. nocturnal, territorial, venomous",
+    },
+  },
+  // Launch only after Faction and Setting have real requests (design review, round 15).
+  {
+    id: "culture",
+    label: "Culture",
+    fullLabel: "Culture or faith",
+    filterLabel: "Cultures",
+    description: "The customs and beliefs of a people: what they do, what they believe, and why.",
+    launched: false,
+    group: "Places and worlds",
+    notePlaceholder: "Which people or world, and what the table needs it for",
+    answer: {
+      nameLabel: "Name of the people or custom",
+      namePlaceholder: "e.g. The Ash-Road Funeral Rites",
+      conceptPlaceholder: "What do they believe or do? When, how, and why?",
+      tagsLabel: "Customs",
+      tagsPlaceholder: "e.g. burial, fasting, song",
     },
   },
 ] as const satisfies readonly Category[];
