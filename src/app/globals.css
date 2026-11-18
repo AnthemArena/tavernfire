@@ -595,3 +595,37 @@ a:hover {
 .page-note {
   padding: 32px 0;
 }
+
+/* Notices */
+.notice {
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.notice p {
+  margin: 0 0 6px;
+}
+
+.notice p:last-child {
+  margin-bottom: 0;
+}
+
+.notice-title {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.notice-success {
+  background: #e6efe9;
+  border: 1px solid var(--teal);
+  color: var(--ink);
+}
+
+.notice-warn {
+  background: #f6e9d3;
+  border: 1px solid #a8741a;
+  color: var(--ink);
+}

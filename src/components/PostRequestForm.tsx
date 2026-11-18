@@ -10,6 +10,8 @@ import { buildSparkFields } from "@/lib/sparks";
 import { KIND_LABELS, REQUEST_KINDS, type RequestKind } from "@/lib/requests";
 
 const NOTE_MAX = 300;
+// If the server hasn't confirmed the request after this long, say so.
+const SLOW_AFTER_MS = 8_000;
 
 export default function PostRequestForm() {
   const router = useRouter();
@@ -20,6 +22,9 @@ export default function PostRequestForm() {
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [slow, setSlow] = useState(false);
+  // The id of the request we just posted, once the server has confirmed it.
+  const [postedId, setPostedId] = useState<string | null>(null);
 
   function setSpark(index: number, value: string) {
     setSparks((current) => current.map((s, i) => (i === index ? value : s)));
@@ -39,7 +44,11 @@ export default function PostRequestForm() {
     }
 
     setBusy(true);
+    setSlow(false);
+    const slowTimer = setTimeout(() => setSlow(true), SLOW_AFTER_MS);
+
     try {
+      // addDoc only finishes once the server has accepted the request.
       const ref = await addDoc(collection(getDb(), "requests"), {
         ...fields,
         kind,
@@ -51,12 +60,24 @@ export default function PostRequestForm() {
         answerCount: 0,
         createdAt: serverTimestamp(),
       });
+      clearTimeout(slowTimer);
+      setSlow(false);
+      setPostedId(ref.id);
+      setSparks(["", "", ""]);
+      setNote("");
       router.push(`/requests/${ref.id}`);
     } catch (err) {
+      clearTimeout(slowTimer);
       console.error("Could not post request", err);
       setError("Couldn't post your request. Check you're signed in and try again.");
+      setSlow(false);
       setBusy(false);
     }
+  }
+
+  function postAnother() {
+    setPostedId(null);
+    setBusy(false);
   }
 
   return (
@@ -75,6 +96,18 @@ export default function PostRequestForm() {
             Sign in to post
           </Link>
         </>
+      ) : postedId ? (
+        <div className="notice notice-success" role="status">
+          <p className="notice-title">Request posted</p>
+          <p>Opening your request now.</p>
+          <p>
+            <Link href={`/requests/${postedId}`}>Open your request</Link>
+            {" or "}
+            <button type="button" className="btn-link" onClick={postAnother}>
+              post another
+            </button>
+          </p>
+        </div>
       ) : (
         <form onSubmit={onSubmit} noValidate>
           <div className="form-row">
@@ -137,6 +170,14 @@ export default function PostRequestForm() {
           {error && (
             <p className="error" role="alert">
               {error}
+            </p>
+          )}
+
+          {slow && (
+            <p className="notice notice-warn" role="status">
+              This is taking longer than usual, so your request may not have
+              reached the server yet. If you&apos;re running the site locally,
+              check that the Firebase emulators are still running.
             </p>
           )}
 
