@@ -190,11 +190,13 @@ export default function EntryCard({
 
       <div className="entry-foot">
         <span className="entry-anon">
-          {isMine ? "You wrote this" : "Author revealed after voting"}
-          {entry.edited && <span className="entry-edited"> · Edited</span>}
+          {isMine ? null : "Author revealed after voting"}
+          {entry.edited && (
+            <span className="entry-edited">{isMine ? "Edited" : " · Edited"}</span>
+          )}
           {isMine && (
             <span className="entry-saved" role="status">
-              {saved ? " · Saved" : ""}
+              {saved ? (entry.edited ? " · Saved" : "Saved") : ""}
             </span>
           )}
         </span>

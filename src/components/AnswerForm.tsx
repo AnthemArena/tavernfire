@@ -74,6 +74,7 @@ export default function AnswerForm({
   const [conceptError, setConceptError] = useState<string | null>(null);
   // After a refused edit, Save stays off until the person changes something.
   const [refused, setRefused] = useState(false);
+  const refusals = useRef(0);
   const [busy, setBusy] = useState(false);
   const nameInput = useRef<HTMLInputElement>(null);
   const conceptInput = useRef<HTMLTextAreaElement>(null);
@@ -127,8 +128,11 @@ export default function AnswerForm({
         onSaved?.();
       } catch (err) {
         console.error("Could not save changes", err);
+        refusals.current += 1;
         setError(
-          "This entry can't be edited right now. It may have been locked, or answers may have closed. Your text is still here, so you can copy it.",
+          refusals.current > 1
+            ? "This entry is locked. Your text is still here, so you can copy it."
+            : "Couldn't save. This entry may be locked, or answers may have closed. Your text is still here.",
         );
         setRefused(true);
         setBusy(false);
@@ -137,9 +141,9 @@ export default function AnswerForm({
     }
 
     if (!request) return;
+    const entryId = resumeEntryId ?? doc(collection(getDb(), "entries")).id;
     try {
       const db = getDb();
-      const entryId = resumeEntryId ?? doc(collection(db, "entries")).id;
 
       // Two writes, in order. First a private marker that says "this person is
       // answering this request with this entry id" (it also records the hidden
@@ -172,7 +176,8 @@ export default function AnswerForm({
       // fail, so hand over to the page instead of offering "try again".
       try {
         const marker = await getDoc(doc(getDb(), ...answerMarkerPath(request.id, user.uid)));
-        if (marker.exists() && marker.get("entryId") !== resumeEntryId) {
+        if (marker.exists() && marker.get("entryId") !== entryId) {
+          setBusy(false);
           onAlreadyAnswered?.();
           return;
         }
