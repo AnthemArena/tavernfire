@@ -1,10 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 
 export default function SiteHeader() {
   const { user, displayName, loading, signOut } = useAuth();
+  const pathname = usePathname();
+  const onRequests = pathname === "/" || pathname.startsWith("/requests");
+  const onSignIn = pathname === "/signin";
 
   return (
     <header className="site-header">
@@ -14,7 +18,11 @@ export default function SiteHeader() {
         </Link>
 
         <nav className="nav" aria-label="Main">
-          <Link href="/" className="nav-current" aria-current="page">
+          <Link
+            href="/"
+            className={onRequests ? "nav-current" : undefined}
+            aria-current={onRequests ? "page" : undefined}
+          >
             Requests
           </Link>
         </nav>
@@ -27,7 +35,7 @@ export default function SiteHeader() {
                 Sign out
               </button>
             </>
-          ) : (
+          ) : onSignIn ? null : (
             <Link className="btn btn-dark" href="/signin">
               Sign in
             </Link>

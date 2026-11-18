@@ -118,12 +118,12 @@ export default function RequestBoard() {
                 </div>
                 {r.note && <p className="request-note">{r.note}</p>}
                 <div className="meta">
+                  <TimeLeft createdAt={r.createdAt} now={now} />
                   <span>
                     <strong>{r.answerCount}</strong>{" "}
                     {r.answerCount === 1 ? "answer" : "answers"}
                   </span>
                   <span>Posted by {r.requesterName}</span>
-                  <TimeLeft createdAt={r.createdAt} now={now} />
                 </div>
               </Link>
             </li>

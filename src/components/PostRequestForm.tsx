@@ -95,20 +95,15 @@ export default function PostRequestForm() {
         <p className="muted">One moment…</p>
       ) : !user ? (
         <>
-          {/* A look at the form before signing in. Decorative, so hidden from assistive tech. */}
-          <div className="form-row hero-spark-preview" aria-hidden="true">
-            {["Spark one", "Spark two", "Spark three"].map((label, index) => (
-              <div className="field field-spark" key={label}>
-                <div className="label">{label}</div>
-                <input
-                  className="input input-spark"
-                  type="text"
-                  tabIndex={-1}
-                  disabled
-                  placeholder={["Statue", "Time", "Glowing"][index]}
-                />
-              </div>
-            ))}
+          <div className="example-sparks">
+            <p className="example-label">Example request: an NPC or a location</p>
+            <div className="sparks">
+              {["Statue", "Time", "Glowing"].map((word) => (
+                <span className="spark" key={word}>
+                  {word}
+                </span>
+              ))}
+            </div>
           </div>
           <p className="card-lede">
             Sign in to post a request. It takes a few seconds and you can use

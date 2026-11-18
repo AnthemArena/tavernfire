@@ -95,8 +95,8 @@ export default function RequestView({ id }: { id: string }) {
           Answers
         </h2>
         <p className="empty">
-          Answers open in the next update. This is where people will add
-          NPCs and locations written for these three sparks.
+          No answers yet. Entries written for these three sparks will appear
+          here.
         </p>
       </section>
     </article>

@@ -68,7 +68,7 @@ All text pairs above meet at least 4.5:1 contrast on their backgrounds; keep it 
 
 - **Time pill (`.time-left`):** shows time left on a request; turns `.time-left-soon` (#F6E0D8 background, accent text, 4.84:1) when under 24 hours remain
 - **How-note (`.how-note`):** light note with a serif title and four numbered steps; replaces the dark card
-- **Signed-out form preview:** three disabled, aria-hidden spark inputs (Statue, Time, Glowing) above "Sign in to post"
+- **Signed-out example:** a labelled "Example request" with three non-interactive spark chips (Statue, Time, Glowing) above "Sign in to post". Replaced the disabled inputs after round 2b
 
 ## Deviations from the design review
 

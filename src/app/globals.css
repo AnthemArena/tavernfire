@@ -201,14 +201,17 @@ a:hover {
 }
 
 .nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  box-sizing: border-box;
   color: var(--muted);
   text-decoration: none;
-  padding-bottom: 4px;
 }
 
 .nav a.nav-current {
   color: var(--ink);
-  border-bottom: 2px solid var(--accent);
+  box-shadow: inset 0 -2px 0 var(--accent);
 }
 
 .header-actions {
@@ -574,8 +577,27 @@ a:hover {
   cursor: not-allowed;
 }
 
-.hero-spark-preview {
+.example-sparks {
   margin-bottom: 16px;
+}
+
+.example-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+
+/* Link-style buttons that stand alone need a full-size tap target. */
+.hint .btn-link,
+.auth-switch .btn-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.hint:has(.btn-link) {
+  margin-bottom: 8px;
 }
 
 /* Narrow screens */
@@ -592,6 +614,16 @@ a:hover {
   .board-grid,
   .hero-grid {
     gap: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .request-card {
+    padding: 18px 20px;
+  }
+
+  .request-card-top {
+    margin-bottom: 10px;
   }
 }
 
