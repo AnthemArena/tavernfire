@@ -35,7 +35,7 @@ function SignInButton() {
 
 /** The signed-in person's circle: name, account and sign out in one small menu. */
 function AvatarMenu() {
-  const { displayName, signOut } = useAuth();
+  const { user, displayName, signOut } = useAuth();
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement | null>(null);
 
@@ -77,6 +77,11 @@ function AvatarMenu() {
       {open && (
         <div className="avatar-panel" id="avatar-panel">
           <p className="avatar-name">{displayName ?? "No name yet"}</p>
+          {user && displayName && (
+            <Link href={`/profile/${user.uid}`} className="avatar-item" onClick={() => setOpen(false)}>
+              View profile
+            </Link>
+          )}
           <Link href="/account" className="avatar-item" onClick={() => setOpen(false)}>
             Your account
           </Link>
