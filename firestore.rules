@@ -195,7 +195,8 @@ service cloud.firestore {
     // Voting rules that need no Cloud Function: a verified email, at most three
     // distinct picks, each an entry of this request, never your own entry, and
     // only within 5 days of the request being posted (3 days of answers and
-    // voting, then 2 days of voting only).
+    // voting, then 2 days of voting only), and only while the request has not
+    // been revealed or closed by the lifecycle function.
     function validBallot(d, requestId) {
       let rq = get(/databases/$(database)/documents/requests/$(requestId)).data;
       let lockPath = /databases/$(database)/documents/requests/$(requestId)/answerLocks/$(request.auth.uid);
@@ -213,6 +214,7 @@ service cloud.firestore {
         && (d.picks.size() < 3 || (d.picks[0] != d.picks[2] && d.picks[1] != d.picks[2]))
         && (!exists(lockPath) || !(get(lockPath).data.entryId in d.picks))
         && rq.moderation == 'ok'
+        && rq.status in ['open', 'voting']
         && request.time < rq.createdAt + duration.value(5, 'd');
     }
 

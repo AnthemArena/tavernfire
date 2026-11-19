@@ -9,8 +9,9 @@
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "emulators": "firebase emulators:start",
-    "test": "node --test src/lib/*.test.ts",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-tavernfire \"node --test tests/*.test.ts\""
+    "test": "node --test src/lib/*.test.ts functions/src/*.test.ts",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-tavernfire \"node --test --test-concurrency=1 tests/*.test.ts\"",
+    "sync:functions": "node -e \"require('fs').copyFileSync('src/lib/ranking.ts','functions/src/ranking.ts')\""
   },
   "dependencies": {
     "firebase": "^13.4.0",
@@ -25,6 +26,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
+    "firebase-admin": "^13.0.0",
     "firebase-tools": "^15.36.0",
     "typescript": "^5"
   }

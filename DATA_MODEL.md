@@ -148,3 +148,22 @@ Search ranking: exact triple, then two-of-three, then one spark; sparks outrank 
 - Do hidden or removed entries keep their spark counts?
 - Synonym and "is-a" handling (vampire inside undead): when to add it
 - Licensing terms stored per entry (for example `license: 'personal-use'`)
+
+
+## Voting lifecycle (built: `functions/`)
+
+A scheduled Cloud Function, `advanceLifecycle` (every 15 minutes, region europe-west2), runs `runLifecycle` in `functions/src/lifecycle.ts`. The ranking itself is `src/lib/ranking.ts` (a copy lives in `functions/src/ranking.ts`; a test keeps them identical, and `npm run sync:functions` copies it).
+
+| When (from `createdAt`) | What the function does |
+| --- | --- |
+| 3 days, 2 or more visible entries | `status: "voting"` |
+| 3 days, no entries | `status: "closed"`, `revealedAt`, `ballotsDeleted: false` |
+| 3 days, exactly one entry | reveal at once (nothing to vote on), no ranks |
+| 5 days | count the ballots and reveal |
+| 7 days after `revealedAt` | delete the request's ballots, set `ballotsDeleted: true` |
+
+Reveal writes, on each visible entry: `authorId` (from the private answer marker), `authorName` (the author's chosen name at that moment, or null if they never chose one), `revealedAt`, and `result: { picks, rank, favourite, order }`. `rank` is null when fewer than 3 people voted. `order` is the position to show (0 is first). On the request it writes `status: "revealed"`, `revealedAt`, `ballotCount` (people who picked at least one entry) and `ballotsDeleted: false`. Hidden requests are skipped until restored; hidden or removed entries are ignored in the count. The run is repeatable, so a failed pass is simply retried.
+
+Ballots are refused by the rules once a request is `revealed` or `closed`.
+
+The small-request rule used: voting runs whenever there are two or more entries (owner can still change this by editing `decide()`).

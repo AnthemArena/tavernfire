@@ -101,3 +101,19 @@ page instead of Firebase's plain one. In the Firebase console go to Authenticati
 Templates, open "Email address verification" and "Password reset", choose the pencil
 icon > Customize action URL, and set it to `https://<your site>/auth/action`
 (later `https://tavernfire.com/auth/action`). The same page handles both emails.
+
+
+## Cloud Functions (voting lifecycle)
+
+Code is in `functions/` (Node 22, TypeScript). One-time setup on your computer:
+
+1. `cd functions` then `npm install`, then `cd ..`.
+2. `firebase login` (if needed), then deploy the rules, indexes and function together:
+   `firebase deploy --only firestore,functions`
+   The first deploy asks to switch on a few Google Cloud services (Cloud Build, Cloud Scheduler, Artifact Registry). Say yes. It needs the Blaze plan.
+3. The new Firestore index (status + createdAt on requests) takes a few minutes to build after deploying. Until it finishes, the function logs a "needs an index" error and tries again 15 minutes later.
+4. Check it in the Firebase console: Functions > `advanceLifecycle` > Logs. A healthy run prints `Lifecycle pass {...}`.
+
+After changing `src/lib/ranking.ts`, run `npm run sync:functions` (a test fails if the copies differ).
+Tests: `npm test` (logic) and `npm run test:rules` (rules plus the lifecycle running against the emulator).
+Keep `NEXT_PUBLIC_ENABLE_VOTING=false` on the live site until the results screens ship.

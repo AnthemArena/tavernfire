@@ -913,6 +913,21 @@ describe("ballots (picking favourites)", () => {
     await assertSucceeds(save(voter("seed-user"), "seed-user", ["e1"]));
   });
 
+  test("no picks are accepted once a request has been revealed or closed", async () => {
+    await seedVoting();
+    await assertSucceeds(save(voter("bob"), "bob", ["e1"]));
+    for (const status of ["revealed", "closed"]) {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await updateDoc(doc(ctx.firestore(), "requests", "r1"), { status });
+      });
+      await assertFails(save(voter("bob"), "bob", ["e2"]));
+    }
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await updateDoc(doc(ctx.firestore(), "requests", "r1"), { status: "voting" });
+    });
+    await assertSucceeds(save(voter("bob"), "bob", ["e2"]));
+  });
+
   test("an unverified email cannot vote", async () => {
     await seedVoting();
     await assertFails(save(voter("bob", false), "bob", ["e1"]));
