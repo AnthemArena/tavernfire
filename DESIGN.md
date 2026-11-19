@@ -4,6 +4,8 @@ Carried over from the concept mockup so the real build matches it. Working name:
 
 ## Look and feel
 
+**Dark is the default theme** (near-black with gold accents), with the parchment look below as a light theme. A Dark/Light switch in the footer remembers the choice in the browser. Both themes are defined as tokens at the top of `globals.css` (`:root` is dark, `:root[data-theme="light"]` is light); screens use the tokens only, so a new colour is added to both. The light description follows.
+
 Warm parchment background, dark serif headings, muted colours and terracotta buttons. Friendly and readable, not an over-the-top fantasy interface. It is a tool for people who play fantasy games, not an in-game screen.
 
 ## Colours
@@ -92,3 +94,20 @@ See `claude/lead-agent-response-2026-11-18.md` in the Project. In short: header 
 - The window is 24 hours from the original posting (editing never restarts it) and ends early when the request stops accepting answers. After it ends the link is replaced by "Entries are locked 24 hours after posting."
 - Only name, description and traits can change. An edited entry shows a small muted "· Edited" after the author line, to everyone.
 - Reporting an entry locks it against edits (the author is not told it was reported; a refused save just says it can no longer be edited).
+
+
+## Dark theme (default)
+
+| Role | Hex |
+| --- | --- |
+| Page background | #131211 |
+| Card surface | #1D1B18 |
+| Card border | #36322B |
+| Spark chip | #2B2721 (hairline #5A4A22) |
+| Ink / body / muted | #F2EBDC / #D9D1C0 / #A99F8D |
+| Control border | #8C8068 |
+| Gold accent (links, primary buttons, focus ring, brand) | #D4AF37, hover #E6C35C, text on gold #14110C |
+| Teal (labels, type badges, picked, success) | #7FC8BD |
+| Error | #FF9B86 |
+
+Measured contrast: ink 14.5:1 on the card, muted 6.6:1, gold 8.2:1, text on gold 9:1, control border 4.4:1 on the card. Gold is the one action colour in dark; terracotta is the light theme's action colour.
