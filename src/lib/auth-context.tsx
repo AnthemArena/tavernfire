@@ -21,6 +21,7 @@ import {
 } from "firebase/auth";
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { getDb, getFirebaseAuth } from "@/lib/firebase";
+import { nextNameChange } from "@/lib/names";
 import { EMPTY_PROFILE, claimName, loadProfile, type Profile } from "@/lib/display-name";
 
 /**
@@ -41,6 +42,8 @@ type AuthContextValue = {
   displayName: string | null;
   /** Reserve and save a public name. Throws a NameError with a message to show. */
   chooseName: (name: string) => Promise<string>;
+  /** When the name can next be changed, or null if it can be changed now. Call after sign-in, not while prerendering. */
+  nameChangeOn: () => Date | null;
   /** True until Firebase has told us whether someone is signed in. */
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
@@ -113,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       displayName: profile.displayName,
       chooseName,
+      nameChangeOn: () => nextNameChange(profile.nameChangedAt, new Date()),
       loading,
       signInWithGoogle,
       signInWithEmail,
@@ -120,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sendPasswordReset,
       signOut,
     }),
-    [user, profile.displayName, chooseName, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, sendPasswordReset, signOut],
+    [user, profile.displayName, profile.nameChangedAt, chooseName, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, sendPasswordReset, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

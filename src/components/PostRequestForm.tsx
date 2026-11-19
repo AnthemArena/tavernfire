@@ -24,7 +24,10 @@ const NOTICE_DELAY_MS = 700;
 
 export default function PostRequestForm() {
   const router = useRouter();
-  const { user, displayName, chooseName, loading } = useAuth();
+  const { user, displayName, chooseName, nameChangeOn, loading } = useAuth();
+  // True while a named person has opened the field to change their name.
+  const [changingName, setChangingName] = useState(false);
+  const showNameField = !displayName || changingName;
 
   const [sparks, setSparks] = useState(["", "", ""]);
   const [kind, setKind] = useState<RequestKind>("npc");
@@ -77,9 +80,10 @@ export default function PostRequestForm() {
 
     try {
       let requesterName = displayName;
-      if (!requesterName) {
+      if (showNameField) {
         try {
           requesterName = await chooseName(nameInput);
+          setChangingName(false);
         } catch (err) {
           clearTimeout(slowTimer);
           setSlow(false);
@@ -282,10 +286,10 @@ export default function PostRequestForm() {
             />
           </div>
 
-          {!displayName && (
+          {showNameField ? (
             <div className="field">
               <label className="label" htmlFor="display-name">
-                Your name on the board
+                {displayName ? "New name on the board" : "Your name on the board"}
               </label>
               <input
                 id="display-name"
@@ -294,6 +298,9 @@ export default function PostRequestForm() {
                 type="text"
                 maxLength={NAME_MAX}
                 autoComplete="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                placeholder="e.g. Marrow"
                 value={nameInput}
                 aria-invalid={nameError ? true : undefined}
                 aria-describedby={nameError ? "name-error name-hint" : "name-hint"}
@@ -308,11 +315,40 @@ export default function PostRequestForm() {
                 </p>
               )}
               <p className="hint" id="name-hint">
-                Shown next to your requests. Entries you write stay anonymous.
-                Pick something that isn&apos;t your real name; you can change it
-                once every {NAME_CHANGE_DAYS} days.
+                Shown next to your requests. Pick something that isn&apos;t your
+                real name; you can change it once every {NAME_CHANGE_DAYS} days.
+                {displayName && (
+                  <>
+                    {" "}
+                    <button
+                      type="button"
+                      className="link-button"
+                      onClick={() => {
+                        setChangingName(false);
+                        setNameError(null);
+                        setNameInput("");
+                      }}
+                    >
+                      Keep {displayName}
+                    </button>
+                  </>
+                )}
               </p>
             </div>
+          ) : (
+            <p className="hint posting-as">
+              Posting as <strong>{displayName}</strong>.{" "}
+              {(() => {
+                const on = nameChangeOn();
+                return on ? (
+                  `You can change it again on ${on.toLocaleDateString(undefined, { day: "numeric", month: "long" })}.`
+                ) : (
+                  <button type="button" className="link-button" onClick={() => setChangingName(true)}>
+                    Change
+                  </button>
+                );
+              })()}
+            </p>
           )}
 
           {error && (

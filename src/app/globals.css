@@ -1085,3 +1085,19 @@ a:hover {
   width: auto;
   min-width: 180px;
 }
+
+/* A button that reads as an inline text link (e.g. "Change" in the posting-as line). */
+.link-button {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--teal);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.link-button:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
