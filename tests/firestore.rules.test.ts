@@ -44,6 +44,13 @@ beforeEach(async () => {
   await env.clearFirestore();
 });
 
+test("every launched request type can be posted", async () => {
+  const db = env.authenticatedContext("alice").firestore();
+  for (const kind of ["npc", "location", "item", "creature"]) {
+    await assertSucceeds(addDoc(collection(db, "requests"), newRequest("alice", { kind })));
+  }
+});
+
 function newRequest(uid: string, overrides: Record<string, unknown> = {}) {
   return {
     ...buildSparkFields(["Statue", "Time", "Glowing"]),
@@ -112,6 +119,8 @@ describe("requests: create", () => {
     const db = env.authenticatedContext("alice").firestore();
     await assertFails(addDoc(collection(db, "requests"), newRequest("alice", { extra: true })));
     await assertFails(addDoc(collection(db, "requests"), newRequest("alice", { kind: "dragon" })));
+    // Drafted but not launched yet, so the rules refuse it.
+    await assertFails(addDoc(collection(db, "requests"), newRequest("alice", { kind: "culture" })));
     await assertFails(
       addDoc(collection(db, "requests"), newRequest("alice", { note: "x".repeat(301) })),
     );

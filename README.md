@@ -18,7 +18,7 @@ Someone posts three sparks and what they need. The community answers with someth
 
 ## How it works
 
-1. **Post a request.** Choose three sparks and a type (NPC or location at launch). Optionally add context, such as party level or tone.
+1. **Post a request.** Choose three sparks and a type (NPC, location, item or creature to start). Optionally add context, such as party level or tone.
 2. **The community answers.** Each entry follows a short template: name, description, and up to five optional traits. (A "How a GM could use it" line was tried and removed: the request already says what is needed, so it mostly repeated the description.)
 3. **Voting.** Entries are shown in random order. Authors and vote totals stay hidden until voting closes, so people vote on the idea and early leaders do not sway later voters.
 4. **Reveal.** Authors are revealed and winners highlighted.
@@ -47,7 +47,7 @@ Start narrow so entries pile up where people look.
 
 **Launch**
 - Request board with three-spark prompts
-- NPC and location request types
+- NPC, location, item and creature request types
 - Optional session context
 - Community answers with a consistent template
 - Anonymous voting until the voting period closes

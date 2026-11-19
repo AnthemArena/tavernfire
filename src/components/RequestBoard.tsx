@@ -24,10 +24,7 @@ import {
 
 type Filter = "all" | RequestKind;
 
-const FILTERS: { value: Filter; label: string }[] = [
-  { value: "all", label: "All" },
-  ...LAUNCHED_CATEGORIES.map((c) => ({ value: c.id as Filter, label: c.filterLabel })),
-];
+
 
 export default function RequestBoard() {
   const [items, setItems] = useState<RequestItem[] | null>(null);
@@ -64,8 +61,21 @@ export default function RequestBoard() {
     );
   }, []);
 
+  // Only offer types that have open requests right now (an empty filter makes the
+  // board look dead), and only once there are enough types to be worth filtering.
+  const present = new Set((items ?? []).map((r) => r.kind));
+  const filters: { value: Filter; label: string }[] = [
+    { value: "all", label: "All" },
+    ...LAUNCHED_CATEGORIES.filter((c) => present.has(c.id as RequestKind)).map((c) => ({
+      value: c.id as Filter,
+      label: c.filterLabel,
+    })),
+  ];
+  const showFilters = LAUNCHED_CATEGORIES.length >= 3 && filters.length > 2;
+  const activeFilter: Filter = filters.some((f) => f.value === filter) ? filter : "all";
+
   const visible =
-    items === null ? [] : items.filter((r) => filter === "all" || r.kind === filter);
+    items === null ? [] : items.filter((r) => activeFilter === "all" || r.kind === activeFilter);
 
   return (
     <section aria-labelledby="open-requests">
@@ -73,19 +83,21 @@ export default function RequestBoard() {
         <h2 id="open-requests" className="section-title">
           Open requests
         </h2>
+        {showFilters && (
         <div className="tabs" role="group" aria-label="Filter requests">
-          {FILTERS.map((f) => (
+          {filters.map((f) => (
             <button
               key={f.value}
               type="button"
               className="tab"
-              aria-pressed={filter === f.value}
+              aria-pressed={activeFilter === f.value}
               onClick={() => setFilter(f.value)}
             >
               {f.label}
             </button>
           ))}
         </div>
+        )}
       </div>
 
       {failed ? (

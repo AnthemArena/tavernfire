@@ -83,14 +83,14 @@ export const CATEGORIES = [
       tagsPlaceholder: "e.g. damp, abandoned, humming",
     },
   },
-  // Wave 2, drafted but not launched: not in the UI, not in firestore.rules.
+  // Wave 2a: Item and Creature are launched. Others below are drafted but not launched.
   {
     id: "item",
     label: "Item",
     fullLabel: "Item",
     filterLabel: "Items",
     description: "An object: what it is, what it looks like, and what makes it special.",
-    launched: false,
+    launched: true,
     group: "Things",
     notePlaceholder: "Who carries it, what level, what it should feel like",
     answer: {
@@ -107,7 +107,7 @@ export const CATEGORIES = [
     filterLabel: "Creatures",
     description:
       "A monster or animal: how it looks, how it behaves, and what it wants. If it talks and schemes, ask for an NPC.",
-    launched: false,
+    launched: true,
     group: "Characters",
     notePlaceholder: "Where it lives, how dangerous it should be, party level",
     answer: {

@@ -87,7 +87,7 @@ service cloud.firestore {
         && d.pairKeys[2] == d.sparksNorm[1] + '|' + d.sparksNorm[2]
         // Keep in step with the launched categories in src/lib/categories.ts
         // (a unit test compares the two).
-        && d.kind in ['npc', 'location']
+        && d.kind in ['npc', 'location', 'item', 'creature']
         && d.note is string && d.note.size() <= 300
         && d.status == 'open'
         && d.moderation == 'ok'

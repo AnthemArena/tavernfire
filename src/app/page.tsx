@@ -10,8 +10,7 @@ export default function Home() {
           <h1>Three sparks in. Something for your table out.</h1>
           <p className="hero-lede">
             A spark is a single word that starts an idea. Post three of them,
-            say whether you need an NPC or a location, and the community
-            answers. Every entry is written by a person and yours to use at the
+            say what you need, and the community answers. Every entry is written by a person and yours to use at the
             table.
           </p>
         </div>
