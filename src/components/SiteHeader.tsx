@@ -55,7 +55,7 @@ export default function SiteHeader() {
         <div className="header-actions">
           {loading ? null : user ? (
             <>
-              <span className="signed-in-as">{displayName}</span>
+              <span className="signed-in-as">{displayName ?? "Signed in"}</span>
               <button type="button" className="btn btn-outline" onClick={() => signOut()}>
                 Sign out
               </button>

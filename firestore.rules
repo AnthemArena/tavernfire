@@ -24,37 +24,87 @@ service cloud.firestore {
       return signedIn() && request.auth.token.get('role', '') == 'moderator';
     }
 
-    function validName(v) {
-      return v is string && v.size() >= 1 && v.size() <= 40;
-    }
-
     function validWord(v) {
       return v is string && v.size() >= 1 && v.size() <= 30;
     }
 
-    function validAvatar(d) {
-      return !('avatarUrl' in d)
-        || d.avatarUrl == null
-        || (d.avatarUrl is string && d.avatarUrl.size() <= 500);
+    // Display names. A person picks one public name, needed only when they
+    // post a request. Keep these checks in step with src/lib/names.ts (a unit
+    // test compares the reserved list).
+    function validChosenName(n) {
+      return n is string && n.size() >= 3 && n.size() <= 20
+        && n.matches("^[A-Za-z0-9][A-Za-z0-9 _.'-]*$")
+        && !n.matches('.*  .*')
+        && !n.matches('.* $');
     }
 
-    // Public profiles. Anyone can read; only the owner can create or edit.
+    // Lower-case, with spaces and punctuation removed ("Dun Gan_01" -> "dungan01").
+    function keyOf(n) {
+      return n.lower().replace('[ ]', '').replace('_', '').replace('[.]', '')
+        .replace("'", '').replace('-', '');
+    }
+
+    function allowedKey(k) {
+      return k.size() >= 3
+        && !(k in ['admin', 'administrator', 'moderator', 'mod', 'staff', 'support',
+                   'system', 'official', 'anonymous', 'adventurer', 'you', 'everyone'])
+        && !k.matches('.*(tavernfire|moderator|admin).*');
+    }
+
+    function nameFree(me) {
+      return me.get('nameChangedAt', null) == null
+        || request.time > me.nameChangedAt + duration.value(7, 'd');
+    }
+
+    // Public profiles. Anyone can read. The profile starts with no name
+    // (displayName null); the owner then claims one through displayNames below.
     match /users/{uid} {
       allow read: if true;
 
       allow create: if isOwner(uid)
-        && request.resource.data.keys().hasAll(['displayName', 'createdAt'])
-        && request.resource.data.keys().hasOnly(['displayName', 'avatarUrl', 'createdAt'])
-        && validName(request.resource.data.displayName)
-        && validAvatar(request.resource.data)
+        && request.resource.data.keys().hasOnly(['displayName', 'createdAt'])
+        && request.resource.data.displayName == null
         && request.resource.data.createdAt == request.time;
 
+      // Choosing or changing the name: the claim (a displayNames document in
+      // this person's name) must already exist, and changes are 7 days apart.
       allow update: if isOwner(uid)
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'avatarUrl'])
-        && validName(request.resource.data.displayName)
-        && validAvatar(request.resource.data);
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['displayName', 'nameKey', 'nameChangedAt'])
+        && validChosenName(request.resource.data.displayName)
+        && request.resource.data.nameKey == keyOf(request.resource.data.displayName)
+        && get(/databases/$(database)/documents/displayNames/$(request.resource.data.nameKey)).data.uid == uid
+        && get(/databases/$(database)/documents/displayNames/$(request.resource.data.nameKey)).data.displayName
+             == request.resource.data.displayName
+        && request.resource.data.nameChangedAt == request.time
+        && nameFree(resource.data);
 
       allow delete: if false;
+    }
+
+    // One document per name, keyed by the lower-case name, so two people
+    // cannot hold names that differ only in capitals or punctuation.
+    // Known gap: someone could create claims without finishing the profile
+    // update and so park names. A Cloud Function will replace this later.
+    match /displayNames/{key} {
+      allow get: if signedIn();
+      allow list: if false;
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['uid', 'displayName', 'createdAt'])
+        && request.resource.data.keys().hasAll(['uid', 'displayName', 'createdAt'])
+        && request.resource.data.uid == request.auth.uid
+        && validChosenName(request.resource.data.displayName)
+        && key == keyOf(request.resource.data.displayName)
+        && allowedKey(key)
+        && request.resource.data.createdAt == request.time
+        && nameFree(get(/databases/$(database)/documents/users/$(request.auth.uid)).data);
+
+      allow update: if false;
+
+      // Give up an old name once the profile has moved on to another one.
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('nameKey', '') != key;
     }
 
     // A new request must look exactly like what the app sends. The derived
@@ -72,7 +122,8 @@ service cloud.firestore {
           'answerCount', 'createdAt'
         ])
         && d.requesterId == request.auth.uid
-        && validName(d.requesterName)
+        && d.requesterName is string
+        && d.requesterName == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('displayName', null)
         && d.sparks is list && d.sparks.size() == 3
         && validWord(d.sparks[0]) && validWord(d.sparks[1]) && validWord(d.sparks[2])
         && d.sparksNorm is list && d.sparksNorm.size() == 3

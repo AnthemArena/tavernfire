@@ -17,7 +17,6 @@ export default function SignInForm() {
   } = useAuth();
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -58,13 +57,9 @@ export default function SignInForm() {
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
-    if (mode === "signup" && displayName.trim() === "") {
-      setError("Choose a name to show next to your entries.");
-      return;
-    }
     void run(() =>
       mode === "signup"
-        ? signUpWithEmail(email, password, displayName)
+        ? signUpWithEmail(email, password)
         : signInWithEmail(email, password),
     );
   }
@@ -94,23 +89,6 @@ export default function SignInForm() {
       </div>
 
       <form onSubmit={onSubmit} noValidate>
-        {isSignUp && (
-          <div className="field">
-            <label className="label" htmlFor="displayName">
-              Name shown on your entries
-            </label>
-            <input
-              id="displayName"
-              className="input"
-              type="text"
-              autoComplete="nickname"
-              maxLength={40}
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-            />
-          </div>
-        )}
-
         <div className="field">
           <label className="label" htmlFor="email">
             Email

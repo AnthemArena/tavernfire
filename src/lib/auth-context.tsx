@@ -6,7 +6,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -18,46 +17,35 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut as firebaseSignOut,
-  updateProfile,
   type User,
 } from "firebase/auth";
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { getDb, getFirebaseAuth } from "@/lib/firebase";
+import { EMPTY_PROFILE, claimName, loadProfile, type Profile } from "@/lib/display-name";
 
-const NAME_MAX = 40;
-
-function cleanName(raw: string | null | undefined): string {
-  const name = (raw ?? "").trim().slice(0, NAME_MAX);
-  return name || "Adventurer";
-}
-
-/** Create the public profile document the first time someone signs in. */
-async function ensureProfile(user: User, displayName?: string) {
+/**
+ * Create the public profile document the first time someone signs in. It holds
+ * no name: people choose one when they first post a request. Nothing from the
+ * Google account (name, photo) is copied across.
+ */
+async function ensureProfile(user: User) {
   const ref = doc(getDb(), "users", user.uid);
   const snap = await getDoc(ref);
   if (snap.exists()) return;
-
-  await setDoc(ref, {
-    displayName: cleanName(
-      displayName ?? user.displayName ?? user.email?.split("@")[0],
-    ),
-    avatarUrl: user.photoURL ?? null,
-    createdAt: serverTimestamp(),
-  });
+  await setDoc(ref, { displayName: null, createdAt: serverTimestamp() });
 }
 
 type AuthContextValue = {
   user: User | null;
+  /** The public name the person chose, or null until they choose one. */
   displayName: string | null;
+  /** Reserve and save a public name. Throws a NameError with a message to show. */
+  chooseName: (name: string) => Promise<string>;
   /** True until Firebase has told us whether someone is signed in. */
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
-  signUpWithEmail: (
-    email: string,
-    password: string,
-    displayName: string,
-  ) => Promise<void>;
+  signUpWithEmail: (email: string, password: string) => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -67,22 +55,21 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  // Bumped to re-render after the signed-in user's name changes in place.
-  const [, setVersion] = useState(0);
-  // While an email sign-up is running, it creates the profile itself (with the
-  // chosen name), so the auth listener must not create one first.
-  const signingUp = useRef(false);
+  const [profile, setProfile] = useState<Profile>(EMPTY_PROFILE);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(getFirebaseAuth(), async (next) => {
       setUser(next);
       setLoading(false);
-      if (next && !signingUp.current) {
-        try {
-          await ensureProfile(next);
-        } catch (err) {
-          console.error("Could not create profile", err);
-        }
+      if (!next) {
+        setProfile(EMPTY_PROFILE);
+        return;
+      }
+      try {
+        await ensureProfile(next);
+        setProfile(await loadProfile(next.uid));
+      } catch (err) {
+        console.error("Could not load profile", err);
       }
     });
     return unsubscribe;
@@ -99,24 +86,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  const signUpWithEmail = useCallback(
-    async (email: string, password: string, displayName: string) => {
-      signingUp.current = true;
-      try {
-        const cred = await createUserWithEmailAndPassword(
-          getFirebaseAuth(),
-          email.trim(),
-          password,
-        );
-        const name = cleanName(displayName);
-        await updateProfile(cred.user, { displayName: name });
-        await ensureProfile(cred.user, name);
-        setVersion((v) => v + 1);
-      } finally {
-        signingUp.current = false;
-      }
+  const signUpWithEmail = useCallback(async (email: string, password: string) => {
+    await createUserWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
+  }, []);
+
+  const chooseName = useCallback(
+    async (name: string) => {
+      if (!user) throw new Error("Not signed in");
+      const next = await claimName(user.uid, name, profile);
+      setProfile(next);
+      return next.displayName ?? name;
     },
-    [],
+    [user, profile],
   );
 
   const sendPasswordReset = useCallback(async (email: string) => {
@@ -130,9 +111,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextValue = useMemo(
     () => ({
       user,
-      displayName: user
-        ? cleanName(user.displayName ?? user.email?.split("@")[0])
-        : null,
+      displayName: profile.displayName,
+      chooseName,
       loading,
       signInWithGoogle,
       signInWithEmail,
@@ -140,10 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sendPasswordReset,
       signOut,
     }),
-    // user.displayName can change without the user object changing, so this is
-    // recomputed on every provider render (the version bump above triggers one).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [user, loading, user?.displayName, signInWithGoogle, signInWithEmail, signUpWithEmail, sendPasswordReset, signOut],
+    [user, profile.displayName, chooseName, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, sendPasswordReset, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

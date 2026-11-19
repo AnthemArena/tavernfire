@@ -42,6 +42,18 @@ after(async () => {
 
 beforeEach(async () => {
   await env.clearFirestore();
+  // Everyone below has already chosen the name "Marrow" (so they can post
+  // requests); the display-name tests start people from scratch themselves.
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    for (const uid of ["alice", "bob", "carol", "dave", "mod", "seed-user"]) {
+      await setDoc(doc(ctx.firestore(), "users", uid), {
+        displayName: "Marrow",
+        nameKey: "marrow",
+        nameChangedAt: new Date("2026-01-01"),
+        createdAt: new Date("2026-01-01"),
+      });
+    }
+  });
 });
 
 test("every launched request type can be posted", async () => {
@@ -173,50 +185,188 @@ describe("requests: read, update, delete", () => {
   });
 });
 
-describe("users", () => {
-  test("a user can create their own profile", async () => {
-    const db = env.authenticatedContext("alice").firestore();
-    await assertSucceeds(
-      setDoc(doc(db, "users", "alice"), {
-        displayName: "Alice",
-        avatarUrl: null,
-        createdAt: serverTimestamp(),
-      }),
-    );
-  });
-
-  test("cannot create someone else's profile or use a client timestamp", async () => {
-    const db = env.authenticatedContext("alice").firestore();
-    await assertFails(
-      setDoc(doc(db, "users", "bob"), { displayName: "Bob", createdAt: serverTimestamp() }),
-    );
-    await assertFails(
-      setDoc(doc(db, "users", "alice"), { displayName: "Alice", createdAt: new Date() }),
-    );
-  });
-
-  test("a user can rename themselves but not change createdAt", async () => {
-    await env.withSecurityRulesDisabled(async (ctx) => {
-      await setDoc(doc(ctx.firestore(), "users", "alice"), {
-        displayName: "Alice",
-        avatarUrl: null,
-        createdAt: new Date("2026-01-01"),
-      });
+async function seedNameless(uid: string, extra: Record<string, unknown> = {}) {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), "users", uid), {
+      displayName: null,
+      createdAt: new Date("2026-01-01"),
+      ...extra,
     });
-    const db = env.authenticatedContext("alice").firestore();
-    await assertSucceeds(updateDoc(doc(db, "users", "alice"), { displayName: "Alice B" }));
-    await assertFails(updateDoc(doc(db, "users", "alice"), { createdAt: new Date() }));
+  });
+}
+
+/** Claim a name the way the app does: the lookup first, then the profile. */
+async function claim(db: ReturnType<ReturnType<RulesTestEnvironment["authenticatedContext"]>["firestore"]>, uid: string, name: string, key: string) {
+  await setDoc(doc(db, "displayNames", key), { uid, displayName: name, createdAt: serverTimestamp() });
+  await updateDoc(doc(db, "users", uid), { displayName: name, nameKey: key, nameChangedAt: serverTimestamp() });
+}
+
+describe("users", () => {
+  test("a profile starts with no name", async () => {
+    const db = env.authenticatedContext("eve").firestore();
+    await assertSucceeds(setDoc(doc(db, "users", "eve"), { displayName: null, createdAt: serverTimestamp() }));
+  });
+
+  test("a profile cannot start with a name, a photo, or someone else's id, or a client timestamp", async () => {
+    const db = env.authenticatedContext("eve").firestore();
+    await assertFails(setDoc(doc(db, "users", "eve"), { displayName: "Eve", createdAt: serverTimestamp() }));
+    await assertFails(
+      setDoc(doc(db, "users", "eve"), { displayName: null, avatarUrl: "http://x", createdAt: serverTimestamp() }),
+    );
+    await assertFails(setDoc(doc(db, "users", "bobby"), { displayName: null, createdAt: serverTimestamp() }));
+    await assertFails(setDoc(doc(db, "users", "eve"), { displayName: null, createdAt: new Date() }));
   });
 
   test("profiles are public to read", async () => {
+    const db = env.unauthenticatedContext().firestore();
+    await assertSucceeds(getDoc(doc(db, "users", "alice")));
+  });
+
+  test("choosing a first name works, and shows on a request", async () => {
+    await seedNameless("eve");
+    const db = env.authenticatedContext("eve").firestore();
+    await assertSucceeds(claim(db, "eve", "Dun Gan", "dungan"));
+    await assertSucceeds(
+      addDoc(collection(db, "requests"), newRequest("eve", { requesterName: "Dun Gan" })),
+    );
+  });
+
+  test("the profile cannot take a name that has no claim, or someone else's claim", async () => {
+    await seedNameless("eve");
+    const db = env.authenticatedContext("eve").firestore();
+    await assertFails(
+      updateDoc(doc(db, "users", "eve"), { displayName: "Dun Gan", nameKey: "dungan", nameChangedAt: serverTimestamp() }),
+    );
     await env.withSecurityRulesDisabled(async (ctx) => {
-      await setDoc(doc(ctx.firestore(), "users", "alice"), {
-        displayName: "Alice",
+      await setDoc(doc(ctx.firestore(), "displayNames", "dungan"), {
+        uid: "bob",
+        displayName: "Dun Gan",
         createdAt: new Date(),
       });
     });
-    const db = env.unauthenticatedContext().firestore();
-    await assertSucceeds(getDoc(doc(db, "users", "alice")));
+    await assertFails(
+      updateDoc(doc(db, "users", "eve"), { displayName: "Dun Gan", nameKey: "dungan", nameChangedAt: serverTimestamp() }),
+    );
+  });
+
+  test("two people cannot hold names that differ only by capitals or punctuation", async () => {
+    await seedNameless("eve");
+    await seedNameless("fay");
+    await assertSucceeds(claim(env.authenticatedContext("eve").firestore(), "eve", "Dun Gan", "dungan"));
+    const fay = env.authenticatedContext("fay").firestore();
+    await assertFails(
+      setDoc(doc(fay, "displayNames", "dungan"), { uid: "fay", displayName: "DUNGAN", createdAt: serverTimestamp() }),
+    );
+    await assertFails(
+      setDoc(doc(fay, "displayNames", "dungan"), { uid: "fay", displayName: "Dun_Gan", createdAt: serverTimestamp() }),
+    );
+  });
+
+  test("a claim must match its own key, be valid, and belong to the person", async () => {
+    await seedNameless("eve");
+    const db = env.authenticatedContext("eve").firestore();
+    const lookup = (key: string, data: Record<string, unknown>) =>
+      setDoc(doc(db, "displayNames", key), { createdAt: serverTimestamp(), ...data });
+    await assertFails(lookup("other", { uid: "eve", displayName: "Dun Gan" })); // key does not match
+    await assertFails(lookup("dungan", { uid: "bob", displayName: "Dun Gan" })); // someone else's
+    await assertFails(lookup("ab", { uid: "eve", displayName: "ab" })); // too short
+    await assertFails(lookup("x".repeat(21), { uid: "eve", displayName: "x".repeat(21) })); // too long
+    await assertFails(lookup("badname", { uid: "eve", displayName: "Bad<Name" })); // odd character
+    await assertFails(lookup("dungan", { uid: "eve", displayName: "Dun  Gan" })); // double space
+    await assertFails(
+      setDoc(doc(db, "displayNames", "dungan"), { uid: "eve", displayName: "Dun Gan", createdAt: new Date() }),
+    ); // client time
+  });
+
+  test("reserved names are refused", async () => {
+    await seedNameless("eve");
+    const db = env.authenticatedContext("eve").firestore();
+    for (const name of ["Admin", "A d m i n", "Moderator Mike", "Tavern Fire", "Adventurer"]) {
+      const key = name.toLowerCase().replace(/[ _.'-]/g, "");
+      await assertFails(
+        setDoc(doc(db, "displayNames", key), { uid: "eve", displayName: name, createdAt: serverTimestamp() }),
+      );
+    }
+  });
+
+  test("names can be looked up one at a time by signed-in people, never listed", async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "displayNames", "marrow"), {
+        uid: "alice",
+        displayName: "Marrow",
+        createdAt: new Date(),
+      });
+    });
+    await assertSucceeds(getDoc(doc(env.authenticatedContext("bob").firestore(), "displayNames", "marrow")));
+    await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), "displayNames", "marrow")));
+    await assertFails(getDocs(collection(env.authenticatedContext("bob").firestore(), "displayNames")));
+  });
+
+  test("a name can be changed only after 7 days", async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "users", "eve"), {
+        displayName: "Old Name",
+        nameKey: "oldname",
+        nameChangedAt: new Date(Date.now() - 2 * DAY),
+        createdAt: new Date("2026-01-01"),
+      });
+    });
+    const db = env.authenticatedContext("eve").firestore();
+    // Too soon: the new claim itself is refused.
+    await assertFails(
+      setDoc(doc(db, "displayNames", "newname"), { uid: "eve", displayName: "New Name", createdAt: serverTimestamp() }),
+    );
+    // After the window it works, and the old claim can then be released.
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "users", "eve"), {
+        displayName: "Old Name",
+        nameKey: "oldname",
+        nameChangedAt: new Date(Date.now() - 8 * DAY),
+        createdAt: new Date("2026-01-01"),
+      });
+      await setDoc(doc(ctx.firestore(), "displayNames", "oldname"), {
+        uid: "eve",
+        displayName: "Old Name",
+        createdAt: new Date(),
+      });
+    });
+    await assertFails(deleteDoc(doc(db, "displayNames", "oldname"))); // still the current name
+    await assertSucceeds(claim(db, "eve", "New Name", "newname"));
+    await assertSucceeds(deleteDoc(doc(db, "displayNames", "oldname")));
+  });
+
+  test("a person cannot delete someone else's claim or edit one", async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "displayNames", "marrow"), {
+        uid: "alice",
+        displayName: "Marrow",
+        createdAt: new Date(),
+      });
+    });
+    const bob = env.authenticatedContext("bob").firestore();
+    await assertFails(deleteDoc(doc(bob, "displayNames", "marrow")));
+    const alice = env.authenticatedContext("alice").firestore();
+    await assertFails(updateDoc(doc(alice, "displayNames", "marrow"), { displayName: "MARROW" }));
+  });
+
+  test("other profile fields cannot be changed", async () => {
+    const db = env.authenticatedContext("alice").firestore();
+    await assertFails(updateDoc(doc(db, "users", "alice"), { createdAt: new Date() }));
+    await assertFails(updateDoc(doc(db, "users", "alice"), { avatarUrl: "http://x" }));
+  });
+});
+
+describe("requests carry the chosen name", () => {
+  test("someone with no name yet cannot post", async () => {
+    await seedNameless("eve");
+    const db = env.authenticatedContext("eve").firestore();
+    await assertFails(addDoc(collection(db, "requests"), newRequest("eve", { requesterName: "Eve" })));
+    await assertFails(addDoc(collection(db, "requests"), newRequest("eve", { requesterName: null })));
+  });
+
+  test("the name on a request must be the poster's own chosen name", async () => {
+    const db = env.authenticatedContext("alice").firestore();
+    await assertFails(addDoc(collection(db, "requests"), newRequest("alice", { requesterName: "Someone Else" })));
   });
 });
 

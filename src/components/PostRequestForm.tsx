@@ -7,6 +7,7 @@ import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { SparkError, buildSparkFields } from "@/lib/sparks";
+import { NAME_CHANGE_DAYS, NAME_MAX, NameError } from "@/lib/names";
 import type { RequestKind } from "@/lib/requests";
 import {
   DEFAULT_NOTE_PLACEHOLDER,
@@ -23,11 +24,15 @@ const NOTICE_DELAY_MS = 700;
 
 export default function PostRequestForm() {
   const router = useRouter();
-  const { user, displayName, loading } = useAuth();
+  const { user, displayName, chooseName, loading } = useAuth();
 
   const [sparks, setSparks] = useState(["", "", ""]);
   const [kind, setKind] = useState<RequestKind>("npc");
   const [note, setNote] = useState("");
+  // Asked for once, the first time someone posts a request.
+  const [nameInput, setNameInput] = useState("");
+  const [nameError, setNameError] = useState<string | null>(null);
+  const nameField = useRef<HTMLInputElement | null>(null);
   const [error, setError] = useState<string | null>(null);
   // When the problem is with one spark box, which one, and a suggested fix.
   const [sparkProblem, setSparkProblem] = useState<{ index: number; message: string; fix: string | null } | null>(null);
@@ -71,13 +76,28 @@ export default function PostRequestForm() {
     const slowTimer = setTimeout(() => setSlow(true), SLOW_AFTER_MS);
 
     try {
+      let requesterName = displayName;
+      if (!requesterName) {
+        try {
+          requesterName = await chooseName(nameInput);
+        } catch (err) {
+          clearTimeout(slowTimer);
+          setSlow(false);
+          setBusy(false);
+          setNameError(
+            err instanceof NameError ? err.message : "Couldn't save that name. Try again.",
+          );
+          nameField.current?.focus();
+          return;
+        }
+      }
       // addDoc only finishes once the server has accepted the request.
       const ref = await addDoc(collection(getDb(), "requests"), {
         ...fields,
         kind,
         note: note.trim(),
         requesterId: user.uid,
-        requesterName: displayName ?? "Adventurer",
+        requesterName,
         status: "open",
         moderation: "ok",
         answerCount: 0,
@@ -261,6 +281,39 @@ export default function PostRequestForm() {
               onChange={(e) => setNote(e.target.value)}
             />
           </div>
+
+          {!displayName && (
+            <div className="field">
+              <label className="label" htmlFor="display-name">
+                Your name on the board
+              </label>
+              <input
+                id="display-name"
+                ref={nameField}
+                className={nameError ? "input input-error" : "input"}
+                type="text"
+                maxLength={NAME_MAX}
+                autoComplete="off"
+                value={nameInput}
+                aria-invalid={nameError ? true : undefined}
+                aria-describedby={nameError ? "name-error name-hint" : "name-hint"}
+                onChange={(e) => {
+                  setNameInput(e.target.value);
+                  setNameError(null);
+                }}
+              />
+              {nameError && (
+                <p className="error" id="name-error" role="alert">
+                  {nameError}
+                </p>
+              )}
+              <p className="hint" id="name-hint">
+                Shown next to your requests. Entries you write stay anonymous.
+                Pick something that isn&apos;t your real name; you can change it
+                once every {NAME_CHANGE_DAYS} days.
+              </p>
+            </div>
+          )}
 
           {error && (
             <p className="error" role="alert">

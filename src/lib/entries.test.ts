@@ -118,7 +118,7 @@ test("the entry edit window in firestore.rules matches ENTRY_EDIT_WINDOW_HOURS",
 });
 
 test("the answer window in firestore.rules matches ANSWER_WINDOW_DAYS", () => {
-  const days = [...rules.matchAll(/duration\.value\((\d+), 'd'\)/g)].map((m) => Number(m[1]));
+  const days = [...rules.matchAll(/createdAt \+ duration\.value\((\d+), 'd'\)/g)].map((m) => Number(m[1]));
   assert.ok(days.length > 0, "no day window found in firestore.rules");
   for (const d of days) assert.equal(d, ANSWER_WINDOW_DAYS);
 });
