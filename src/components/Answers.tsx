@@ -103,6 +103,14 @@ export default function Answers({ request }: { request: RequestItem }) {
     action = null;
   } else if (loading) {
     action = null;
+  } else if (closed) {
+    action = (
+      <p className="notice notice-plain">
+        {entries !== null && entries.length === 0
+          ? "This request closed without any answers."
+          : "Answers for this request have closed. Voting is coming soon."}
+      </p>
+    );
   } else if (!user) {
     action = (
       <p className="answers-prompt">
@@ -130,10 +138,6 @@ export default function Answers({ request }: { request: RequestItem }) {
         it for up to {ENTRY_EDIT_WINDOW_HOURS} hours, or until answers close.
       </p>
     ) : null;
-  } else if (closed) {
-    action = <p className="notice notice-plain">
-        Answers for this request have closed. Voting is coming soon.
-      </p>;
   } else if (entries !== null && (unfinished || entries.length === 0 || formOpen)) {
     // One form in one place, so what the person typed survives a failed attempt
     // (a failed second write makes the private marker appear, which would
@@ -193,7 +197,7 @@ export default function Answers({ request }: { request: RequestItem }) {
       ) : (
         <>
           {action}
-          {entries.length === 0 && !showingForm && !isRequester && (
+          {entries.length === 0 && !showingForm && !isRequester && !closed && (
             <p className="empty">
               No answers yet. Entries written for these three sparks will appear here.
             </p>
