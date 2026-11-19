@@ -187,7 +187,7 @@ export default function AnswerForm({
       <h3 className="card-title">{editing ? "Edit your answer" : "Write your answer"}</h3>
       {!editing && (
         <p className="card-lede">
-          Write it yourself. Entries are anonymous until voting ends.
+          Write it yourself. Entries are anonymous.
         </p>
       )}
 

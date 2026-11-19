@@ -190,7 +190,7 @@ export default function EntryCard({
 
       <div className="entry-foot">
         <span className="entry-anon">
-          {isMine ? null : "Author revealed after voting"}
+          {isMine ? null : "Author hidden"}
           {entry.edited && (
             <span className="entry-edited">{isMine ? "Edited" : " · Edited"}</span>
           )}

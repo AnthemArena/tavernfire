@@ -48,7 +48,7 @@ All text pairs above meet at least 4.5:1 contrast on their backgrounds; keep it 
 - **Spark chip:** large serif word on a #E8DFCB background, three per request
 - **Request card:** three spark chips, type badge, note, answer count, requester, time left
 - **Entry card:** name, description, trait pills, "Used in N games", buttons (Save to collection, I used this, Report entry), vote button
-- **Hidden during voting:** author name and vote totals (say "Author revealed after voting")
+- **Hidden during voting:** author name and vote totals (say "Author hidden" for now; restore "Author revealed after voting" when voting ships)
 
 ## Wording
 
@@ -77,7 +77,7 @@ See `claude/lead-agent-response-2026-11-18.md` in the Project. In short: header 
 
 ## Answers (Slice A)
 
-- **Entry card:** name (Fraunces 700, 22px), description (16px, 65ch max, line breaks kept), trait pills, then a footer with "Author revealed after voting" and a quiet "Report entry" (muted, underlined, 44px tall). Your own entry is pinned first with a "Your entry" badge, says "You wrote this", and has no report link. After submitting, a "Your answer is in. You can edit it for up to 24 hours, or until answers close." notice appears.
+- **Entry card:** name (Fraunces 700, 22px), description (16px, 65ch max, line breaks kept), trait pills, then a footer with "Author hidden" (to become "Author revealed after voting" when voting ships) and a quiet "Report entry" (muted, underlined, 44px tall). Your own entry is pinned first with a "Your entry" badge, says "You wrote this", and has no report link. After submitting, a "Your answer is in. You can edit it for up to 24 hours, or until answers close." notice appears.
 - **Trait pills:** 13px Inter 500, teal #1D5A57 on #E6EFE9 with a teal border (6.7:1). Deliberately small and rounded so they never read as spark chips.
 - **Answer form:** name, description, traits (Enter or comma adds a pill; each pill has a remove button with a 44px tap area), no "How a GM could use it" field; live counters at the top right of each label ("n of 60", "n of 600", "n of 5"); NPC and Location have different placeholders.
 - **States:** signed out ("Sign in to answer"), requester ("This is your request"), already answered (form gone, entry pinned), answers closed, none (form shown directly), one, many, reported.

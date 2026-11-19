@@ -131,7 +131,9 @@ export default function Answers({ request }: { request: RequestItem }) {
       </p>
     ) : null;
   } else if (closed) {
-    action = <p className="notice notice-plain">Answers for this request have closed.</p>;
+    action = <p className="notice notice-plain">
+        Answers for this request have closed. Voting is coming soon.
+      </p>;
   } else if (entries !== null && (unfinished || entries.length === 0 || formOpen)) {
     // One form in one place, so what the person typed survives a failed attempt
     // (a failed second write makes the private marker appear, which would
