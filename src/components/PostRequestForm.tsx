@@ -315,8 +315,9 @@ export default function PostRequestForm() {
                 </p>
               )}
               <p className="hint" id="name-hint">
-                Shown next to your requests. Pick something that isn&apos;t your
-                real name; you can change it once every {NAME_CHANGE_DAYS} days.
+                Shown next to your requests, and on your answers once voting ends.
+                Pick something that isn&apos;t your real name; you can change it once
+                every {NAME_CHANGE_DAYS} days.
               </p>
               {displayName && (
                 <p className="hint">

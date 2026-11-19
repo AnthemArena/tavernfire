@@ -225,7 +225,14 @@ async function reveal(db: Firestore, requestId: string, results: Results, now: D
       batch.update(db.collection("entries").doc(r.entryId), {
         authorId,
         authorName: authorId ? (nameOf.get(authorId) ?? null) : null,
-        result: { picks: r.picks, rank: r.rank, favourite: r.favourite, order: i + j },
+        result: {
+          picks: r.picks,
+          rank: r.rank,
+          favourite: r.favourite,
+          // True when another entry shares this rank ("Joint 2nd").
+          tied: r.rank !== null && results.ranked.some((o) => o.entryId !== r.entryId && o.rank === r.rank),
+          order: i + j,
+        },
         revealedAt: now,
       });
     });

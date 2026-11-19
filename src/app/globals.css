@@ -865,6 +865,15 @@ a:hover {
   border-color: var(--control-border);
 }
 
+.my-answer-name {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 1.25;
+  color: var(--ink);
+  margin: 0 0 10px;
+}
+
 .results-section {
   margin-top: 40px;
 }

@@ -126,6 +126,9 @@ describe("runLifecycle (emulator)", () => {
     const e2 = await get("entries/e2");
     assert.equal(e2.result.picks, 1);
     assert.equal(e2.result.rank, 2);
+    // e2 and e3 share second place; e1 stands alone.
+    assert.equal(e2.result.tied, true);
+    assert.equal(e1.result.tied, false);
     assert.equal((await get("entries/e3")).authorName, null);
   });
 

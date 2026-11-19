@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { collection, doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
+import { NAME_CHANGE_DAYS, NAME_MAX, NameError } from "@/lib/names";
 import {
   ENTRY_CONCEPT_MAX,
   ENTRY_NAME_MAX,
@@ -51,7 +52,7 @@ export default function AnswerForm({
   /** Shown only when there is something else on the page to go back to. */
   onCancel?: () => void;
 }) {
-  const { user } = useAuth();
+  const { user, displayName, chooseName } = useAuth();
   const copy = getCategory(editing?.kind ?? request?.kind ?? "npc").answer;
   const idPart = editing?.id ?? "new";
 
@@ -67,6 +68,12 @@ export default function AnswerForm({
   const refusals = useRef(0);
   const [busy, setBusy] = useState(false);
   const nameInput = useRef<HTMLInputElement>(null);
+  // Someone who has not chosen a name yet picks one here, shown with their answer
+  // once voting ends. (Editing never asks: the name is already set by then.)
+  const needsAuthorName = !editing && !displayName;
+  const [authorName, setAuthorName] = useState("");
+  const [authorNameError, setAuthorNameError] = useState<string | null>(null);
+  const authorNameInput = useRef<HTMLInputElement>(null);
   const conceptInput = useRef<HTMLTextAreaElement>(null);
 
   // When editing in place, start in the first field.
@@ -105,6 +112,19 @@ export default function AnswerForm({
     }
 
     setBusy(true);
+
+    if (needsAuthorName) {
+      try {
+        await chooseName(authorName);
+      } catch (err) {
+        setAuthorNameError(
+          err instanceof NameError ? err.message : "Couldn't save that name. Try again.",
+        );
+        authorNameInput.current?.focus();
+        setBusy(false);
+        return;
+      }
+    }
 
     if (editing) {
       try {
@@ -187,7 +207,7 @@ export default function AnswerForm({
       <h3 className="card-title">{editing ? "Edit your answer" : "Write your answer"}</h3>
       {!editing && (
         <p className="card-lede">
-          Write it yourself. Entries are anonymous.
+          Write it yourself. Your name stays hidden until voting ends.
         </p>
       )}
 
@@ -261,6 +281,46 @@ export default function AnswerForm({
           setRefused(false);
         }}
       />
+
+      {!editing &&
+        (needsAuthorName ? (
+          <div className="field">
+            <label className="label" htmlFor="answer-display-name">
+              Your display name
+            </label>
+            <input
+              id="answer-display-name"
+              ref={authorNameInput}
+              className={authorNameError ? "input input-error" : "input"}
+              type="text"
+              maxLength={NAME_MAX}
+              autoComplete="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              placeholder="e.g. Marrow"
+              value={authorName}
+              aria-invalid={authorNameError ? true : undefined}
+              aria-describedby={authorNameError ? "answer-name-error answer-name-hint" : "answer-name-hint"}
+              onChange={(e) => {
+                setAuthorName(e.target.value);
+                setAuthorNameError(null);
+              }}
+            />
+            {authorNameError && (
+              <p className="error field-error" id="answer-name-error" role="alert">
+                {authorNameError}
+              </p>
+            )}
+            <p className="hint" id="answer-name-hint">
+              Shown on your answer when voting ends. Pick something that isn&apos;t your real name;
+              you can change it once every {NAME_CHANGE_DAYS} days.
+            </p>
+          </div>
+        ) : (
+          <p className="hint">
+            Your name, <strong>{displayName}</strong>, is shown on your answer when voting ends.
+          </p>
+        ))}
 
       {error && (
         <p className="error" role="alert">

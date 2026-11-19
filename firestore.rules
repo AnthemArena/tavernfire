@@ -146,6 +146,13 @@ service cloud.firestore {
         && d.createdAt == request.time;
     }
 
+    // A person's own answer markers across every request, for "Your answers" on
+    // the account page. The query must filter on authorId == your uid; reading
+    // anyone else's marker (or all of them) is refused.
+    match /{path=**}/answerLocks/{uid} {
+      allow read: if signedIn() && resource.data.authorId == request.auth.uid;
+    }
+
     match /requests/{requestId} {
       // Hidden requests are only visible to moderators.
       allow read: if resource.data.moderation == 'ok' || isModerator();

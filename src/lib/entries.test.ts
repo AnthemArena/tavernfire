@@ -152,7 +152,7 @@ test("author and results appear only once the reveal fields are present", () => 
     revealedAt: new Date(),
     result: { picks: 3, rank: 1, favourite: true, order: 0 },
   });
-  assert.deepEqual(revealed?.reveal, { authorName: "Ann", picks: 3, rank: 1, favourite: true, order: 0 });
+  assert.deepEqual(revealed?.reveal, { authorName: "Ann", picks: 3, rank: 1, favourite: true, tied: false, order: 0 });
   const noName = toEntryItem("a", { ...base, revealedAt: new Date(), authorName: null, result: { picks: 0, rank: null, favourite: false, order: 2 } });
   assert.equal(noName?.reveal?.authorName, null);
   assert.equal(noName?.reveal?.rank, null);
@@ -161,7 +161,7 @@ test("author and results appear only once the reveal fields are present", () => 
 test("orderRevealed follows the stored order, with unrevealed entries last", () => {
   const mk = (id: string, order: number | null) => ({
     id,
-    reveal: order === null ? null : { authorName: null, picks: 0, rank: null, favourite: false, order },
+    reveal: order === null ? null : { authorName: null, picks: 0, rank: null, favourite: false, tied: false, order },
   });
   assert.deepEqual(orderRevealed([mk("c", 2), mk("x", null), mk("a", 0), mk("b", 1)]).map((e) => e.id), ["a", "b", "c", "x"]);
 });

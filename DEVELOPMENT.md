@@ -127,3 +127,13 @@ The board lists `open` and `voting` requests (with a phase label on each card) a
 "Recent results" list of `revealed` ones; both use the existing
 (moderation, status, createdAt) index. With `NEXT_PUBLIC_ENABLE_VOTING=false`, picks are hidden but results
 still show if a request has been revealed.
+
+## Answer names and "Your answers"
+
+- Someone with no display name is asked for one on the answer form (the name is shown on
+  the answer when voting ends). Posting a request asks the same way.
+- The account page lists your own answers, found with a collection-group read of your
+  answer markers (`answerLocks` where `authorId` is you). That needs the new rule and the
+  collection-group index on `answerLocks.authorId`, so deploy with
+  `firebase deploy --only "firestore,functions"`. The reveal now also stores `result.tied`
+  (for "Joint 2nd"), so redeploy the function too.

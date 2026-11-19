@@ -40,6 +40,8 @@ export type EntryReveal = {
   /** 1-based, ties share a rank; null when too few people voted to rank. */
   rank: number | null;
   favourite: boolean;
+  /** True when another entry shares this rank. Older results may lack it. */
+  tied: boolean;
   /** Position to show, 0 first. */
   order: number;
 };
@@ -121,6 +123,7 @@ function toReveal(data: Record<string, unknown>): EntryReveal | null {
     picks: typeof r.picks === "number" ? r.picks : 0,
     rank: typeof r.rank === "number" ? r.rank : null,
     favourite: r.favourite === true,
+    tied: r.tied === true,
     order: typeof r.order === "number" ? r.order : 0,
   };
 }

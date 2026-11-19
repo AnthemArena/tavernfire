@@ -14,6 +14,7 @@ import {
   addDoc,
   collection,
   deleteDoc,
+  collectionGroup,
   doc,
   getDoc,
   getDocs,
@@ -1019,5 +1020,39 @@ describe("everything else is locked", () => {
     await assertFails(setDoc(doc(db, "votes", "v1"), { entryId: "e1" }));
     await assertFails(getDoc(doc(db, "votes", "v1")));
     await assertFails(setDoc(doc(db, "sparks", "statue"), { count: 1 }));
+  });
+});
+
+describe("your answers (own markers across requests)", () => {
+  async function seedMarkers() {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore();
+      const marker = (uid: string, requestId: string, entryId: string) =>
+        setDoc(doc(db, "requests", requestId, "answerLocks", uid), {
+          authorId: uid,
+          requestId,
+          entryId,
+          createdAt: new Date(),
+        });
+      await marker("carol", "r1", "e1");
+      await marker("carol", "r2", "e2");
+      await marker("bob", "r1", "e3");
+    });
+  }
+  const own = (uid: string) => query(collectionGroup(env.authenticatedContext(uid).firestore(), "answerLocks"), where("authorId", "==", uid));
+
+  test("a person can list their own markers across requests", async () => {
+    await seedMarkers();
+    const snap = await assertSucceeds(getDocs(own("carol")));
+    assert.deepEqual(snap.docs.map((d) => d.get("entryId")).sort(), ["e1", "e2"]);
+  });
+
+  test("not someone else's, not everyone's, and not signed out", async () => {
+    await seedMarkers();
+    const carol = env.authenticatedContext("carol").firestore();
+    await assertFails(getDocs(query(collectionGroup(carol, "answerLocks"), where("authorId", "==", "bob"))));
+    await assertFails(getDocs(collectionGroup(carol, "answerLocks")));
+    const out = env.unauthenticatedContext().firestore();
+    await assertFails(getDocs(query(collectionGroup(out, "answerLocks"), where("authorId", "==", "carol"))));
   });
 });

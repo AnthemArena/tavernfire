@@ -2,12 +2,24 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { collection, onSnapshot, orderBy, query, where } from "firebase/firestore";
+import {
+  collection,
+  collectionGroup,
+  doc,
+  getDoc,
+  getDocs,
+  onSnapshot,
+  orderBy,
+  query,
+  where,
+} from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { useNow } from "@/lib/use-now";
 import { NAME_CHANGE_DAYS, NAME_MAX, NameError } from "@/lib/names";
 import { kindLabel, toRequestItem, type RequestItem } from "@/lib/requests";
+import { toEntryItem, type EntryItem } from "@/lib/entries";
+import { answerStatus } from "@/lib/my-answers";
 import PhaseLabel from "@/components/PhaseLabel";
 import AnswerCount from "@/components/AnswerCount";
 
@@ -37,6 +49,7 @@ export default function AccountView() {
         waitUntil={displayName ? nameChangeOn() : null}
       />
       <MyRequests uid={user.uid} />
+      <MyAnswers uid={user.uid} />
       <button type="button" className="btn btn-outline account-signout" onClick={() => signOut()}>
         Sign out
       </button>
@@ -86,7 +99,7 @@ function NameCard({
       </p>
       <p className="hint">
         {displayName
-          ? "Shown next to your requests."
+          ? "Shown next to your requests, and on your answers when voting ends."
           : "You'll be asked for one when you post your first request. You can also pick it here."}
       </p>
 
@@ -214,9 +227,116 @@ function MyRequests({ uid }: { uid: string }) {
           ))}
         </ul>
       )}
+    </section>
+  );
+}
+
+type AnswerRow = {
+  entryId: string;
+  request: RequestItem;
+  entry: EntryItem | null;
+  /** The private marker exists but the entry never finished saving. */
+  unfinished: boolean;
+  at: number;
+};
+
+/** Your answers, across all requests. Only you can see this list. */
+function MyAnswers({ uid }: { uid: string }) {
+  const [rows, setRows] = useState<AnswerRow[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  const now = useNow();
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const db = getDb();
+        const markers = await getDocs(
+          query(collectionGroup(db, "answerLocks"), where("authorId", "==", uid)),
+        );
+        const found = await Promise.all(
+          markers.docs.map(async (m): Promise<AnswerRow | null> => {
+            const requestId = m.get("requestId") as string;
+            const entryId = m.get("entryId") as string;
+            const requestSnap = await getDoc(doc(db, "requests", requestId)).catch(() => null);
+            const request =
+              requestSnap && requestSnap.exists()
+                ? toRequestItem(requestSnap.id, requestSnap.data() ?? {})
+                : null;
+            if (!request) return null; // a hidden or removed request
+            // A hidden entry is refused to its own author, so treat any failure as "not shown".
+            const entrySnap = await getDoc(doc(db, "entries", entryId)).catch(() => null);
+            const entry =
+              entrySnap && entrySnap.exists() ? toEntryItem(entrySnap.id, entrySnap.data() ?? {}) : null;
+            const created = m.get("createdAt") as { toDate?: () => Date } | undefined;
+            return {
+              entryId,
+              request,
+              entry,
+              unfinished: entrySnap !== null && !entrySnap.exists(),
+              at: created?.toDate?.().getTime() ?? 0,
+            };
+          }),
+        );
+        if (cancelled) return;
+        setRows(found.filter((r): r is AnswerRow => r !== null).sort((a, b) => b.at - a.at));
+      } catch (err) {
+        console.error("Could not load your answers", err);
+        if (!cancelled) setFailed(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [uid]);
+
+  return (
+    <section aria-labelledby="my-answers">
+      <h2 className="section-title" id="my-answers">
+        Your answers
+      </h2>
+      {failed ? (
+        <p className="empty" role="alert">
+          Couldn&apos;t load your answers right now. Please try again in a moment.
+        </p>
+      ) : rows === null ? (
+        <p className="empty" role="status">
+          Loading…
+        </p>
+      ) : rows.length === 0 ? (
+        <p className="empty">
+          You haven&apos;t answered a request yet. <Link href="/">Find one on the board.</Link>
+        </p>
+      ) : (
+        <ul className="request-list">
+          {rows.map((r) => (
+            <li key={r.entryId}>
+              <Link href={`/requests/${r.request.id}`} className="request-card">
+                <div className="request-card-top">
+                  <div className="sparks">
+                    {r.request.sparks.map((s) => (
+                      <span className="spark" key={s}>
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <p className="my-answer-name">
+                  {r.entry ? r.entry.name : r.unfinished ? "This answer didn't finish saving" : "Answer not shown"}
+                </p>
+                <div className="meta">
+                  <span className="badge">{kindLabel(r.request.kind)}</span>
+                  <span>
+                    {r.unfinished ? "Open the request to send it again" : answerStatus(r.request, r.entry, now)}
+                  </span>
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
       <p className="hint account-note">
-        Answers you write stay hidden from everyone else. A list of your own answers, visible only to
-        you, is planned for a later update.
+        Only you can see this list. Your name is shown on an answer when voting on its request ends.
       </p>
     </section>
   );
