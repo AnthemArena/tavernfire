@@ -1,0 +1,41 @@
+# Firebase App Hosting settings for Tavernfire.
+# NEXT_PUBLIC_ values are baked into the site when it is built, so they are
+# marked BUILD. None of these are secrets (Firebase web config is public by
+# design), so they are safe to keep in Git.
+#
+# Fill in the four REPLACE_ME values from your .env.local file.
+
+runConfig:
+  # Keep costs low while the site is new: scale to zero when nobody is visiting.
+  minInstances: 0
+  maxInstances: 2
+
+env:
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: tavernfire-3fcb5
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: REPLACE_ME
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: REPLACE_ME
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: REPLACE_ME
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: REPLACE_ME
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: REPLACE_ME
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_USE_FIREBASE_EMULATORS
+    value: "false"
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_ENABLE_ANSWERS
+    value: "true"
+    availability: [BUILD, RUNTIME]
+  # Keep voting off on the live site until results and the reveal are built.
+  - variable: NEXT_PUBLIC_ENABLE_VOTING
+    value: "false"
+    availability: [BUILD, RUNTIME]

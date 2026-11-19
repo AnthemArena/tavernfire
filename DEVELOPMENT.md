@@ -83,3 +83,13 @@ Policy: ids never change, and a launched category is never removed (the app skip
 - Email sign-ups get a verification email; voting needs a verified email (Google sign-ins already are). In the emulator the link appears in the Auth emulator's UI (http://localhost:4000/auth) under the user, or in the emulator terminal output.
 - The new "your requests" list on the account page needs the index in `firestore.indexes.json`; publish it with `npx firebase deploy --only firestore:indexes` when going live (the emulator does not need it).
 - Windows: answers and voting open for 3 days, then voting only for 2 more (`ANSWER_WINDOW_DAYS`, `VOTING_WINDOW_DAYS` in `src/lib/requests.ts`; a test keeps `firestore.rules` in step).
+
+## Hosting (Firebase App Hosting)
+
+Settings live in `apphosting.yaml`. Fill in the `REPLACE_ME` Firebase config values
+(same ones as `.env.local`), then in the Firebase console go to Build > App Hosting >
+Get started, connect the GitHub repo, pick branch `main`, and set the root directory
+to `/`. Every push to `main` then deploys. It needs the Blaze plan.
+After the first deploy, add the site's address (and tavernfire.com when connected)
+under Authentication > Settings > Authorized domains, or sign-in will fail.
+Keep `NEXT_PUBLIC_ENABLE_VOTING` false until results and the reveal ship.
