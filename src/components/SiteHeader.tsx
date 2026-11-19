@@ -10,7 +10,8 @@ function MainNav() {
   const pathname = usePathname();
   const { user } = useAuth();
   const onAccount = pathname === "/account";
-  const onRequests = pathname === "/" || pathname.startsWith("/requests");
+  const onRequests =
+    pathname === "/" || pathname.startsWith("/requests") || pathname.startsWith("/fires");
   return (
     <nav className="nav" aria-label="Main">
       <Link
@@ -18,7 +19,7 @@ function MainNav() {
         className={onRequests ? "nav-current" : undefined}
         aria-current={onRequests ? "page" : undefined}
       >
-        Requests
+        Fires
       </Link>
       {user && (
         <Link
@@ -56,7 +57,7 @@ export default function SiteHeader() {
         <Suspense
           fallback={
             <nav className="nav" aria-label="Main">
-              <Link href="/">Requests</Link>
+              <Link href="/">Fires</Link>
             </nav>
           }
         >
@@ -64,6 +65,9 @@ export default function SiteHeader() {
         </Suspense>
 
         <div className="header-actions">
+          <Link className="btn btn-primary header-cta" href="/fires/new">
+            Light a fire
+          </Link>
           {loading ? null : user ? (
             <>
               <span className="signed-in-as">{displayName ?? "Signed in"}</span>

@@ -1,21 +1,21 @@
-import PostRequestForm from "@/components/PostRequestForm";
+import Link from "next/link";
 import RequestBoard from "@/components/RequestBoard";
 
 export default function Home() {
   return (
     <main className="container">
-      <section className="hero hero-grid">
+      <section className="hero">
         <div className="hero-copy">
           <p className="kicker">Where game tables trade ideas</p>
           <h1>Three sparks in. Something for your table out.</h1>
           <p className="hero-lede">
-            A spark is a single word that starts an idea. Post three of them,
-            say what you need, and the community answers. Every entry is written by a person and yours to use at the
-            table.
+            A spark is a single word that starts an idea. Light a fire with
+            three of them, say what you need, and the community answers. Every
+            entry is written by a person and yours to use at the table.
           </p>
-        </div>
-        <div className="hero-form">
-          <PostRequestForm />
+          <Link className="btn btn-primary hero-cta" href="/fires/new">
+            Light a fire
+          </Link>
         </div>
       </section>
 
@@ -26,7 +26,7 @@ export default function Home() {
 
         <aside className="board-side" aria-label="How it works">
           <div className="how-note">
-            <p className="how-note-title">How a request works</p>
+            <p className="how-note-title">How a fire works</p>
             <ol>
               <li>Answers open for 3 days.</li>
               <li>Voting follows, with authors hidden.</li>

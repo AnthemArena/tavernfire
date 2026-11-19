@@ -115,7 +115,7 @@ export default function PostRequestForm() {
     } catch (err) {
       clearTimeout(slowTimer);
       console.error("Could not post request", err);
-      setError("Couldn't post your request. Check you're signed in and try again.");
+      setError("Couldn't light your fire. Check you're signed in and try again.");
       setSlow(false);
       setBusy(false);
     }
@@ -131,8 +131,6 @@ export default function PostRequestForm() {
 
   return (
     <div className="card">
-      <h2 className="card-title">Post a request</h2>
-
       {loading ? (
         <p className="muted">One moment…</p>
       ) : !user ? (
@@ -148,23 +146,23 @@ export default function PostRequestForm() {
             </div>
           </div>
           <p className="card-lede">
-            Sign in to post a request. It takes a few seconds and you can use
+            Sign in to light a fire. It takes a few seconds and you can use
             your Google account.
           </p>
           <Link className="btn btn-primary btn-block" href="/signin">
-            Sign in to post
+            Sign in to light a fire
           </Link>
         </>
       ) : postedId && showPosted ? (
         <div className="notice notice-success" role="status">
-          <p className="notice-title">Request posted</p>
-          <p>Opening your request now.</p>
+          <p className="notice-title">Fire lit</p>
+          <p>Opening your fire now.</p>
           <div className="notice-actions">
             <Link className="btn btn-outline" href={`/requests/${postedId}`}>
-              Open your request
+              Open your fire
             </Link>
             <button type="button" className="btn btn-outline" onClick={postAnother}>
-              Post another
+              Light another
             </button>
           </div>
         </div>
@@ -315,7 +313,7 @@ export default function PostRequestForm() {
                 </p>
               )}
               <p className="hint" id="name-hint">
-                Shown next to your requests, and on your answers once voting ends.
+                Shown next to your fires, and on your answers once voting ends.
                 Pick something that isn&apos;t your real name; you can change it once
                 every {NAME_CHANGE_DAYS} days.
               </p>
@@ -363,14 +361,14 @@ export default function PostRequestForm() {
 
           {slow && (
             <p className="notice notice-warn" role="status">
-              This is taking longer than usual, so your request may not have
+              This is taking longer than usual, so your fire may not have
               reached the server yet. If you&apos;re running the site locally,
               check that the Firebase emulators are still running.
             </p>
           )}
 
           <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
-            {busy ? "Posting…" : "Post request"}
+            {busy ? "Lighting…" : "Light the fire"}
           </button>
           <p className="hint">
             Answers stay open for 3 days. Write your own work; no AI-generated

@@ -106,7 +106,7 @@ export default function RequestBoard() {
     <section aria-labelledby="open-requests">
       <div className="board-head">
         <h2 id="open-requests" className="section-title">
-          Requests
+          Burning now
         </h2>
         {items === null && (
           // Holds the filter's place while requests load, so the list does not
@@ -133,7 +133,7 @@ export default function RequestBoard() {
           </div>
         )}
         {showFilters && !isCompactPicker(LAUNCHED_CATEGORIES.length) && (
-        <div className="tabs" role="group" aria-label="Filter requests">
+        <div className="tabs" role="group" aria-label="Filter fires">
           {filters.map((f) => (
             <button
               key={f.value}
@@ -151,17 +151,17 @@ export default function RequestBoard() {
 
       {failed ? (
         <p className="empty" role="alert">
-          Couldn&apos;t load requests right now. Please try again in a moment.
+          Couldn&apos;t load fires right now. Please try again in a moment.
         </p>
       ) : items === null ? (
         <p className="empty" role="status">
-          Loading requests…
+          Loading fires…
         </p>
       ) : visible.length === 0 ? (
         <p className="empty">
           {items.length === 0
-            ? "No open requests yet. Be the first to post one."
-            : "No requests of that type right now."}
+            ? "Nothing is burning yet. Be the first to light a fire."
+            : "No fires of that type right now."}
         </p>
       ) : (
         <ul className="request-list">
@@ -176,8 +176,9 @@ export default function RequestBoard() {
     {visibleResults.length > 0 && (
       <section aria-labelledby="recent-results" className="results-section">
         <h2 id="recent-results" className="section-title">
-          Recent results
+          Recent fires
         </h2>
+        <p className="section-sub">Finished fires, with their best answers.</p>
         <ul className="request-list">
           {visibleResults.map((r) => (
             <li key={r.id}>

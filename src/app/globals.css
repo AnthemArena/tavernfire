@@ -1307,3 +1307,29 @@ a:hover {
   background: var(--tab-bg);
   color: var(--tab-fg);
 }
+
+/* Fires: the call to action and the Light a fire page */
+.hero-cta {
+  margin-top: 28px;
+}
+
+.page-intro {
+  margin: 8px 0 28px;
+}
+
+.page-intro .section-title {
+  margin-bottom: 12px;
+}
+
+.section-sub {
+  margin: 4px 0 0;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+/* On a phone the header has no room for the button; the hero carries it instead. */
+@media (max-width: 640px) {
+  .header-cta {
+    display: none;
+  }
+}

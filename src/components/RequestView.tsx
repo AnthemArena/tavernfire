@@ -50,10 +50,10 @@ export default function RequestView({ id }: { id: string }) {
   if (state.status === "missing") {
     return (
       <div className="page-note">
-        <h1 className="section-title">Request not found</h1>
+        <h1 className="section-title">Fire not found</h1>
         <p className="muted">
           It may have been removed, or the link may be wrong.{" "}
-          <Link href="/">Back to all requests</Link>
+          <Link href="/">Back to Fires</Link>
         </p>
       </div>
     );
@@ -64,7 +64,7 @@ export default function RequestView({ id }: { id: string }) {
   return (
     <article className="request-page">
       <Link href="/" className="back-link">
-        ← All requests
+        ← Fires
       </Link>
 
       <p className="kicker">The three sparks</p>

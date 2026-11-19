@@ -201,7 +201,7 @@ function MyRequests({ uid }: { uid: string }) {
         </p>
       ) : items.length === 0 ? (
         <p className="empty">
-          You haven&apos;t posted a request yet. <Link href="/">Post one from the board.</Link>
+          You haven&apos;t lit a fire yet. <Link href="/fires/new">Light one now.</Link>
         </p>
       ) : (
         <ul className="request-list">
@@ -305,7 +305,7 @@ function MyAnswers({ uid }: { uid: string }) {
         </p>
       ) : rows.length === 0 ? (
         <p className="empty">
-          You haven&apos;t answered a request yet. <Link href="/">Find one on the board.</Link>
+          You haven&apos;t answered any fires yet. <Link href="/">Find a fire to answer.</Link>
         </p>
       ) : (
         <ul className="request-list">
