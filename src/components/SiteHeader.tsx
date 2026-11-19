@@ -8,6 +8,8 @@ import { useAuth } from "@/lib/auth-context";
 /** Reads the route, so it sits in its own Suspense boundary. */
 function MainNav() {
   const pathname = usePathname();
+  const { user } = useAuth();
+  const onAccount = pathname === "/account";
   const onRequests = pathname === "/" || pathname.startsWith("/requests");
   return (
     <nav className="nav" aria-label="Main">
@@ -18,6 +20,15 @@ function MainNav() {
       >
         Requests
       </Link>
+      {user && (
+        <Link
+          href="/account"
+          className={onAccount ? "nav-current" : undefined}
+          aria-current={onAccount ? "page" : undefined}
+        >
+          Account
+        </Link>
+      )}
     </nav>
   );
 }
@@ -56,7 +67,7 @@ export default function SiteHeader() {
           {loading ? null : user ? (
             <>
               <span className="signed-in-as">{displayName ?? "Signed in"}</span>
-              <button type="button" className="btn btn-outline" onClick={() => signOut()}>
+              <button type="button" className="btn btn-outline header-signout" onClick={() => signOut()}>
                 Sign out
               </button>
             </>

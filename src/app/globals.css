@@ -966,6 +966,10 @@ a:hover {
   .signed-in-as {
     display: none;
   }
+  /* No room for Sign out beside the nav on a phone; it lives on the Account page. */
+  .header-signout {
+    display: none;
+  }
 }
 
 @media (max-width: 340px) {
@@ -1109,4 +1113,31 @@ a:hover {
   outline: 2px solid var(--teal);
   outline-offset: 2px;
   border-radius: 2px;
+}
+
+/* Account page */
+.account-signout {
+  align-self: flex-start;
+}
+.page-title {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  line-height: 1.2;
+  color: var(--ink);
+  margin: 8px 0 20px;
+}
+.account {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding-bottom: 48px;
+}
+.account-name {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  margin: 0 0 4px;
+  color: var(--ink);
+}
+.account-note {
+  margin-top: 16px;
 }
