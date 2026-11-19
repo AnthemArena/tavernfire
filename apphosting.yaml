@@ -15,19 +15,19 @@ env:
     value: tavernfire-3fcb5
     availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    value: REPLACE_ME
+    value: NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyAPGjKw61NK4hlviDU_cz2kxJiKiBUU384
     availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    value: REPLACE_ME
+    value: tavernfire-3fcb5.firebaseapp.com
     availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-    value: REPLACE_ME
+    value: tavernfire-3fcb5.firebasestorage.app
     availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-    value: REPLACE_ME
+    value: 585639437973
     availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-    value: REPLACE_ME
+    value: 1:585639437973:web:b93b6579e6e502dbc81d9c
     availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_USE_FIREBASE_EMULATORS
     value: "false"
