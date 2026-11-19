@@ -1333,3 +1333,72 @@ a:hover {
     display: none;
   }
 }
+
+/* Avatar circle and its menu */
+.avatar-menu {
+  position: relative;
+}
+
+.avatar-button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--chip);
+  color: var(--ink);
+  border: 1px solid var(--control-border);
+  font: 600 17px var(--font-serif);
+  cursor: pointer;
+}
+
+.avatar-button:hover {
+  background: var(--btn-dark-hover);
+}
+
+.avatar-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 20;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.avatar-name {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+  overflow-wrap: anywhere;
+}
+
+.avatar-item {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink);
+  font: 500 15px var(--font-sans, inherit);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.avatar-item:hover {
+  background: var(--chip);
+  color: var(--ink);
+}

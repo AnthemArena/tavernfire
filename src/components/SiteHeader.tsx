@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -8,8 +8,6 @@ import { useAuth } from "@/lib/auth-context";
 /** Reads the route, so it sits in its own Suspense boundary. */
 function MainNav() {
   const pathname = usePathname();
-  const { user } = useAuth();
-  const onAccount = pathname === "/account";
   const onRequests =
     pathname === "/" || pathname.startsWith("/requests") || pathname.startsWith("/fires");
   return (
@@ -21,15 +19,6 @@ function MainNav() {
       >
         Fires
       </Link>
-      {user && (
-        <Link
-          href="/account"
-          className={onAccount ? "nav-current" : undefined}
-          aria-current={onAccount ? "page" : undefined}
-        >
-          Account
-        </Link>
-      )}
     </nav>
   );
 }
@@ -44,8 +33,71 @@ function SignInButton() {
   );
 }
 
+/** The signed-in person's circle: name, account and sign out in one small menu. */
+function AvatarMenu() {
+  const { displayName, signOut } = useAuth();
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointer(e: MouseEvent) {
+      if (box.current && !box.current.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const initial = displayName ? displayName.trim().charAt(0).toUpperCase() : null;
+
+  return (
+    <div className="avatar-menu" ref={box}>
+      <button
+        type="button"
+        className="avatar-button"
+        aria-label="Your menu"
+        aria-expanded={open}
+        aria-controls="avatar-panel"
+        onClick={() => setOpen((v) => !v)}
+      >
+        {initial ?? (
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7z" />
+          </svg>
+        )}
+      </button>
+      {open && (
+        <div className="avatar-panel" id="avatar-panel">
+          <p className="avatar-name">{displayName ?? "No name yet"}</p>
+          <Link href="/account" className="avatar-item" onClick={() => setOpen(false)}>
+            Your account
+          </Link>
+          <button
+            type="button"
+            className="avatar-item"
+            onClick={() => {
+              setOpen(false);
+              signOut();
+            }}
+          >
+            Sign out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function SiteHeader() {
-  const { user, displayName, loading, signOut } = useAuth();
+  const { user, loading } = useAuth();
 
   return (
     <header className="site-header">
@@ -69,12 +121,7 @@ export default function SiteHeader() {
             Light a fire
           </Link>
           {loading ? null : user ? (
-            <>
-              <span className="signed-in-as">{displayName ?? "Signed in"}</span>
-              <button type="button" className="btn btn-outline header-signout" onClick={() => signOut()}>
-                Sign out
-              </button>
-            </>
+            <AvatarMenu />
           ) : (
             <Suspense fallback={null}>
               <SignInButton />
