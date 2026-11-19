@@ -853,6 +853,22 @@ a:hover {
   border-color: var(--accent);
 }
 
+/* Results: the favourite is the one filled badge; the rank is quiet. */
+.badge-favourite {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.badge-rank {
+  color: var(--ink);
+  border-color: var(--control-border);
+}
+
+.results-section {
+  margin-top: 40px;
+}
+
 .entry-concept {
   font-size: 16px;
   line-height: 1.55;
@@ -940,6 +956,7 @@ a:hover {
 }
 
 .entry-anon,
+.entry-picks,
 .entry-reported {
   font-size: 14px;
   color: var(--muted);

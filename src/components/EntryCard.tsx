@@ -14,9 +14,10 @@ import {
 } from "@/lib/entries";
 import AnswerForm from "@/components/AnswerForm";
 
-// Note for the voting step: while a request is open or in voting, this card must
-// never receive or render an author name, an author id or a vote total, not even
-// in hidden text or aria-labels. Those arrive only after the reveal.
+// While a request is open or in voting, this card must never receive or render an
+// author name, an author id or a vote total, not even in hidden text or aria-labels.
+// Those arrive only after the reveal, through the `result` prop (which the page
+// builds from the entry's reveal data, present only once results are out).
 
 function ReportForm({ entryId, onClose }: { entryId: string; onClose: () => void }) {
   const { user } = useAuth();
@@ -116,6 +117,7 @@ export default function EntryCard({
   editUntil,
   answersClosed,
   voting,
+  result,
 }: {
   entry: EntryItem;
   isMine: boolean;
@@ -127,6 +129,8 @@ export default function EntryCard({
   answersClosed: boolean;
   /** Present when this person can pick favourites (signed in, verified, voting open). */
   voting?: { picked: boolean; atCap: boolean; busy: boolean; onToggle: () => void };
+  /** Present once the results are revealed. */
+  result?: { rankText: string | null; picks: number; favourite: boolean; authorName: string | null };
 }) {
   const { user } = useAuth();
   const [reporting, setReporting] = useState(false);
@@ -177,6 +181,8 @@ export default function EntryCard({
           {entry.name}
         </h3>
         {isMine && <span className="badge badge-mine">Your entry</span>}
+        {result?.favourite && <span className="badge badge-favourite">Community favourite</span>}
+        {result?.rankText && <span className="badge badge-rank">{result.rankText}</span>}
       </div>
 
       <p className="entry-concept">{entry.concept}</p>
@@ -216,7 +222,19 @@ export default function EntryCard({
 
       <div className="entry-foot">
         <span className="entry-anon">
-          {isMine ? null : "Author hidden"}
+          {result
+            ? isMine
+              ? null
+              : `Written by ${result.authorName ?? "a Tavernfire member"}`
+            : isMine
+              ? null
+              : "Author hidden"}
+          {result && (result.picks > 0 || result.rankText) && (
+            <span className="entry-picks">
+              {isMine ? "" : " · "}
+              {result.picks} {result.picks === 1 ? "pick" : "picks"}
+            </span>
+          )}
           {entry.edited && (
             <span className="entry-edited">{isMine ? "Edited" : " · Edited"}</span>
           )}

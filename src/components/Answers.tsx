@@ -11,6 +11,8 @@ import {
   ENTRY_EDIT_WINDOW_HOURS,
   editableUntil,
   orderForViewer,
+  orderRevealed,
+  rankLabel,
   toEntryItem,
   type EntryItem,
 } from "@/lib/entries";
@@ -119,7 +121,8 @@ export default function Answers({ request }: { request: RequestItem }) {
   const phase = now.getTime() > 0 ? requestPhase(request.createdAt, now) : "answering";
   const ended = phase === "ended";
   // Voting needs at least two entries; with one, the author is simply revealed at day 3.
-  const votingOpen = VOTING_ENABLED && !ended && list.length >= 2;
+  const revealed = request.status === "revealed";
+  const votingOpen = VOTING_ENABLED && !ended && !revealed && list.length >= 2;
   const validPicks = (picks ?? []).filter((id) => list.some((e) => e.id === id));
   const canPick = votingOpen && signedInUid !== null && emailVerified && picks !== null;
 
@@ -169,9 +172,29 @@ export default function Answers({ request }: { request: RequestItem }) {
       setVerifyBusy(false);
     }
   }
-  const shown = mine
-    ? [...list.filter((e) => e.id === mine), ...list.filter((e) => e.id !== mine)]
-    : list;
+  // After the reveal, entries follow the order the results function stored.
+  // Before it, yours first and the rest in a random order.
+  const shown = revealed
+    ? orderRevealed(list)
+    : mine
+      ? [...list.filter((e) => e.id === mine), ...list.filter((e) => e.id !== mine)]
+      : list;
+  const rankedResults = revealed && list.some((e) => e.reveal?.rank != null);
+  // How many entries share each rank, so ties read "Joint 2nd".
+  const sharedRanks = new Map<number, number>();
+  for (const e of list) {
+    const rank = e.reveal?.rank;
+    if (rank != null) sharedRanks.set(rank, (sharedRanks.get(rank) ?? 0) + 1);
+  }
+  const voters = request.ballotCount ?? 0;
+  const resultsNote =
+    list.length === 1
+      ? "This request had one answer, so there was nothing to vote on."
+      : rankedResults
+        ? `Voting has ended. ${voters} ${voters === 1 ? "person" : "people"} picked favourites.`
+        : voters === 0
+          ? "Voting has ended. Nobody picked favourites, so the answers stay in a random order."
+          : `Voting has ended. Only ${voters} ${voters === 1 ? "person" : "people"} picked favourites, too few to rank the answers, so they stay in a random order.`;
 
   // What sits above the entries: the form, a prompt to write, or a reason there is none.
   let action;
@@ -180,6 +203,12 @@ export default function Answers({ request }: { request: RequestItem }) {
     action = null;
   } else if (loading) {
     action = null;
+  } else if (revealed) {
+    action = (
+      <p className="notice notice-plain" role="status">
+        {resultsNote}
+      </p>
+    );
   } else if (closed) {
     action = (
       <p className="notice notice-plain">
@@ -262,7 +291,13 @@ export default function Answers({ request }: { request: RequestItem }) {
           <p className="muted answers-count" role="status">
             {entries.length} {entries.length === 1 ? "answer" : "answers"}
             {entries.length > 1 &&
-              (mine ? ", yours first, the rest in random order" : ", in random order")}
+              (revealed
+                ? rankedResults
+                  ? ", ranked by favourites"
+                  : ", in random order"
+                : mine
+                  ? ", yours first, the rest in random order"
+                  : ", in random order")}
           </p>
         )}
       </div>
@@ -329,6 +364,19 @@ export default function Answers({ request }: { request: RequestItem }) {
                     now={now}
                     editUntil={e.id === mine ? editableUntil(e, closeAt) : null}
                     answersClosed={closed}
+                    result={
+                      revealed && e.reveal
+                        ? {
+                            rankText:
+                              e.reveal.rank != null
+                                ? rankLabel(e.reveal.rank, (sharedRanks.get(e.reveal.rank) ?? 1) > 1)
+                                : null,
+                            picks: e.reveal.picks,
+                            favourite: e.reveal.favourite,
+                            authorName: e.reveal.authorName,
+                          }
+                        : undefined
+                    }
                     voting={
                       canPick
                         ? {

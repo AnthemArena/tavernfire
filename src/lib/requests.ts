@@ -14,6 +14,9 @@ export function kindLabel(kind: RequestKind): string {
   return getCategory(kind).label;
 }
 
+/** Written by the lifecycle function: open, voting, revealed (results out) or closed (no answers). */
+export type RequestStatus = "open" | "voting" | "revealed" | "closed";
+
 export type RequestItem = {
   id: string;
   sparks: string[];
@@ -24,6 +27,9 @@ export type RequestItem = {
   requesterId: string;
   requesterName: string;
   answerCount: number;
+  status: RequestStatus;
+  /** People who picked favourites; set when the results are revealed. */
+  ballotCount: number | null;
   /** When the request was created. A local estimate until the server confirms it. */
   createdAt: Date;
 };
@@ -64,6 +70,11 @@ export function toRequestItem(
         ? data.requesterName
         : "Someone",
     answerCount: typeof data.answerCount === "number" ? data.answerCount : 0,
+    status:
+      data.status === "voting" || data.status === "revealed" || data.status === "closed"
+        ? data.status
+        : "open",
+    ballotCount: typeof data.ballotCount === "number" ? data.ballotCount : null,
     createdAt: createdAt.toDate(),
   };
 }
@@ -118,4 +129,46 @@ export function requestPhase(createdAt: Date, now: Date): RequestPhase {
   if (now < answersCloseAt(createdAt)) return "answering";
   if (now < votingClosesAt(createdAt)) return "voting";
   return "ended";
+}
+
+/** What to show people. "counting" is the gap between voting ending and the results function running. */
+export type DisplayPhase = "answering" | "voting" | "counting" | "revealed" | "closed";
+
+export function displayPhase(r: Pick<RequestItem, "status" | "createdAt">, now: Date): DisplayPhase {
+  if (r.status === "revealed") return "revealed";
+  if (r.status === "closed") return "closed";
+  const phase = requestPhase(r.createdAt, now);
+  return phase === "ended" ? "counting" : phase;
+}
+
+/** "2 days", "5 hours" or "under an hour": how long until a moment. */
+export function describeUntil(until: Date, now: Date): string {
+  const hour = 60 * 60 * 1000;
+  const day = 24 * hour;
+  const ms = until.getTime() - now.getTime();
+  if (ms >= day) {
+    const days = Math.ceil(ms / day);
+    return days === 1 ? "1 day" : `${days} days`;
+  }
+  if (ms >= hour) {
+    const hours = Math.floor(ms / hour);
+    return hours === 1 ? "1 hour" : `${hours} hours`;
+  }
+  return "under an hour";
+}
+
+/** The short status line on cards and request pages. */
+export function describePhase(r: Pick<RequestItem, "status" | "createdAt">, now: Date): string {
+  switch (displayPhase(r, now)) {
+    case "answering":
+      return `Open for answers · ${describeTimeLeft(r.createdAt, now)}`;
+    case "voting":
+      return `Voting · ends in ${describeUntil(votingClosesAt(r.createdAt), now)}`;
+    case "counting":
+      return "Counting votes";
+    case "revealed":
+      return "Results are in";
+    case "closed":
+      return "Closed with no answers";
+  }
 }

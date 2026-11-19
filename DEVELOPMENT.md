@@ -117,3 +117,13 @@ Code is in `functions/` (Node 22, TypeScript). One-time setup on your computer:
 After changing `src/lib/ranking.ts`, run `npm run sync:functions` (a test fails if the copies differ).
 Tests: `npm test` (logic) and `npm run test:rules` (rules plus the lifecycle running against the emulator).
 Keep `NEXT_PUBLIC_ENABLE_VOTING=false` on the live site until the results screens ship.
+
+## Results screens
+
+The request page and board read the fields the lifecycle function writes
+(`status`, `ballotCount` on requests; `result`, `authorName`, `revealedAt` on entries).
+Author names and pick counts show only when an entry has `revealedAt` and `result`.
+The board lists `open` and `voting` requests (with a phase label on each card) and a
+"Recent results" list of `revealed` ones; both use the existing
+(moderation, status, createdAt) index. With `NEXT_PUBLIC_ENABLE_VOTING=false`, picks are hidden but results
+still show if a request has been revealed.

@@ -10,6 +10,8 @@ import {
   buildEntryFields,
   orderForViewer,
   toEntryItem,
+  rankLabel,
+  orderRevealed,
 } from "./entries.ts";
 
 const base = {
@@ -58,6 +60,7 @@ test("toEntryItem rejects malformed data and tolerates missing optional fields",
     name: "n",
     concept: "c",
     traits: [],
+    reveal: null,
   });
 });
 
@@ -124,4 +127,41 @@ test("the answer and voting windows in firestore.rules match requests.ts", () =>
     [...new Set(days)].sort((a, b) => a - b),
     [ANSWER_WINDOW_DAYS, VOTING_WINDOW_DAYS],
   );
+});
+
+test("rankLabel gives ordinals and marks shared ranks", () => {
+  assert.equal(rankLabel(1, false), "1st");
+  assert.equal(rankLabel(2, true), "Joint 2nd");
+  assert.equal(rankLabel(3, false), "3rd");
+  assert.equal(rankLabel(4, false), "4th");
+  assert.equal(rankLabel(11, false), "11th");
+  assert.equal(rankLabel(12, false), "12th");
+  assert.equal(rankLabel(21, false), "21st");
+  assert.equal(rankLabel(102, false), "102nd");
+});
+
+test("author and results appear only once the reveal fields are present", () => {
+  const base = { name: "n", concept: "c", requestId: "r" };
+  assert.equal(toEntryItem("a", base)?.reveal, null);
+  // An author id alone (without revealedAt and a result) shows nothing.
+  assert.equal(toEntryItem("a", { ...base, authorId: "u1", authorName: "Ann" })?.reveal, null);
+  const revealed = toEntryItem("a", {
+    ...base,
+    authorId: "u1",
+    authorName: "Ann",
+    revealedAt: new Date(),
+    result: { picks: 3, rank: 1, favourite: true, order: 0 },
+  });
+  assert.deepEqual(revealed?.reveal, { authorName: "Ann", picks: 3, rank: 1, favourite: true, order: 0 });
+  const noName = toEntryItem("a", { ...base, revealedAt: new Date(), authorName: null, result: { picks: 0, rank: null, favourite: false, order: 2 } });
+  assert.equal(noName?.reveal?.authorName, null);
+  assert.equal(noName?.reveal?.rank, null);
+});
+
+test("orderRevealed follows the stored order, with unrevealed entries last", () => {
+  const mk = (id: string, order: number | null) => ({
+    id,
+    reveal: order === null ? null : { authorName: null, picks: 0, rank: null, favourite: false, order },
+  });
+  assert.deepEqual(orderRevealed([mk("c", 2), mk("x", null), mk("a", 0), mk("b", 1)]).map((e) => e.id), ["a", "b", "c", "x"]);
 });

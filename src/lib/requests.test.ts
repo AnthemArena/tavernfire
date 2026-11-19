@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { describeTimeLeft, isClosingSoon, toRequestItem } from "./requests.ts";
+import { describePhase, describeTimeLeft, describeUntil, displayPhase, isClosingSoon, toRequestItem } from "./requests.ts";
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -63,4 +63,39 @@ test("a request moves from answering to voting to ended", () => {
   assert.equal(requestPhase(made, at(4.9)), "voting");
   assert.equal(requestPhase(made, at(5)), "ended");
   assert.equal(votingClosesAt(made).getTime() - answersCloseAt(made).getTime(), 2 * 24 * 60 * 60 * 1000);
+});
+
+const ago = (ms: number) => new Date(now.getTime() - ms);
+
+test("displayPhase follows the clock until the function writes a final status", () => {
+  assert.equal(displayPhase({ status: "open", createdAt: ago(1 * DAY) }, now), "answering");
+  assert.equal(displayPhase({ status: "open", createdAt: ago(3.5 * DAY) }, now), "voting");
+  assert.equal(displayPhase({ status: "voting", createdAt: ago(4 * DAY) }, now), "voting");
+  assert.equal(displayPhase({ status: "open", createdAt: ago(5.5 * DAY) }, now), "counting");
+  assert.equal(displayPhase({ status: "revealed", createdAt: ago(3.2 * DAY) }, now), "revealed");
+  assert.equal(displayPhase({ status: "closed", createdAt: ago(9 * DAY) }, now), "closed");
+});
+
+test("describeUntil and describePhase give short labels", () => {
+  assert.equal(describeUntil(new Date(now.getTime() + 1.5 * DAY), now), "2 days");
+  assert.equal(describeUntil(new Date(now.getTime() + 20 * HOUR), now), "20 hours");
+  assert.equal(describeUntil(new Date(now.getTime() + 20 * 60 * 1000), now), "under an hour");
+  assert.equal(describePhase({ status: "open", createdAt: ago(1.5 * DAY) }, now), "Open for answers · 2 days left");
+  assert.equal(describePhase({ status: "open", createdAt: ago(3.5 * DAY) }, now), "Voting · ends in 2 days");
+  assert.equal(describePhase({ status: "open", createdAt: ago(6 * DAY) }, now), "Counting votes");
+  assert.equal(describePhase({ status: "revealed", createdAt: ago(6 * DAY) }, now), "Results are in");
+});
+
+test("toRequestItem reads status and ballot count, defaulting safely", () => {
+  const base = {
+    sparks: ["a", "b", "c"],
+    kind: "npc",
+    createdAt: { toDate: () => now },
+  };
+  assert.equal(toRequestItem("r", base)?.status, "open");
+  assert.equal(toRequestItem("r", base)?.ballotCount, null);
+  const done = toRequestItem("r", { ...base, status: "revealed", ballotCount: 7 });
+  assert.equal(done?.status, "revealed");
+  assert.equal(done?.ballotCount, 7);
+  assert.equal(toRequestItem("r", { ...base, status: "weird" })?.status, "open");
 });

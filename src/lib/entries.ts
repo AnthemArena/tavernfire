@@ -32,6 +32,18 @@ export const REPORT_REASON_LABELS: Record<ReportReason, string> = {
   other: "Something else",
 };
 
+/** What the lifecycle function adds to an entry at the reveal. */
+export type EntryReveal = {
+  /** The author's chosen name at the time, or null if they never chose one. */
+  authorName: string | null;
+  picks: number;
+  /** 1-based, ties share a rank; null when too few people voted to rank. */
+  rank: number | null;
+  favourite: boolean;
+  /** Position to show, 0 first. */
+  order: number;
+};
+
 export type EntryItem = {
   id: string;
   requestId: string;
@@ -43,6 +55,8 @@ export type EntryItem = {
   name: string;
   concept: string;
   traits: string[];
+  /** Null until the results are revealed. Author and vote data only ever come from here. */
+  reveal: EntryReveal | null;
 };
 
 export type EntryFields = {
@@ -98,6 +112,36 @@ export function buildEntryFields(input: {
   return { name, concept, traits, traitsNorm };
 }
 
+function toReveal(data: Record<string, unknown>): EntryReveal | null {
+  const result = data.result;
+  if (data.revealedAt == null || typeof result !== "object" || result === null) return null;
+  const r = result as Record<string, unknown>;
+  return {
+    authorName: typeof data.authorName === "string" && data.authorName !== "" ? data.authorName : null,
+    picks: typeof r.picks === "number" ? r.picks : 0,
+    rank: typeof r.rank === "number" ? r.rank : null,
+    favourite: r.favourite === true,
+    order: typeof r.order === "number" ? r.order : 0,
+  };
+}
+
+/** "1st", "2nd", "3rd", "11th"; "Joint 2nd" when others share the rank. */
+export function rankLabel(rank: number, tied: boolean): string {
+  const lastTwo = rank % 100;
+  const lastOne = rank % 10;
+  const suffix =
+    lastTwo >= 11 && lastTwo <= 13 ? "th" : lastOne === 1 ? "st" : lastOne === 2 ? "nd" : lastOne === 3 ? "rd" : "th";
+  const base = `${rank}${suffix}`;
+  return tied ? `Joint ${base}` : base;
+}
+
+/** Revealed entries in the order the function stored; any without results go last. */
+export function orderRevealed<T extends { reveal: EntryReveal | null }>(items: T[]): T[] {
+  return [...items].sort(
+    (a, b) => (a.reveal?.order ?? Number.MAX_SAFE_INTEGER) - (b.reveal?.order ?? Number.MAX_SAFE_INTEGER),
+  );
+}
+
 /** Convert a Firestore document into an EntryItem, or null if it is malformed. */
 export function toEntryItem(
   id: string,
@@ -122,6 +166,7 @@ export function toEntryItem(
     traits: Array.isArray(data.traits)
       ? (data.traits as unknown[]).filter((t): t is string => typeof t === "string")
       : [],
+    reveal: toReveal(data),
   };
 }
 

@@ -12,7 +12,7 @@ import {
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useNow } from "@/lib/use-now";
-import TimeLeft from "@/components/TimeLeft";
+import PhaseLabel from "@/components/PhaseLabel";
 import AnswerCount from "@/components/AnswerCount";
 import { LAUNCHED_CATEGORIES, isCompactPicker } from "@/lib/categories";
 import {
@@ -28,6 +28,7 @@ type Filter = "all" | RequestKind;
 
 export default function RequestBoard() {
   const [items, setItems] = useState<RequestItem[] | null>(null);
+  const [results, setResults] = useState<RequestItem[]>([]);
   const [failed, setFailed] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
   const now = useNow();
@@ -36,7 +37,7 @@ export default function RequestBoard() {
     const q = query(
       collection(getDb(), "requests"),
       where("moderation", "==", "ok"),
-      where("status", "==", "open"),
+      where("status", "in", ["open", "voting"]),
       orderBy("createdAt", "desc"),
       limit(30),
     );
@@ -61,6 +62,27 @@ export default function RequestBoard() {
     );
   }, []);
 
+  // Requests whose results are out. A quiet second list; if it fails, the board still works.
+  useEffect(() => {
+    const q = query(
+      collection(getDb(), "requests"),
+      where("moderation", "==", "ok"),
+      where("status", "==", "revealed"),
+      orderBy("createdAt", "desc"),
+      limit(10),
+    );
+    return onSnapshot(
+      q,
+      (snapshot) =>
+        setResults(
+          snapshot.docs
+            .map((d) => toRequestItem(d.id, d.data({ serverTimestamps: "estimate" })))
+            .filter((item): item is RequestItem => item !== null),
+        ),
+      (err) => console.error("Could not load results", err),
+    );
+  }, []);
+
   // Only offer types that have open requests right now (an empty filter makes the
   // board look dead), and only once there are enough types to be worth filtering.
   const present = new Set((items ?? []).map((r) => r.kind));
@@ -77,11 +99,14 @@ export default function RequestBoard() {
   const visible =
     items === null ? [] : items.filter((r) => activeFilter === "all" || r.kind === activeFilter);
 
+  const visibleResults = results.filter((r) => activeFilter === "all" || r.kind === activeFilter);
+
   return (
+    <>
     <section aria-labelledby="open-requests">
       <div className="board-head">
         <h2 id="open-requests" className="section-title">
-          Open requests
+          Requests
         </h2>
         {items === null && (
           // Holds the filter's place while requests load, so the list does not
@@ -142,28 +167,49 @@ export default function RequestBoard() {
         <ul className="request-list">
           {visible.map((r) => (
             <li key={r.id}>
-              <Link href={`/requests/${r.id}`} className="request-card">
-                <div className="request-card-top">
-                  <div className="sparks">
-                    {r.sparks.map((s) => (
-                      <span className="spark" key={s}>
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                {r.note && <p className="request-note">{r.note}</p>}
-                <div className="meta">
-                  <span className="badge">{kindLabel(r.kind)}</span>
-                  <TimeLeft createdAt={r.createdAt} now={now} />
-                  <AnswerCount requestId={r.id} />
-                  <span className="meta-poster">Posted by {r.requesterName}</span>
-                </div>
-              </Link>
+              <RequestCard request={r} now={now} />
             </li>
           ))}
         </ul>
       )}
     </section>
+    {visibleResults.length > 0 && (
+      <section aria-labelledby="recent-results" className="results-section">
+        <h2 id="recent-results" className="section-title">
+          Recent results
+        </h2>
+        <ul className="request-list">
+          {visibleResults.map((r) => (
+            <li key={r.id}>
+              <RequestCard request={r} now={now} />
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+    </>
+  );
+}
+
+function RequestCard({ request: r, now }: { request: RequestItem; now: Date }) {
+  return (
+    <Link href={`/requests/${r.id}`} className="request-card">
+      <div className="request-card-top">
+        <div className="sparks">
+          {r.sparks.map((s) => (
+            <span className="spark" key={s}>
+              {s}
+            </span>
+          ))}
+        </div>
+      </div>
+      {r.note && <p className="request-note">{r.note}</p>}
+      <div className="meta">
+        <span className="badge">{kindLabel(r.kind)}</span>
+        <PhaseLabel request={r} now={now} />
+        <AnswerCount requestId={r.id} />
+        <span className="meta-poster">Posted by {r.requesterName}</span>
+      </div>
+    </Link>
   );
 }

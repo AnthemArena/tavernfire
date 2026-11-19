@@ -5,7 +5,7 @@ import Link from "next/link";
 import { doc, onSnapshot } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useNow } from "@/lib/use-now";
-import TimeLeft from "@/components/TimeLeft";
+import PhaseLabel from "@/components/PhaseLabel";
 import Answers from "@/components/Answers";
 import {
   kindLabel,
@@ -84,7 +84,7 @@ export default function RequestView({ id }: { id: string }) {
       <div className="meta">
         <span className="badge">{kindLabel(r.kind)}</span>
         <span>Posted by {r.requesterName}</span>
-        <TimeLeft createdAt={r.createdAt} now={now} />
+        <PhaseLabel request={r} now={now} />
       </div>
 
       <Answers request={r} />

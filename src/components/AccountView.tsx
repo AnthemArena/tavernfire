@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useNow } from "@/lib/use-now";
 import { NAME_CHANGE_DAYS, NAME_MAX, NameError } from "@/lib/names";
 import { kindLabel, toRequestItem, type RequestItem } from "@/lib/requests";
-import TimeLeft from "@/components/TimeLeft";
+import PhaseLabel from "@/components/PhaseLabel";
 import AnswerCount from "@/components/AnswerCount";
 
 /** Your own page: your name, and the requests you have posted. Only you see it. */
@@ -206,7 +206,7 @@ function MyRequests({ uid }: { uid: string }) {
                 </div>
                 <div className="meta">
                   <span className="badge">{kindLabel(r.kind)}</span>
-                  <TimeLeft createdAt={r.createdAt} now={now} />
+                  <PhaseLabel request={r} now={now} />
                   <AnswerCount requestId={r.id} />
                 </div>
               </Link>
