@@ -115,6 +115,7 @@ export default function EntryCard({
   now,
   editUntil,
   answersClosed,
+  voting,
 }: {
   entry: EntryItem;
   isMine: boolean;
@@ -124,6 +125,8 @@ export default function EntryCard({
   editUntil: Date | null;
   /** True once the request has stopped accepting answers. */
   answersClosed: boolean;
+  /** Present when this person can pick favourites (signed in, verified, voting open). */
+  voting?: { picked: boolean; atCap: boolean; busy: boolean; onToggle: () => void };
 }) {
   const { user } = useAuth();
   const [reporting, setReporting] = useState(false);
@@ -186,6 +189,29 @@ export default function EntryCard({
             </li>
           ))}
         </ul>
+      )}
+
+      {voting && !isMine && (
+        <div className="entry-pick">
+          <button
+            type="button"
+            className={voting.picked ? "btn btn-picked" : "btn btn-outline"}
+            aria-pressed={voting.picked}
+            aria-disabled={voting.busy || (voting.atCap && !voting.picked) ? true : undefined}
+            aria-describedby={voting.atCap && !voting.picked ? `pick-hint-${entry.id}` : undefined}
+            onClick={() => {
+              if (voting.busy || (voting.atCap && !voting.picked)) return;
+              voting.onToggle();
+            }}
+          >
+            {voting.picked ? "Picked" : "Pick as a favourite"}
+          </button>
+          {voting.atCap && !voting.picked && (
+            <span className="hint" id={`pick-hint-${entry.id}`}>
+              All 3 picks used. Un-pick one to choose this.
+            </span>
+          )}
+        </div>
       )}
 
       <div className="entry-foot">

@@ -76,3 +76,10 @@ With the emulators and `npm run dev` running:
 3. **Then release the app.** If the app ships first, people can pick the category and every post is refused.
 
 Policy: ids never change, and a launched category is never removed (the app skips requests whose type it does not know, so removing one would make them vanish). Renaming changes only the label. Every category uses the same answer shape (name, description, optional tags); only the wording differs. The post form shows a radio list up to four categories and a grouped drop-down from five (`COMPACT_PICKER_FROM`).
+
+## Picking favourites (voting)
+
+- The pick buttons are built but not for release on their own: set `NEXT_PUBLIC_ENABLE_VOTING=false` on any live deploy until the results and reveal ship.
+- Email sign-ups get a verification email; voting needs a verified email (Google sign-ins already are). In the emulator the link appears in the Auth emulator's UI (http://localhost:4000/auth) under the user, or in the emulator terminal output.
+- The new "your requests" list on the account page needs the index in `firestore.indexes.json`; publish it with `npx firebase deploy --only firestore:indexes` when going live (the emulator does not need it).
+- Windows: answers and voting open for 3 days, then voting only for 2 more (`ANSWER_WINDOW_DAYS`, `VOTING_WINDOW_DAYS` in `src/lib/requests.ts`; a test keeps `firestore.rules` in step).

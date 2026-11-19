@@ -167,6 +167,53 @@ service cloud.firestore {
           && validLock(request.resource.data, requestId);
         allow update, delete: if false;
       }
+
+      // A person's picks for this request: up to three favourite entries.
+      // Private: only its owner (and moderators) can read it, so counts stay
+      // hidden until the reveal. Picks can be changed until voting ends.
+      // Clients never delete ballots; a function removes them after the reveal.
+      match /ballots/{uid} {
+        allow read: if signedIn() && (uid == request.auth.uid || isModerator());
+        allow create, update: if signedIn() && uid == request.auth.uid
+          && validBallot(request.resource.data, requestId);
+        allow delete: if false;
+      }
+    }
+
+    // Is this entry a visible entry of this request?
+    function pickableEntry(entryId, requestId) {
+      let e = get(/databases/$(database)/documents/entries/$(entryId)).data;
+      return e.requestId == requestId && e.moderation == 'ok';
+    }
+
+    function pickOk(picks, i, requestId) {
+      return picks.size() <= i
+        || (picks[i] is string && picks[i].size() >= 1 && picks[i].size() <= 40
+            && pickableEntry(picks[i], requestId));
+    }
+
+    // Voting rules that need no Cloud Function: a verified email, at most three
+    // distinct picks, each an entry of this request, never your own entry, and
+    // only within 5 days of the request being posted (3 days of answers and
+    // voting, then 2 days of voting only).
+    function validBallot(d, requestId) {
+      let rq = get(/databases/$(database)/documents/requests/$(requestId)).data;
+      let lockPath = /databases/$(database)/documents/requests/$(requestId)/answerLocks/$(request.auth.uid);
+      return d.keys().hasOnly(['voterId', 'requestId', 'picks', 'updatedAt'])
+        && d.keys().hasAll(['voterId', 'requestId', 'picks', 'updatedAt'])
+        && request.auth.token.get('email_verified', false) == true
+        && d.voterId == request.auth.uid
+        && d.requestId == requestId
+        && d.updatedAt == request.time
+        && d.picks is list && d.picks.size() <= 3
+        && pickOk(d.picks, 0, requestId)
+        && pickOk(d.picks, 1, requestId)
+        && pickOk(d.picks, 2, requestId)
+        && (d.picks.size() < 2 || d.picks[0] != d.picks[1])
+        && (d.picks.size() < 3 || (d.picks[0] != d.picks[2] && d.picks[1] != d.picks[2]))
+        && (!exists(lockPath) || !(get(lockPath).data.entryId in d.picks))
+        && rq.moderation == 'ok'
+        && request.time < rq.createdAt + duration.value(5, 'd');
     }
 
     function validLock(d, requestId) {

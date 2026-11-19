@@ -864,6 +864,140 @@ describe("reports", () => {
   });
 });
 
+describe("ballots (picking favourites)", () => {
+  /** A request with three visible entries, written by other people. */
+  async function seedVoting(createdAgo = 1 * DAY) {
+    await seedRequest("r1");
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore();
+      await updateDoc(doc(db, "requests", "r1"), { createdAt: new Date(Date.now() - createdAgo) });
+      for (const id of ["e1", "e2", "e3", "e4"]) {
+        await setDoc(doc(db, "entries", id), newEntryData("r1", { createdAt: new Date() }));
+      }
+      await setDoc(doc(db, "entries", "other"), newEntryData("r2", { createdAt: new Date() }));
+      // carol wrote e3 (her private marker says so).
+      await setDoc(doc(db, "requests", "r1", "answerLocks", "carol"), {
+        authorId: "carol",
+        requestId: "r1",
+        entryId: "e3",
+        createdAt: new Date(),
+      });
+    });
+  }
+
+  const voter = (uid: string, verified = true) =>
+    env.authenticatedContext(uid, { email_verified: verified }).firestore();
+
+  const ballot = (uid: string, picks: unknown, overrides: Record<string, unknown> = {}) => ({
+    voterId: uid,
+    requestId: "r1",
+    picks,
+    updatedAt: serverTimestamp(),
+    ...overrides,
+  });
+
+  const save = (db: ReturnType<typeof voter>, uid: string, picks: unknown, o: Record<string, unknown> = {}) =>
+    setDoc(doc(db, "requests", "r1", "ballots", uid), ballot(uid, picks, o));
+
+  test("a verified person can pick up to three entries, and change them later", async () => {
+    await seedVoting();
+    const db = voter("bob");
+    await assertSucceeds(save(db, "bob", ["e1"]));
+    await assertSucceeds(save(db, "bob", ["e1", "e2", "e4"]));
+    await assertSucceeds(save(db, "bob", ["e2"]));
+    await assertSucceeds(save(db, "bob", [])); // clearing is allowed
+  });
+
+  test("the requester votes like anyone else", async () => {
+    await seedVoting(); // seedRequest's requester is "seed-user"
+    await assertSucceeds(save(voter("seed-user"), "seed-user", ["e1"]));
+  });
+
+  test("an unverified email cannot vote", async () => {
+    await seedVoting();
+    await assertFails(save(voter("bob", false), "bob", ["e1"]));
+    await assertFails(save(env.authenticatedContext("bob").firestore(), "bob", ["e1"]));
+  });
+
+  test("a signed-out visitor cannot vote", async () => {
+    await seedVoting();
+    await assertFails(save(env.unauthenticatedContext().firestore(), "bob", ["e1"]));
+  });
+
+  test("no more than three picks, and no repeats", async () => {
+    await seedVoting();
+    const db = voter("bob");
+    await assertFails(save(db, "bob", ["e1", "e2", "e3", "e4"]));
+    await assertFails(save(db, "bob", ["e1", "e1"]));
+    await assertFails(save(db, "bob", ["e1", "e2", "e1"]));
+  });
+
+  test("picks must be real, visible entries of this request", async () => {
+    await seedVoting();
+    const db = voter("bob");
+    await assertFails(save(db, "bob", ["nope"])); // does not exist
+    await assertFails(save(db, "bob", ["other"])); // belongs to another request
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await updateDoc(doc(ctx.firestore(), "entries", "e2"), { moderation: "hidden" });
+    });
+    await assertFails(save(db, "bob", ["e2"]));
+    await assertFails(save(db, "bob", [7]));
+    await assertFails(save(db, "bob", "e1"));
+  });
+
+  test("you cannot pick your own entry", async () => {
+    await seedVoting();
+    const db = voter("carol");
+    await assertFails(save(db, "carol", ["e3"]));
+    await assertFails(save(db, "carol", ["e1", "e3"]));
+    await assertSucceeds(save(db, "carol", ["e1", "e2"]));
+  });
+
+  test("ballots are refused after the 5-day voting window but accepted on day 4", async () => {
+    await seedVoting(4 * DAY);
+    await assertSucceeds(save(voter("bob"), "bob", ["e1"]));
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await updateDoc(doc(ctx.firestore(), "requests", "r1"), { createdAt: new Date(Date.now() - 6 * DAY) });
+    });
+    await assertFails(save(voter("bob"), "bob", ["e2"]));
+  });
+
+  test("not on a hidden request", async () => {
+    await seedVoting();
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await updateDoc(doc(ctx.firestore(), "requests", "r1"), { moderation: "hidden" });
+    });
+    await assertFails(save(voter("bob"), "bob", ["e1"]));
+  });
+
+  test("a ballot belongs to its owner and must carry the server time", async () => {
+    await seedVoting();
+    const db = voter("bob");
+    await assertFails(save(db, "alice", ["e1"], { voterId: "alice" })); // someone else's ballot
+    await assertFails(save(db, "bob", ["e1"], { voterId: "alice" }));
+    await assertFails(save(db, "bob", ["e1"], { requestId: "r2" }));
+    await assertFails(save(db, "bob", ["e1"], { updatedAt: new Date() }));
+    await assertFails(save(db, "bob", ["e1"], { extra: true }));
+  });
+
+  test("only you (and moderators) can read your ballot, and it cannot be deleted from the app", async () => {
+    await seedVoting();
+    await assertSucceeds(save(voter("bob"), "bob", ["e1"]));
+    await assertSucceeds(getDoc(doc(voter("bob"), "requests", "r1", "ballots", "bob")));
+    await assertFails(getDoc(doc(voter("alice"), "requests", "r1", "ballots", "bob")));
+    await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), "requests", "r1", "ballots", "bob")));
+    const mod = env.authenticatedContext("mod", { role: "moderator" }).firestore();
+    await assertSucceeds(getDoc(doc(mod, "requests", "r1", "ballots", "bob")));
+    await assertFails(deleteDoc(doc(voter("bob"), "requests", "r1", "ballots", "bob")));
+  });
+
+  test("entries still carry no vote data from the app", async () => {
+    await seedVoting();
+    const db = env.authenticatedContext("carol").firestore();
+    await assertFails(updateDoc(doc(db, "entries", "e3"), { votes: 5 }));
+  });
+});
+
 describe("everything else is locked", () => {
   test("unknown collections are refused", async () => {
     const db = env.authenticatedContext("alice").firestore();

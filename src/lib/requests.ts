@@ -1,6 +1,8 @@
 // Shared types and helpers for requests.
 
 export const ANSWER_WINDOW_DAYS = 3;
+/** Answers and voting for 3 days, then voting only for 2 more. */
+export const VOTING_WINDOW_DAYS = 5;
 
 import { getCategory, isCategoryId, type CategoryId } from "./categories.ts";
 
@@ -98,4 +100,22 @@ export function describeTimeLeft(createdAt: Date, now: Date): string {
     return hours === 1 ? "1 hour left" : `${hours} hours left`;
   }
   return "Closing soon";
+}
+
+/** When voting stops. Derived from createdAt until a server function stores it. */
+export function votingClosesAt(createdAt: Date): Date {
+  return new Date(createdAt.getTime() + VOTING_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+}
+
+export type RequestPhase = "answering" | "voting" | "ended";
+
+/**
+ * Where a request is in its life: answers and voting both open for 3 days
+ * ("answering"), then voting only for 2 more ("voting"), then "ended" (results
+ * are counted by a function; until it exists the app just says so).
+ */
+export function requestPhase(createdAt: Date, now: Date): RequestPhase {
+  if (now < answersCloseAt(createdAt)) return "answering";
+  if (now < votingClosesAt(createdAt)) return "voting";
+  return "ended";
 }

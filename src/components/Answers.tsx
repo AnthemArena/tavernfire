@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { collection, doc, onSnapshot, query, where } from "firebase/firestore";
+import { collection, doc, onSnapshot, query, serverTimestamp, setDoc, where } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { useNow } from "@/lib/use-now";
@@ -14,16 +14,21 @@ import {
   toEntryItem,
   type EntryItem,
 } from "@/lib/entries";
-import { answersCloseAt, type RequestItem } from "@/lib/requests";
+import { answersCloseAt, requestPhase, votingClosesAt, type RequestItem } from "@/lib/requests";
+import { MAX_PICKS, ballotPath, togglePick } from "@/lib/ballots";
 import AnswerForm from "@/components/AnswerForm";
 import EntryCard from "@/components/EntryCard";
 
 // The answer form can be switched off with NEXT_PUBLIC_ENABLE_ANSWERS=false
 // (for example on a deploy whose rules haven't been published yet).
 const ANSWERS_ENABLED = process.env.NEXT_PUBLIC_ENABLE_ANSWERS !== "false";
+// Picking favourites can be switched off the same way
+// (NEXT_PUBLIC_ENABLE_VOTING=false). Keep it off on a live deploy until the
+// results and reveal ship.
+const VOTING_ENABLED = process.env.NEXT_PUBLIC_ENABLE_VOTING !== "false";
 
 export default function Answers({ request }: { request: RequestItem }) {
-  const { user, loading } = useAuth();
+  const { user, loading, emailVerified, resendVerification, refreshVerification } = useAuth();
   const now = useNow();
   const uid = user?.uid ?? null;
 
@@ -31,6 +36,12 @@ export default function Answers({ request }: { request: RequestItem }) {
   const [loadError, setLoadError] = useState(false);
   const [myEntryId, setMyEntryId] = useState<string | null>(null);
   const [reportedIds, setReportedIds] = useState<Set<string>>(new Set());
+  // My picks for this request (null until the first read), and the state of saving them.
+  const [picks, setPicks] = useState<string[] | null>(null);
+  const [pickBusy, setPickBusy] = useState(false);
+  const [pickError, setPickError] = useState<string | null>(null);
+  const [verifyBusy, setVerifyBusy] = useState(false);
+  const [verifyNote, setVerifyNote] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [justSubmitted, setJustSubmitted] = useState(false);
   const [alreadyAnswered, setAlreadyAnswered] = useState(false);
@@ -72,6 +83,19 @@ export default function Answers({ request }: { request: RequestItem }) {
     );
   }, [request.id, uid]);
 
+  // My private ballot, if any. Only I can read it.
+  useEffect(() => {
+    if (!uid || !VOTING_ENABLED) return;
+    return onSnapshot(
+      doc(getDb(), ballotPath(request.id, uid)),
+      (snap) => {
+        const stored = snap.get("picks");
+        setPicks(Array.isArray(stored) ? stored.filter((p): p is string => typeof p === "string") : []);
+      },
+      (err) => console.error("Could not load your picks", err),
+    );
+  }, [request.id, uid]);
+
   // Entries I have already reported.
   useEffect(() => {
     if (!uid) return;
@@ -92,6 +116,59 @@ export default function Answers({ request }: { request: RequestItem }) {
   const isRequester = signedInUid !== null && signedInUid === request.requesterId;
   const closeAt = answersCloseAt(request.createdAt);
   const closed = now.getTime() > 0 && now >= closeAt;
+  const phase = now.getTime() > 0 ? requestPhase(request.createdAt, now) : "answering";
+  const ended = phase === "ended";
+  // Voting needs at least two entries; with one, the author is simply revealed at day 3.
+  const votingOpen = VOTING_ENABLED && !ended && list.length >= 2;
+  const validPicks = (picks ?? []).filter((id) => list.some((e) => e.id === id));
+  const canPick = votingOpen && signedInUid !== null && emailVerified && picks !== null;
+
+  async function toggle(entryId: string) {
+    if (!signedInUid) return;
+    const next = togglePick(validPicks, entryId);
+    if (!next) return;
+    setPickBusy(true);
+    setPickError(null);
+    try {
+      await setDoc(doc(getDb(), ballotPath(request.id, signedInUid)), {
+        voterId: signedInUid,
+        requestId: request.id,
+        picks: next,
+        updatedAt: serverTimestamp(),
+      });
+    } catch (err) {
+      console.error("Could not save picks", err);
+      setPickError("Couldn't save your pick. Check your connection and try again.");
+    } finally {
+      setPickBusy(false);
+    }
+  }
+
+  async function checkVerified() {
+    setVerifyBusy(true);
+    setVerifyNote(null);
+    try {
+      const ok = await refreshVerification();
+      if (!ok) setVerifyNote("We can't see that it's verified yet. Open the link in the email, then try again.");
+    } catch {
+      setVerifyNote("Couldn't check just now. Try again in a moment.");
+    } finally {
+      setVerifyBusy(false);
+    }
+  }
+
+  async function resend() {
+    setVerifyBusy(true);
+    setVerifyNote(null);
+    try {
+      await resendVerification();
+      setVerifyNote("Sent. Check your inbox and spam folder.");
+    } catch {
+      setVerifyNote("Couldn't send it just now. Wait a minute and try again.");
+    } finally {
+      setVerifyBusy(false);
+    }
+  }
   const shown = mine
     ? [...list.filter((e) => e.id === mine), ...list.filter((e) => e.id !== mine)]
     : list;
@@ -108,7 +185,11 @@ export default function Answers({ request }: { request: RequestItem }) {
       <p className="notice notice-plain">
         {entries !== null && entries.length === 0
           ? "This request closed without any answers."
-          : "Answers for this request have closed. Voting is coming soon."}
+          : ended && VOTING_ENABLED
+            ? "Voting has ended. Results are being counted."
+            : VOTING_ENABLED && list.length >= 2
+              ? `Answers have closed. Voting is open until ${votingClosesAt(request.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "long" })}.`
+              : "Answers for this request have closed. Voting is coming soon."}
       </p>
     );
   } else if (!user) {
@@ -202,6 +283,41 @@ export default function Answers({ request }: { request: RequestItem }) {
               No answers yet. Entries written for these three sparks will appear here.
             </p>
           )}
+          {votingOpen && !loading && (
+            <div className="voting-bar">
+              {!user ? (
+                <p className="notice notice-plain">
+                  <Link href="/signin">Sign in</Link> to pick up to {MAX_PICKS} favourites.
+                </p>
+              ) : !emailVerified ? (
+                <div className="notice notice-warn" role="status">
+                  <p className="notice-title">Verify your email to pick favourites</p>
+                  <p>
+                    We sent a link to {user.email ?? "your email"}. Open it, then come back here.
+                  </p>
+                  <div className="notice-actions">
+                    <button type="button" className="btn btn-outline" onClick={checkVerified} disabled={verifyBusy}>
+                      I&apos;ve verified it
+                    </button>
+                    <button type="button" className="btn btn-outline" onClick={resend} disabled={verifyBusy}>
+                      Send the link again
+                    </button>
+                  </div>
+                  {verifyNote && <p role="status">{verifyNote}</p>}
+                </div>
+              ) : (
+                <p className="notice notice-plain" role="status">
+                  Your picks: {validPicks.length} of {MAX_PICKS}. Pick up to {MAX_PICKS} favourites; nobody
+                  sees them until voting ends.
+                </p>
+              )}
+              {pickError && (
+                <p className="error" role="alert">
+                  {pickError}
+                </p>
+              )}
+            </div>
+          )}
           {shown.length > 0 && (
             <ul className="entry-list">
               {shown.map((e) => (
@@ -213,6 +329,16 @@ export default function Answers({ request }: { request: RequestItem }) {
                     now={now}
                     editUntil={e.id === mine ? editableUntil(e, closeAt) : null}
                     answersClosed={closed}
+                    voting={
+                      canPick
+                        ? {
+                            picked: validPicks.includes(e.id),
+                            atCap: validPicks.length >= MAX_PICKS,
+                            busy: pickBusy,
+                            onToggle: () => void toggle(e.id),
+                          }
+                        : undefined
+                    }
                   />
                 </li>
               ))}

@@ -51,3 +51,16 @@ test("never shows more than the full window when createdAt is ahead of the clock
   const ahead = new Date(now.getTime() + 5_000); // created 5 seconds "in the future"
   assert.equal(describeTimeLeft(ahead, now), "3 days left");
 });
+
+import { requestPhase, votingClosesAt, answersCloseAt } from "./requests.ts";
+
+test("a request moves from answering to voting to ended", () => {
+  const made = new Date("2026-11-01T12:00:00Z");
+  const at = (days: number) => new Date(made.getTime() + days * 24 * 60 * 60 * 1000);
+  assert.equal(requestPhase(made, at(0)), "answering");
+  assert.equal(requestPhase(made, at(2.9)), "answering");
+  assert.equal(requestPhase(made, at(3)), "voting");
+  assert.equal(requestPhase(made, at(4.9)), "voting");
+  assert.equal(requestPhase(made, at(5)), "ended");
+  assert.equal(votingClosesAt(made).getTime() - answersCloseAt(made).getTime(), 2 * 24 * 60 * 60 * 1000);
+});

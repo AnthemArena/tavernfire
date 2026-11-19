@@ -31,6 +31,10 @@ Require three distinct sparks. (Open decision: allow fewer than three?)
 - Custom claim `role`: `member` | `moderator` (set via Admin SDK, not stored here)
 - Private settings in `users/{uid}/private/settings`: email preferences, etc. Owner-only.
 
+### `requests/{requestId}/ballots/{uid}` (private picks)
+- `voterId`, `requestId`, `picks` (0 to 3 entry ids), `updatedAt` (server time). Only its owner and moderators can read it; clients never delete it (a function removes ballots 7 days after the reveal).
+- Rules: verified email; at most 3 distinct picks; each pick a visible entry of this request; never your own entry (checked against your `answerLocks` marker); accepted only within 5 days of the request being posted; picks can be changed until then. Entries hold no vote data until the reveal.
+
 ### `requests/{requestId}`
 - `sparks`: the three words as typed, for display
 - `sparksNorm`, `sparkKey`, `pairKeys`: see above

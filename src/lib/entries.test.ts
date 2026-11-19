@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
-import { ANSWER_WINDOW_DAYS } from "./requests.ts";
+import { ANSWER_WINDOW_DAYS, VOTING_WINDOW_DAYS } from "./requests.ts";
 import {
   ENTRY_EDIT_WINDOW_HOURS,
   answerMarkerPath,
@@ -117,8 +117,11 @@ test("the entry edit window in firestore.rules matches ENTRY_EDIT_WINDOW_HOURS",
   for (const h of hours) assert.equal(h, ENTRY_EDIT_WINDOW_HOURS);
 });
 
-test("the answer window in firestore.rules matches ANSWER_WINDOW_DAYS", () => {
+test("the answer and voting windows in firestore.rules match requests.ts", () => {
   const days = [...rules.matchAll(/createdAt \+ duration\.value\((\d+), 'd'\)/g)].map((m) => Number(m[1]));
   assert.ok(days.length > 0, "no day window found in firestore.rules");
-  for (const d of days) assert.equal(d, ANSWER_WINDOW_DAYS);
+  assert.deepEqual(
+    [...new Set(days)].sort((a, b) => a - b),
+    [ANSWER_WINDOW_DAYS, VOTING_WINDOW_DAYS],
+  );
 });

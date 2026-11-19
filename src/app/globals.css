@@ -1141,3 +1141,32 @@ a:hover {
 .account-note {
   margin-top: 16px;
 }
+
+/* Picking favourites */
+.entry-pick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 14px;
+  margin-bottom: 12px;
+}
+.btn-picked {
+  background: var(--teal);
+  color: #fff;
+  border: 1px solid var(--teal);
+}
+.btn-picked:hover {
+  background: var(--teal);
+  color: #fff;
+}
+.entry-pick .btn[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.voting-bar {
+  margin: 0 0 16px;
+}
+.voting-bar .notice-actions {
+  margin-top: 10px;
+}

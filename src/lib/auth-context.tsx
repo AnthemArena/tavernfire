@@ -13,6 +13,7 @@ import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  sendEmailVerification,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -38,6 +39,12 @@ async function ensureProfile(user: User) {
 
 type AuthContextValue = {
   user: User | null;
+  /** True once the person's email address is verified (Google sign-ins always are). */
+  emailVerified: boolean;
+  /** Send the verification email again. */
+  resendVerification: () => Promise<void>;
+  /** Check again whether the email is verified (after the person clicks the link). */
+  refreshVerification: () => Promise<boolean>;
   /** The public name the person chose, or null until they choose one. */
   displayName: string | null;
   /** Reserve and save a public name. Throws a NameError with a message to show. */
@@ -59,10 +66,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<Profile>(EMPTY_PROFILE);
+  const [emailVerified, setEmailVerified] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(getFirebaseAuth(), async (next) => {
       setUser(next);
+      setEmailVerified(next?.emailVerified ?? false);
       setLoading(false);
       if (!next) {
         setProfile(EMPTY_PROFILE);
@@ -90,7 +99,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signUpWithEmail = useCallback(async (email: string, password: string) => {
-    await createUserWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
+    const cred = await createUserWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
+    // Voting needs a verified email, so ask for it straight away. Not fatal if it fails:
+    // the person can resend it from the voting prompt.
+    await sendEmailVerification(cred.user).catch((err) =>
+      console.error("Could not send verification email", err),
+    );
+  }, []);
+
+  const resendVerification = useCallback(async () => {
+    const current = getFirebaseAuth().currentUser;
+    if (current) await sendEmailVerification(current);
+  }, []);
+
+  const refreshVerification = useCallback(async () => {
+    const current = getFirebaseAuth().currentUser;
+    if (!current) return false;
+    await current.reload();
+    // The security rules read the verified flag from the sign-in token, so get a fresh one.
+    await current.getIdToken(true);
+    setEmailVerified(current.emailVerified);
+    return current.emailVerified;
   }, []);
 
   const chooseName = useCallback(
@@ -114,6 +143,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextValue = useMemo(
     () => ({
       user,
+      emailVerified,
+      resendVerification,
+      refreshVerification,
       displayName: profile.displayName,
       chooseName,
       nameChangeOn: () => nextNameChange(profile.nameChangedAt, new Date()),
@@ -124,7 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sendPasswordReset,
       signOut,
     }),
-    [user, profile.displayName, profile.nameChangedAt, chooseName, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, sendPasswordReset, signOut],
+    [user, emailVerified, resendVerification, refreshVerification, profile.displayName, profile.nameChangedAt, chooseName, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, sendPasswordReset, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
