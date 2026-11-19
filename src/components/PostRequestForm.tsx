@@ -317,23 +317,26 @@ export default function PostRequestForm() {
               <p className="hint" id="name-hint">
                 Shown next to your requests. Pick something that isn&apos;t your
                 real name; you can change it once every {NAME_CHANGE_DAYS} days.
-                {displayName && (
-                  <>
-                    {" "}
-                    <button
-                      type="button"
-                      className="link-button"
-                      onClick={() => {
-                        setChangingName(false);
-                        setNameError(null);
-                        setNameInput("");
-                      }}
-                    >
-                      Keep {displayName}
-                    </button>
-                  </>
-                )}
               </p>
+              {displayName && (
+                <p className="hint">
+                  Choosing a new name starts a new {NAME_CHANGE_DAYS}-day wait
+                  before you can change it again.
+                </p>
+              )}
+              {displayName && (
+                <button
+                  type="button"
+                  className="link-button link-button-block"
+                  onClick={() => {
+                    setChangingName(false);
+                    setNameError(null);
+                    setNameInput("");
+                  }}
+                >
+                  Keep {displayName}
+                </button>
+              )}
             </div>
           ) : (
             <p className="hint posting-as">

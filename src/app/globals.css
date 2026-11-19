@@ -1095,6 +1095,15 @@ a:hover {
   color: var(--teal);
   text-decoration: underline;
   cursor: pointer;
+  /* 44px tap area without changing how it looks */
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 6px;
+  margin: 0 -6px;
+}
+.link-button-block {
+  display: flex;
 }
 .link-button:focus-visible {
   outline: 2px solid var(--teal);

@@ -46,7 +46,7 @@ export function validateName(raw: string): string {
   if (name.length < NAME_MIN) throw new NameError(`Use at least ${NAME_MIN} characters.`);
   if (name.length > NAME_MAX) throw new NameError(`Use ${NAME_MAX} characters or fewer.`);
   if (!NAME_PATTERN.test(name)) {
-    throw new NameError("Letters A to Z, numbers, spaces and . _ ' - only. Start with a letter or number.");
+    throw new NameError("Letters A to Z, numbers, spaces and\u00a0.\u00a0_\u00a0'\u00a0-\u00a0only. Start with a letter or number.");
   }
   const key = nameKey(name);
   if (key.length < NAME_MIN) throw new NameError("Add a few more letters or numbers.");
