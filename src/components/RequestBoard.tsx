@@ -14,7 +14,7 @@ import { getDb } from "@/lib/firebase";
 import { useNow } from "@/lib/use-now";
 import TimeLeft from "@/components/TimeLeft";
 import AnswerCount from "@/components/AnswerCount";
-import { LAUNCHED_CATEGORIES } from "@/lib/categories";
+import { LAUNCHED_CATEGORIES, isCompactPicker } from "@/lib/categories";
 import {
   kindLabel,
   toRequestItem,
@@ -83,7 +83,31 @@ export default function RequestBoard() {
         <h2 id="open-requests" className="section-title">
           Open requests
         </h2>
-        {showFilters && (
+        {items === null && (
+          // Holds the filter's place while requests load, so the list does not
+          // jump down when the filter appears with the first cards.
+          <div className="tabs-placeholder" aria-hidden="true" />
+        )}
+        {showFilters && isCompactPicker(LAUNCHED_CATEGORIES.length) && (
+          <div className="board-select">
+            <label className="board-select-label" htmlFor="board-show">
+              Show
+            </label>
+            <select
+              id="board-show"
+              className="input select board-select-input"
+              value={activeFilter}
+              onChange={(e) => setFilter(e.target.value as Filter)}
+            >
+              {filters.map((f) => (
+                <option key={f.value} value={f.value}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        {showFilters && !isCompactPicker(LAUNCHED_CATEGORIES.length) && (
         <div className="tabs" role="group" aria-label="Filter requests">
           {filters.map((f) => (
             <button

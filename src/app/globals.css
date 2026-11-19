@@ -1062,3 +1062,26 @@ a:hover {
   background-repeat: no-repeat;
   background-position: right 16px center;
 }
+
+/* Board filter: placeholder while loading, and the select used from five types up */
+.tabs-placeholder {
+  min-height: 44px;
+  width: 100%;
+}
+
+.board-select {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.board-select-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--body);
+}
+
+.board-select-input {
+  width: auto;
+  min-width: 180px;
+}
