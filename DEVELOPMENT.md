@@ -93,3 +93,11 @@ to `/`. Every push to `main` then deploys. It needs the Blaze plan.
 After the first deploy, add the site's address (and tavernfire.com when connected)
 under Authentication > Settings > Authorized domains, or sign-in will fail.
 Keep `NEXT_PUBLIC_ENABLE_VOTING` false until results and the reveal ship.
+
+## Email links (verification and password reset)
+
+`/auth/action` handles the links in Firebase's emails, so people land on a Tavernfire
+page instead of Firebase's plain one. In the Firebase console go to Authentication >
+Templates, open "Email address verification" and "Password reset", choose the pencil
+icon > Customize action URL, and set it to `https://<your site>/auth/action`
+(later `https://tavernfire.com/auth/action`). The same page handles both emails.
