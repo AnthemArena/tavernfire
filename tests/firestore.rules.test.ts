@@ -207,14 +207,26 @@ describe("users", () => {
     await assertSucceeds(setDoc(doc(db, "users", "eve"), { displayName: null, createdAt: serverTimestamp() }));
   });
 
-  test("a profile cannot start with a name, a photo, or someone else's id, or a client timestamp", async () => {
+  test("a profile cannot start with a name", async () => {
     const db = env.authenticatedContext("eve").firestore();
     await assertFails(setDoc(doc(db, "users", "eve"), { displayName: "Eve", createdAt: serverTimestamp() }));
+  });
+
+  test("a profile cannot start with a photo", async () => {
+    const db = env.authenticatedContext("eve2").firestore();
     await assertFails(
-      setDoc(doc(db, "users", "eve"), { displayName: null, avatarUrl: "http://x", createdAt: serverTimestamp() }),
+      setDoc(doc(db, "users", "eve2"), { displayName: null, avatarUrl: "http://x", createdAt: serverTimestamp() }),
     );
+  });
+
+  test("a profile cannot be created for someone else", async () => {
+    const db = env.authenticatedContext("eve3").firestore();
     await assertFails(setDoc(doc(db, "users", "bobby"), { displayName: null, createdAt: serverTimestamp() }));
-    await assertFails(setDoc(doc(db, "users", "eve"), { displayName: null, createdAt: new Date() }));
+  });
+
+  test("a profile cannot use a client timestamp", async () => {
+    const db = env.authenticatedContext("eve4").firestore();
+    await assertFails(setDoc(doc(db, "users", "eve4"), { displayName: null, createdAt: new Date() }));
   });
 
   test("profiles are public to read", async () => {
