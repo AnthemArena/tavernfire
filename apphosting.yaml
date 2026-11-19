@@ -35,7 +35,7 @@ env:
   - variable: NEXT_PUBLIC_ENABLE_ANSWERS
     value: "true"
     availability: [BUILD, RUNTIME]
-  # Keep voting off on the live site until results and the reveal are built.
+  # Picking favourites. Results, reveal and the lifecycle function are built and tested.
   - variable: NEXT_PUBLIC_ENABLE_VOTING
-    value: "false"
+    value: "true"
     availability: [BUILD, RUNTIME]

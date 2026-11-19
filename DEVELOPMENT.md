@@ -92,7 +92,7 @@ Get started, connect the GitHub repo, pick branch `main`, and set the root direc
 to `/`. Every push to `main` then deploys. It needs the Blaze plan.
 After the first deploy, add the site's address (and tavernfire.com when connected)
 under Authentication > Settings > Authorized domains, or sign-in will fail.
-Keep `NEXT_PUBLIC_ENABLE_VOTING` false until results and the reveal ship.
+Voting is switched on in `apphosting.yaml` (`NEXT_PUBLIC_ENABLE_VOTING`).
 
 ## Email links (verification and password reset)
 
