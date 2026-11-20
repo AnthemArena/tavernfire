@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { avatarOf, chunk, syncAvatar } from "./avatars.ts";
 
 test("the avatar is read from a profile, or null", () => {
-  assert.equal(avatarOf({ avatar: "lantern" }), "lantern");
+  assert.equal(avatarOf({ avatar: "demon-3" }), "demon-3");
   assert.equal(avatarOf({ avatar: 5 }), null);
   assert.equal(avatarOf({}), null);
   assert.equal(avatarOf(undefined), null);
@@ -45,29 +45,29 @@ function fakeDb(data: Record<string, Record<string, Record<string, unknown>>>) {
 test("a new avatar is copied to the member's fires and answers, and nobody else's", async () => {
   const { db, writes } = fakeDb({
     requests: {
-      f1: { requesterId: "me", requesterAvatar: "ember" },
+      f1: { requesterId: "me", requesterAvatar: "demon-1" },
       f2: { requesterId: "me" },
       f3: { requesterId: "other" },
     },
     entries: {
-      a1: { authorId: "me", authorAvatar: "moon" },
+      a1: { authorId: "me", authorAvatar: "undead-7" },
       a2: { authorId: "other" },
     },
   });
-  const changed = await syncAvatar(db, "me", "moon");
+  const changed = await syncAvatar(db, "me", "undead-7");
   assert.equal(changed, 2); // f1 and f2; a1 already shows moon
   assert.deepEqual(
     writes.map((w) => w.path).sort(),
     ["requests/f1", "requests/f2"],
   );
-  assert.deepEqual(writes[0].patch, { requesterAvatar: "moon" });
+  assert.deepEqual(writes[0].patch, { requesterAvatar: "undead-7" });
 });
 
 test("running it again changes nothing", async () => {
   const { db, writes } = fakeDb({
-    requests: { f1: { requesterId: "me", requesterAvatar: "moon" } },
-    entries: { a1: { authorId: "me", authorAvatar: "moon" } },
+    requests: { f1: { requesterId: "me", requesterAvatar: "undead-7" } },
+    entries: { a1: { authorId: "me", authorAvatar: "undead-7" } },
   });
-  assert.equal(await syncAvatar(db, "me", "moon"), 0);
+  assert.equal(await syncAvatar(db, "me", "undead-7"), 0);
   assert.equal(writes.length, 0);
 });

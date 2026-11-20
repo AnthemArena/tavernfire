@@ -138,7 +138,7 @@ export default function ProfileView({ uid }: { uid: string }) {
   return (
     <div className="profile-layout">
       <aside className="profile-card" aria-label="About this person">
-        <Avatar id={profile.avatar} name={profile.name} size="lg" />
+        <Avatar id={profile.avatar} name={profile.name} size="lg" eager />
         <div>
           <h1 className="profile-name">{profile.name}</h1>
           {since && <p className="profile-since">Member since {since}</p>}

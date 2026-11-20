@@ -1315,36 +1315,36 @@ describe("avatars", () => {
 
   test("someone can pick a preset avatar", async () => {
     const db = env.authenticatedContext("alice").firestore();
-    await assertSucceeds(updateDoc(doc(db, "users", "alice"), { avatar: "lantern", avatarChangedAt: serverTimestamp() }));
+    await assertSucceeds(updateDoc(doc(db, "users", "alice"), { avatar: "demon-3", avatarChangedAt: serverTimestamp() }));
   });
 
   test("an avatar must be one of the presets", async () => {
     const db = env.authenticatedContext("alice").firestore();
-    await assertFails(updateDoc(doc(db, "users", "alice"), { avatar: "dragon", avatarChangedAt: serverTimestamp() }));
+    await assertFails(updateDoc(doc(db, "users", "alice"), { avatar: "dragon-1", avatarChangedAt: serverTimestamp() }));
     await assertFails(updateDoc(doc(db, "users", "alice"), { avatar: "https://example.com/me.png", avatarChangedAt: serverTimestamp() }));
   });
 
   test("nobody sets another person's avatar", async () => {
     const db = env.authenticatedContext("bob").firestore();
-    await assertFails(updateDoc(doc(db, "users", "alice"), { avatar: "moon", avatarChangedAt: serverTimestamp() }));
+    await assertFails(updateDoc(doc(db, "users", "alice"), { avatar: "undead-7", avatarChangedAt: serverTimestamp() }));
   });
 
   test("the avatar change time cannot be faked, and cannot ride along with other fields", async () => {
     const db = env.authenticatedContext("alice").firestore();
-    await assertFails(updateDoc(doc(db, "users", "alice"), { avatar: "moon", avatarChangedAt: new Date() }));
-    await assertFails(updateDoc(doc(db, "users", "alice"), { avatar: "moon", avatarChangedAt: serverTimestamp(), role: "moderator" }));
+    await assertFails(updateDoc(doc(db, "users", "alice"), { avatar: "undead-7", avatarChangedAt: new Date() }));
+    await assertFails(updateDoc(doc(db, "users", "alice"), { avatar: "undead-7", avatarChangedAt: serverTimestamp(), role: "moderator" }));
   });
 
   test("it can be changed again an hour later, not before", async () => {
-    await seedAvatar("alice", "ember", new Date(Date.now() - 10 * 60 * 1000));
+    await seedAvatar("alice", "demon-1", new Date(Date.now() - 10 * 60 * 1000));
     const db = env.authenticatedContext("alice").firestore();
-    await assertFails(updateDoc(doc(db, "users", "alice"), { avatar: "moon", avatarChangedAt: serverTimestamp() }));
-    await seedAvatar("alice", "ember", new Date(Date.now() - 2 * 60 * 60 * 1000));
-    await assertSucceeds(updateDoc(doc(db, "users", "alice"), { avatar: "moon", avatarChangedAt: serverTimestamp() }));
+    await assertFails(updateDoc(doc(db, "users", "alice"), { avatar: "undead-7", avatarChangedAt: serverTimestamp() }));
+    await seedAvatar("alice", "demon-1", new Date(Date.now() - 2 * 60 * 60 * 1000));
+    await assertSucceeds(updateDoc(doc(db, "users", "alice"), { avatar: "undead-7", avatarChangedAt: serverTimestamp() }));
   });
 
   test("changing the display name still works for someone with an avatar", async () => {
-    await seedAvatar("alice", "ember", new Date());
+    await seedAvatar("alice", "demon-1", new Date());
     await env.withSecurityRulesDisabled(async (ctx) => {
       await updateDoc(doc(ctx.firestore(), "users", "alice"), { nameChangedAt: new Date("2026-01-01") });
     });
@@ -1353,34 +1353,34 @@ describe("avatars", () => {
   });
 
   test("a fire carries the avatar its lighter has now", async () => {
-    await seedAvatar("alice", "crown", new Date("2026-01-01"));
+    await seedAvatar("alice", "demon-12", new Date("2026-01-01"));
     const db = env.authenticatedContext("alice").firestore();
-    await assertSucceeds(addDoc(collection(db, "requests"), newRequest("alice", { requesterAvatar: "crown" })));
+    await assertSucceeds(addDoc(collection(db, "requests"), newRequest("alice", { requesterAvatar: "demon-12" })));
   });
 
   test("a fire cannot claim an avatar its lighter does not have", async () => {
-    await seedAvatar("alice", "crown", new Date("2026-01-01"));
+    await seedAvatar("alice", "demon-12", new Date("2026-01-01"));
     const db = env.authenticatedContext("alice").firestore();
-    await assertFails(addDoc(collection(db, "requests"), newRequest("alice", { requesterAvatar: "skull" })));
+    await assertFails(addDoc(collection(db, "requests"), newRequest("alice", { requesterAvatar: "undead-30" })));
     await assertFails(addDoc(collection(db, "requests"), newRequest("alice"))); // has one, left it off
     // Someone with no avatar cannot invent one.
     const bob = env.authenticatedContext("bob").firestore();
-    await assertFails(addDoc(collection(bob, "requests"), newRequest("bob", { requesterAvatar: "skull" })));
+    await assertFails(addDoc(collection(bob, "requests"), newRequest("bob", { requesterAvatar: "undead-30" })));
   });
 
   test("an answer carries its author's current avatar", async () => {
     await seedRequest("r1");
-    await seedAvatar("bob", "key", new Date("2026-01-01"));
+    await seedAvatar("bob", "undead-20", new Date("2026-01-01"));
     const db = env.authenticatedContext("bob").firestore();
-    await assertSucceeds(submitAnswer(db, "bob", "r1", "e1", { entry: { authorAvatar: "key" } }));
+    await assertSucceeds(submitAnswer(db, "bob", "r1", "e1", { entry: { authorAvatar: "undead-20" } }));
   });
 
   test("an answer cannot claim another avatar", async () => {
     await seedRequest("r1");
-    await seedAvatar("bob", "key", new Date("2026-01-01"));
+    await seedAvatar("bob", "undead-20", new Date("2026-01-01"));
     const db = env.authenticatedContext("bob").firestore();
-    await assertFails(submitAnswer(db, "bob", "r1", "e1", { entry: { authorAvatar: "skull" } }));
+    await assertFails(submitAnswer(db, "bob", "r1", "e1", { entry: { authorAvatar: "undead-30" } }));
     const carol = env.authenticatedContext("carol").firestore();
-    await assertFails(submitAnswer(carol, "carol", "r1", "e2", { entry: { authorAvatar: "skull" } }));
+    await assertFails(submitAnswer(carol, "carol", "r1", "e2", { entry: { authorAvatar: "undead-30" } }));
   });
 });

@@ -56,9 +56,10 @@ service cloud.firestore {
         || request.time > me.nameChangedAt + duration.value(7, 'd');
     }
 
-    // The preset avatars. Keep in step with src/lib/avatars.ts (a test checks this).
+    // The preset avatars: a pack name and a number, e.g. demon-12. Keep in step with
+    // PACKS in src/lib/avatars.ts (a test checks this).
     function validAvatar(a) {
-      return a is string && a in ['ember', 'd20', 'lantern', 'mug', 'crown', 'skull', 'potion', 'sword', 'key', 'moon'];
+      return a is string && a.matches('(demon|undead)-([1-9]|[1-4][0-9]|50)');
     }
 
     // An avatar can be changed again an hour after the last change.

@@ -17,7 +17,7 @@ import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { useNow } from "@/lib/use-now";
 import Avatar from "@/components/Avatar";
-import { AVATARS, nextAvatarChange, type AvatarId } from "@/lib/avatars";
+import { AVATARS, PACKS, nextAvatarChange, type AvatarId, type PackId } from "@/lib/avatars";
 import { AvatarError } from "@/lib/display-name";
 import { NAME_CHANGE_DAYS, NAME_MAX, NameError } from "@/lib/names";
 import { kindLabel, toRequestItem, type RequestItem } from "@/lib/requests";
@@ -86,6 +86,7 @@ function AvatarCard({
   choose: (avatar: AvatarId) => Promise<void>;
 }) {
   const [picked, setPicked] = useState<AvatarId | null>(current);
+  const [pack, setPack] = useState<PackId>(current ? (current.split("-")[0] as PackId) : PACKS[0].id);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -111,8 +112,15 @@ function AvatarCard({
         Avatar
       </h2>
       <p className="hint">Shown next to your name on your fires and answers.</p>
+      <div className="tabs" role="group" aria-label="Avatar packs">
+        {PACKS.map((p) => (
+          <button key={p.id} type="button" className="tab" aria-pressed={pack === p.id} onClick={() => setPack(p.id)}>
+            {p.label}
+          </button>
+        ))}
+      </div>
       <div className="avatar-grid" role="group" aria-label="Choose an avatar">
-        {AVATARS.map((a) => (
+        {AVATARS.filter((a) => a.pack === pack).map((a) => (
           <button
             key={a.id}
             type="button"

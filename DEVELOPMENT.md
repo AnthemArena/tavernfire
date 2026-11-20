@@ -199,10 +199,11 @@ still show if a request has been revealed.
 
 ## Avatars
 
-Members pick one of ten preset illustrations on the account page. The list lives in `src/lib/avatars.ts` (ids and labels) and the artwork in `src/components/Avatar.tsx`. The same ids are in `firestore.rules` (`validAvatar`); a test fails if the two lists differ.
+Members pick a portrait from the art packs on the account page. The pictures are `public/avatars/<pack>-<n>.webp` (256 px wide, converted from the original PNGs), and the pack list is `PACKS` in `src/lib/avatars.ts`. The ids (like `demon-12`) are also checked in `firestore.rules` (`validAvatar`, a pattern naming the packs and the 1 to 50 range); tests fail if the two disagree or a picture file is missing.
 
+- **Adding a pack:** save its images as `<pack>-1.webp`, `<pack>-2.webp`…, add it to `PACKS`, and add the pack name to the pattern in `validAvatar`. Then deploy the rules.
 - The choice is stored as `users/{uid}.avatar` plus `avatarChangedAt`. The rules allow a change once an hour (`avatarFree`).
 - Unlike names, avatars stay current on old posts. Each fire has `requesterAvatar` and each answer `authorAvatar` (left off when the member has none), copied when posting; the rules check they match the profile. When the profile avatar changes, the `propagateAvatar` function (`functions/src/avatars.ts`) updates the member's fires and answers. It is safe to run twice.
 - `Avatar` has three sizes: `sm` (cards and bylines), `md` (header, fire page), `lg` (profile and picker). With no avatar it shows the first letter of the name.
 - Uploaded pictures are a later step: they would be another kind of value in the same `avatar` field, with their own checks.
-- Deploy with the usual `firebase deploy --only "firestore:rules,firestore:indexes,functions"` (the new function is `propagateAvatar`).
+- Deploy with `firebase deploy --only "firestore:rules,firestore:indexes,functions"` (the new function is `propagateAvatar`).

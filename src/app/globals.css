@@ -1745,7 +1745,7 @@ a:hover {
 
 .avatar-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
   gap: 10px;
   margin: 12px 0 16px;
 }
@@ -1760,8 +1760,8 @@ a:hover {
   cursor: pointer;
 }
 .avatar-choice .avatar {
-  width: 52px;
-  height: 52px;
+  width: 64px;
+  height: 64px;
   margin: 0;
 }
 .avatar-choice:hover {
@@ -1773,4 +1773,19 @@ a:hover {
 .avatar-choice:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+.avatar-img {
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 15%;
+  background: var(--chip);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.avatar-sm.avatar-img {
+  box-shadow: 0 0 0 1.5px var(--accent);
+}
+.avatar-choice .avatar-img {
+  width: 64px;
+  height: 64px;
 }
