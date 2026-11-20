@@ -18,7 +18,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useNow } from "@/lib/use-now";
 import Avatar from "@/components/Avatar";
 import { RankProgress } from "@/components/RankBadge";
-import { AVATARS, PACKS, nextAvatarChange, type AvatarId, type PackId } from "@/lib/avatars";
+import { AVATARS, PACKS, describeWhen, nextAvatarChange, type AvatarId, type PackId } from "@/lib/avatars";
 import { AvatarError } from "@/lib/display-name";
 import { BIO_MAX, BioError } from "@/lib/bio";
 import { NAME_CHANGE_DAYS, NAME_MAX, NameError } from "@/lib/names";
@@ -152,8 +152,7 @@ function AvatarCard({
       </div>
       {waitUntil && picked !== current && (
         <p className="hint">
-          You can change your avatar again at{" "}
-          {waitUntil.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}.
+          You can change your avatar again {describeWhen(waitUntil, new Date())}.
         </p>
       )}
       {error && (
@@ -227,7 +226,7 @@ function BioCard({ bio, save }: { bio: string; save: (bio: string) => Promise<vo
             </p>
           )}
           <p className="hint" id="account-bio-hint">
-            Shown on your profile and at the top of your fires. Plain text, no links.
+            Shown on your profile. Plain text, no links.
           </p>
         </div>
         <button type="submit" className="btn btn-primary" disabled={busy || value.trim() === bio}>

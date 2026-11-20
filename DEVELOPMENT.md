@@ -210,7 +210,7 @@ Members pick a portrait from the art packs on the settings page. The pictures ar
 
 ## Bios
 
-`users/{uid}.bio`: plain text, at most 280 characters, no web addresses (`validBio` in the rules; the same limits are in `src/lib/bio.ts` and a test keeps them in step). Written on the settings page ("About you"), shown on the profile and under "Lit by" on the fire page. The fire page reads the lighter's profile when it opens, so the bio is always their current one; nothing is copied onto fires. Bios are not yet covered by moderation (reporting a profile is on the later list), which is why links are refused.
+`users/{uid}.bio`: plain text, at most 280 characters, no web addresses (`validBio` in the rules; the same limits are in `src/lib/bio.ts` and a test keeps them in step). Written on the settings page ("About you"), shown on the profile only (kept off the fire page to avoid clutter). Nothing is copied onto fires. Bios are not yet covered by moderation (reporting a profile is on the later list), which is why links are refused.
 
 ## XP and ranks
 

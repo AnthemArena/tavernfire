@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
-import { AVATAR_CHANGE_HOURS, AVATARS, PACKS, avatarSrc, isAvatarId, nextAvatarChange } from "./avatars.ts";
+import { AVATAR_CHANGE_HOURS, AVATARS, describeWhen, PACKS, avatarSrc, isAvatarId, nextAvatarChange } from "./avatars.ts";
 
 const rules = readFileSync(new URL("../../firestore.rules", import.meta.url), "utf8");
 
@@ -47,4 +47,10 @@ test("an avatar can be changed again an hour later", () => {
   assert.equal(nextAvatarChange(null, changed), null);
   assert.equal(nextAvatarChange(changed, new Date("2026-11-20T10:30:00Z"))?.toISOString(), "2026-11-20T11:00:00.000Z");
   assert.equal(nextAvatarChange(changed, new Date("2026-11-20T11:00:01Z")), null);
+});
+
+test("a later time today is given as a time, another day as a date", () => {
+  const now = new Date("2026-11-20T10:00:00");
+  assert.equal(describeWhen(new Date("2026-11-20T15:15:00"), now), "at 3:15 pm");
+  assert.equal(describeWhen(new Date("2026-11-21T09:00:00"), now), "on 21 November");
 });

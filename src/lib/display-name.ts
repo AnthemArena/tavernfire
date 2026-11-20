@@ -2,7 +2,7 @@ import { deleteDoc, doc, getDoc, serverTimestamp, setDoc, updateDoc } from "fire
 import { getDb } from "@/lib/firebase";
 import { NameError, nameKey, nextNameChange, validateName } from "@/lib/names";
 import { BioError, validateBio } from "@/lib/bio";
-import { isAvatarId, nextAvatarChange, type AvatarId } from "@/lib/avatars";
+import { describeWhen, isAvatarId, nextAvatarChange, type AvatarId } from "@/lib/avatars";
 
 export type Profile = {
   displayName: string | null;
@@ -91,7 +91,7 @@ export async function saveAvatar(uid: string, avatar: AvatarId, current: Profile
   const wait = nextAvatarChange(current.avatarChangedAt, new Date());
   if (wait) {
     throw new AvatarError(
-      `You can change your avatar again at ${wait.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}.`,
+      `You can change your avatar again ${describeWhen(wait, new Date())}.`,
     );
   }
   try {

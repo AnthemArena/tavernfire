@@ -43,21 +43,18 @@ export default function RequestView({ id }: { id: string }) {
   const [pending, setPending] = useState<PendingStoke | undefined>(undefined);
   const [needVerify, setNeedVerify] = useState(false);
   const [stokeError, setStokeError] = useState<string | null>(null);
-  const [lighterBio, setLighterBio] = useState("");
   const [lighterXp, setLighterXp] = useState(0);
   const lighterId = state.status === "ready" ? state.request.requesterId : "";
   useDocumentTitle(state.status === "ready" ? state.request.sparks.join(", ") : null);
 
-  // The lighter's bio lives on their profile, so it is always their current one.
+  // The lighter's rank comes from their profile, so it is always their current one.
   useEffect(() => {
     if (!lighterId) return;
     let cancelled = false;
     getDoc(doc(getDb(), "users", lighterId))
       .then((snap) => {
-        const bio = snap.data()?.bio;
         const xp = snap.data()?.xp;
         if (cancelled) return;
-        setLighterBio(typeof bio === "string" ? bio : "");
         setLighterXp(typeof xp === "number" ? xp : 0);
       })
       .catch(() => {});
@@ -180,13 +177,8 @@ export default function RequestView({ id }: { id: string }) {
           )}
           , {describeAge(r.createdAt, now)}
         </span>
+        {lighterId && <RankBadge xp={lighterXp} size={18} iconOnly />}
       </p>
-      {lighterId && (
-        <p className="lit-by-bio">
-          <RankBadge xp={lighterXp} size={16} />
-          {lighterBio && <span className="lit-by-bio-text">{lighterBio}</span>}
-        </p>
-      )}
 
       <div className="meta">
         {isOwnFire ? (

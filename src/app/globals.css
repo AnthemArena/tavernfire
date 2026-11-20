@@ -1716,6 +1716,10 @@ a:hover {
 }
 .lit-by {
   margin: 20px 0 8px;
+  gap: 8px;
+}
+.lit-by .rank-badge {
+  margin-left: 2px;
 }
 
 /* Avatars: sit inline beside a name */
@@ -1797,18 +1801,6 @@ a:hover {
   color: var(--ink);
   white-space: pre-line;
   overflow-wrap: anywhere;
-}
-.lit-by-bio {
-  display: grid;
-  gap: 4px;
-  justify-items: start;
-  margin: 0 0 12px 44px;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--muted);
-  white-space: pre-line;
-  overflow-wrap: anywhere;
-  max-width: 60ch;
 }
 
 /* Ranks */

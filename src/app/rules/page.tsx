@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import LegalPage from "@/components/LegalPage";
 import { CONTACT_EMAIL } from "@/lib/site";
+import { RANKS } from "@/lib/xp";
 
 export const metadata: Metadata = { title: "Community rules – Tavernfire" };
 
@@ -44,6 +45,20 @@ export default function RulesPage() {
         copied, spam or abuse). Reports go to a private review. A report never penalises
         anyone automatically; a person looks at it first.
       </p>
+
+      <h2>Ranks</h2>
+      <p>
+        You earn XP for lighting fires and answering, and more when people upvote your
+        answers or stoke your fires. Your rank is shown on your profile. Ranks are for fun
+        and give no extra powers.
+      </p>
+      <ul>
+        {RANKS.map((r) => (
+          <li key={r.level}>
+            <strong>{r.name}</strong>: {r.minXp} XP
+          </li>
+        ))}
+      </ul>
 
       <h2>What happens if rules are broken</h2>
       <p>

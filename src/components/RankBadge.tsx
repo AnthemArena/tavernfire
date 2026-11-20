@@ -1,13 +1,14 @@
-import { rankFor, rankProgress } from "@/lib/xp";
+import { RANKS, rankFor, rankProgress } from "@/lib/xp";
 
 /** A member's rank: the icon and the name, e.g. "Flamebearer". */
-export function RankBadge({ xp, size = 20 }: { xp: number; size?: number }) {
+export function RankBadge({ xp, size = 20, iconOnly = false }: { xp: number; size?: number; iconOnly?: boolean }) {
   const rank = rankFor(xp);
+  const label = `${rank.name}, rank ${rank.level} of ${RANKS.length}`;
   return (
-    <span className="rank-badge">
+    <span className="rank-badge" title={label}>
       {/* eslint-disable-next-line @next/next/no-img-element -- small fixed file */}
-      <img src={`/ranks/${rank.icon}.webp`} width={size} height={size} alt="" loading="lazy" decoding="async" />
-      <span>{rank.name}</span>
+      <img src={`/ranks/${rank.icon}.webp`} width={size} height={size} alt={iconOnly ? label : ""} loading="lazy" decoding="async" />
+      {!iconOnly && <span>{rank.name}</span>}
     </span>
   );
 }

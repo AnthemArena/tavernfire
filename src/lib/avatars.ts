@@ -52,3 +52,11 @@ export function nextAvatarChange(changedAt: Date | null, now: Date): Date | null
   const next = new Date(changedAt.getTime() + AVATAR_CHANGE_HOURS * 3_600_000);
   return next.getTime() > now.getTime() ? next : null;
 }
+
+/** "at 3:15 pm" for a time later today, "on 26 November" for another day. */
+export function describeWhen(when: Date, now: Date): string {
+  const sameDay = when.toDateString() === now.toDateString();
+  return sameDay
+    ? `at ${when.toLocaleTimeString("en-GB", { hour: "numeric", minute: "2-digit", hour12: true })}`
+    : `on ${when.toLocaleDateString("en-GB", { day: "numeric", month: "long" })}`;
+}
