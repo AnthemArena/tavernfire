@@ -61,6 +61,11 @@ export default function TermsPage() {
         <li>Follow the community rules.</li>
         <li>Don&apos;t try to break, overload or get around the site, or to vote more than once per answer or fire.</li>
         <li>Don&apos;t post anything illegal.</li>
+        <li>
+          Don&apos;t bulk-copy (scrape) Tavernfire, or use its content to train AI models,
+          without asking us first. This is a rule for using the site. It is separate from
+          the licence on individual answers, which stays as described above.
+        </li>
       </ul>
 
       <h2>Moderation</h2>
