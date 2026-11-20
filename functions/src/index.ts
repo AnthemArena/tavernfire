@@ -1,10 +1,12 @@
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
+import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
 import { runLifecycle } from "./lifecycle.ts";
 import { recountUpvotes } from "./upvotes.ts";
 import { recomputeFireAnswers } from "./answers.ts";
+import { applyModeration, isModerationAction } from "./moderation.ts";
 import { recountSparks, sparksChanged, sparksOf } from "./sparks.ts";
 import { addTrend, recountStokes, STOKE_WEIGHT, UPVOTE_WEIGHT } from "./trending.ts";
 
@@ -86,3 +88,18 @@ export const countAnswers = onDocumentWritten(
     await recomputeFireAnswers(getFirestore(), requestId);
   },
 );
+
+// A moderator hides, restores or clears the reports on an answer. Only people whose
+// account has the moderator role (see scripts/set-moderator.mjs) can call it.
+export const moderateAnswer = onCall({ region: "europe-west2", maxInstances: 5 }, async (request) => {
+  if (request.auth?.token.role !== "moderator") {
+    throw new HttpsError("permission-denied", "Moderators only.");
+  }
+  const { entryId, action } = (request.data ?? {}) as { entryId?: unknown; action?: unknown };
+  if (typeof entryId !== "string" || entryId === "" || !isModerationAction(action)) {
+    throw new HttpsError("invalid-argument", "Send an answer id and an action (hide, dismiss or restore).");
+  }
+  const found = await applyModeration(getFirestore(), entryId, action, request.auth.uid);
+  if (!found) throw new HttpsError("not-found", "That answer no longer exists.");
+  return { ok: true };
+});

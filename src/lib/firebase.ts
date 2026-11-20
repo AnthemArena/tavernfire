@@ -1,5 +1,6 @@
 import { getApp, getApps, initializeApp, type FirebaseApp } from "firebase/app";
 import { connectAuthEmulator, getAuth, type Auth } from "firebase/auth";
+import { getFunctions, type Functions } from "firebase/functions";
 import {
   connectFirestoreEmulator,
   getFirestore,
@@ -46,4 +47,9 @@ export function getDb(): Firestore {
     }
   }
   return db;
+}
+
+/** Cloud Functions the app calls directly (moderation). They run in London, next to the database. */
+export function getCloudFunctions(): Functions {
+  return getFunctions(getFirebaseApp(), "europe-west2");
 }

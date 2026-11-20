@@ -1698,3 +1698,16 @@ a:hover {
   font-family: var(--font-display, inherit);
   color: var(--accent);
 }
+
+/* Moderation queue */
+.moderation-item {
+  margin-bottom: 16px;
+}
+.moderation-reports-title {
+  margin: 16px 0 4px;
+  font-weight: 600;
+}
+.moderation-reports {
+  margin: 0 0 16px;
+  padding-left: 20px;
+}

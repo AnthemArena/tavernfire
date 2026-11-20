@@ -44,11 +44,11 @@ If traits return, sparks rank above them in search, and the interface keeps the 
 - Upvotes on answers, Stoke on fires, counted by Cloud Functions
 - Public profiles at `/profile/<id>` (name, member since, fires, answers, upvotes received)
 - Account page (your fires and your answers)
-- Report answer (reports are stored; moderator tools are not built yet)
+- Report answer, and a moderator review queue at `/moderation` (hide an answer or dismiss its reports)
 
 **Next**
 - Library: search fires by spark (built); search by trait (on hold)
-- Before launch: clear test data, connect the domain and set the email action URL, create moderator tools and a moderator role, terms and privacy pages
+- Before launch: clear test data, connect the domain and set the email action URL, make yourself a moderator (see DEVELOPMENT.md)
 
 **Later**
 - Duels and timed "blitz" modes (anonymous, one vote per match, hosted by an admin or on a schedule)

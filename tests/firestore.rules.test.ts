@@ -876,6 +876,16 @@ describe("reports", () => {
     await assertFails(setDoc(doc(bob, "reports", "e1_bob"), report("bob", "e1", { status: "actioned" })));
   });
 
+  test("a moderator can list the open reports; an ordinary member cannot", async () => {
+    await seedPlainEntry();
+    await assertSucceeds(
+      setDoc(doc(env.authenticatedContext("bob").firestore(), "reports", "e1_bob"), report("bob", "e1")),
+    );
+    const open = (db: Db) => getDocs(query(collection(db, "reports"), where("status", "==", "open")));
+    await assertSucceeds(open(env.authenticatedContext("mod", { role: "moderator" }).firestore()));
+    await assertFails(open(env.authenticatedContext("carol").firestore()));
+  });
+
   test("reporters can read their own reports; others cannot", async () => {
     await seedPlainEntry();
     const bob = env.authenticatedContext("bob").firestore();

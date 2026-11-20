@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { initializeApp, deleteApp, type App } from "firebase-admin/app";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
 import { recountUpvotes } from "../functions/src/upvotes.ts";
+import { applyModeration } from "../functions/src/moderation.ts";
 import { recomputeFireAnswers } from "../functions/src/answers.ts";
 import { recountSparks } from "../functions/src/sparks.ts";
 import { addTrend, recountStokes } from "../functions/src/trending.ts";
@@ -134,4 +135,39 @@ test("a fire's answer count and top answer follow its answers", async () => {
   assert.equal(empty.get("topAnswer"), null);
 
   assert.equal(await recomputeFireAnswers(db, "no-such-fire"), null);
+});
+
+test("moderator actions hide, clear and restore an answer and are logged", async () => {
+  const put = async () => {
+    await db.collection("entries").doc("m1").set({ requestId: "mf", name: "Reported", concept: "x", moderation: "ok" });
+    await db.collection("reports").doc("m1_ann").set({ entryId: "m1", reporterId: "ann", status: "open" });
+    await db.collection("reports").doc("m1_bob").set({ entryId: "m1", reporterId: "bob", status: "open" });
+    await db.collection("entryFlags").doc("m1").set({ entryId: "m1", reportId: "m1_ann" });
+  };
+  await put();
+
+  // Hide: the answer is hidden, its reports are actioned, the edit lock stays.
+  assert.equal(await applyModeration(db, "m1", "hide", "mod1"), true);
+  assert.equal((await db.collection("entries").doc("m1").get()).get("moderation"), "hidden");
+  assert.equal((await db.collection("reports").doc("m1_ann").get()).get("status"), "actioned");
+  assert.equal((await db.collection("reports").doc("m1_bob").get()).get("status"), "actioned");
+  assert.equal((await db.collection("entryFlags").doc("m1").get()).exists, true);
+
+  // Restore puts it back.
+  assert.equal(await applyModeration(db, "m1", "restore", "mod1"), true);
+  assert.equal((await db.collection("entries").doc("m1").get()).get("moderation"), "ok");
+
+  // Dismiss: reports are dismissed and the edit lock is removed.
+  await put();
+  assert.equal(await applyModeration(db, "m1", "dismiss", "mod1"), true);
+  assert.equal((await db.collection("reports").doc("m1_ann").get()).get("status"), "dismissed");
+  assert.equal((await db.collection("entryFlags").doc("m1").get()).exists, false);
+  assert.equal((await db.collection("entries").doc("m1").get()).get("moderation"), "ok");
+
+  const log = await db.collection("moderationLog").where("entryId", "==", "m1").get();
+  assert.deepEqual(log.docs.map((d) => d.get("action")).sort(), ["dismiss", "hide", "restore"]);
+  assert.ok(log.docs.every((d) => d.get("moderatorUid") === "mod1"));
+
+  // An answer that no longer exists is reported, not crashed on.
+  assert.equal(await applyModeration(db, "gone", "hide", "mod1"), false);
 });

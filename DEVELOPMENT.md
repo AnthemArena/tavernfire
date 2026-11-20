@@ -187,3 +187,10 @@ still show if a request has been revealed.
 - New fires start with `stokeCount: 0` and new answers with `upvoteCount: 0` (the rules require both). Firestore leaves out documents that lack a field you sort by, so without these they would be missing from sorted queries. Fires and answers written before this change lack them: they are test data and will not show in the Library until deleted or backfilled.
 - Indexes: three on `requests` (`moderation`, one of `sparkKey` / `pairKeys` / `sparksNorm`, `stokeCount`). Deploy with `firebase deploy --only "firestore:rules,firestore:indexes,functions"`.
 - Not built yet: search by trait, filter by type or by unanswered, paging past the first 30 results.
+
+## Moderation
+
+- **Making someone a moderator:** `node scripts/set-moderator.mjs someone@example.com` (add `--remove` to take it away). It needs a service account key: Firebase console, Project settings, Service accounts, Generate new private key. Keep that file outside the project folder and never commit it. Set `$env:GOOGLE_APPLICATION_CREDENTIALS` to its path first (PowerShell). The person must sign out and back in afterwards. The role is the custom claim `role: "moderator"`, which the rules and the function check.
+- **The review queue:** `/moderation` (not linked anywhere; moderators bookmark it) lists answers with open reports, the reasons, and two buttons. **Hide answer** removes it from the site (reports become "actioned", the edit lock stays). **Dismiss reports** clears them and removes the edit lock. A hidden answer can be restored by the `restore` action (no button yet).
+- Actions run in the `moderateAnswer` Cloud Function (`functions/src/moderation.ts`) because the rules let nobody change or delete answers from the app. Every action is written to `moderationLog`. Hiding an answer also updates its fire's answer count and top answer (`countAnswers`).
+- Not built: moderating fires or profiles, a list of hidden answers with a restore button, and notifying authors.
