@@ -147,6 +147,7 @@ export default function AnswerForm({
     if (!request) return;
     const entryId = resumeEntryId ?? doc(collection(getDb(), "entries")).id;
     let step = "";
+    let sent: Record<string, unknown> | null = null;
     try {
       const db = getDb();
 
@@ -164,7 +165,7 @@ export default function AnswerForm({
         });
       }
       step = "the public entry";
-      await setDoc(doc(db, "entries", entryId), {
+      const entry = {
         requestId: request.id,
         kind: request.kind,
         ...fields,
@@ -177,12 +178,15 @@ export default function AnswerForm({
         ...(avatar ? { authorAvatar: avatar } : {}),
         upvoteCount: 0,
         createdAt: serverTimestamp(),
-      });
+      };
+      sent = entry;
+      await setDoc(doc(db, "entries", entryId), entry);
       step = "";
       onSubmitted?.();
       // The live listener on the page now shows the new entry as "Your entry".
     } catch (err) {
       console.error(`Could not submit answer (refused at ${step || "an unknown step"})`, err);
+      if (sent) console.error("Answer sent", JSON.stringify({ ...sent, createdAt: "server time" }), "entry id", entryId);
       // If a different entry of mine already holds the private marker, this is
       // a second answer (for example from another tab). Retrying would always
       // fail, so hand over to the page instead of offering "try again".
