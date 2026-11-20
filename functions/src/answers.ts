@@ -1,11 +1,11 @@
 // Keeps two things on each fire in step with its answers, so the Library can show a
 // fire's answer count and its best answer without reading the answers themselves:
 //   answerCount  how many visible answers it has
-//   topAnswer    the most upvoted one ({ name, snippet }), oldest first among ties
+//   topAnswer    the most upvoted one ({ name, snippet }), oldest first among ties; null if none
 // Like the vote counts, this recomputes from the answers every time, so running twice
 // cannot leave it wrong. Only this function writes these fields.
 
-import { FieldValue, type Firestore } from "firebase-admin/firestore";
+import type { Firestore } from "firebase-admin/firestore";
 
 export const SNIPPET_MAX = 140;
 
@@ -51,7 +51,8 @@ export async function recomputeFireAnswers(db: Firestore, requestId: string): Pr
   const top = pickTop(rows);
   await fire.update({
     answerCount: snap.size,
-    topAnswer: top ?? FieldValue.delete(),
+    // null (not a deleted field) when there is no answer, so no Firestore helper is needed here.
+    topAnswer: top,
   });
   return snap.size;
 }

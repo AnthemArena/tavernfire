@@ -131,7 +131,7 @@ test("a fire's answer count and top answer follow its answers", async () => {
   assert.equal(await recomputeFireAnswers(db, "f1"), 0);
   const empty = await db.collection("requests").doc("f1").get();
   assert.equal(empty.get("answerCount"), 0);
-  assert.equal(empty.get("topAnswer"), undefined);
+  assert.equal(empty.get("topAnswer"), null);
 
   assert.equal(await recomputeFireAnswers(db, "no-such-fire"), null);
 });
