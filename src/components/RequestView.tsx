@@ -152,7 +152,7 @@ export default function RequestView({ id }: { id: string }) {
         ← Fires
       </Link>
 
-      <p className="kicker">The three sparks for {getCategory(r.kind).answer.needed}</p>
+      <p className="kicker">The three sparks for <span className="kicker-type">{getCategory(r.kind).answer.needed}</span></p>
       <h1 className="visually-hidden">
         Fire: {r.sparks.join(", ")}
       </h1>
@@ -203,7 +203,6 @@ export default function RequestView({ id }: { id: string }) {
             type="button"
             className={stoked ? "stoke-btn stoke-btn-on" : "stoke-btn"}
             aria-pressed={stoked}
-            title="A good fire is a question worth answering."
             aria-describedby="stoke-help"
             aria-label={`Stoke this fire, ${stokes} ${stokes === 1 ? "stoke" : "stokes"}`}
             onClick={() => void toggleStoke()}

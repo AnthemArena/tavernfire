@@ -2212,7 +2212,7 @@ a:hover {
   width: 150px;
   height: 64px;
   border-radius: 12px;
-  background: var(--surface-2, rgba(128, 128, 128, 0.18));
+  background: var(--chip);
   animation: ghost-pulse 1.4s ease-in-out infinite;
 }
 @keyframes ghost-pulse {
@@ -2229,4 +2229,8 @@ a:hover {
 }
 .request-page .answers {
   margin-top: 48px;
+}
+
+.kicker-type {
+  color: var(--ink);
 }
