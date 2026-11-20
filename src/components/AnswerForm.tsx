@@ -325,8 +325,8 @@ export default function AnswerForm({
       {!editing && (
         <p className="hint">
           By submitting, you confirm this is your own work. You keep ownership, and you license
-          it to everyone under CC BY 4.0. That means anyone can reuse it with credit,
-          including companies building AI tools. <Link href="/terms">Read the terms</Link>.
+          it to everyone under CC BY 4.0. That means anyone can reuse it with credit.{" "}
+          <Link href="/terms">Read the terms</Link>.
         </p>
       )}
 
