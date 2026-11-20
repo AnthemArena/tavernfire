@@ -147,7 +147,13 @@ export default function RequestView({ id }: { id: string }) {
       )}
 
       <p className="lit-by">
-        Lit by {r.requesterName}, {describeAge(r.createdAt, now)}
+        Lit by{" "}
+        {r.requesterId ? (
+          <Link href={`/profile/${r.requesterId}`}>{r.requesterName}</Link>
+        ) : (
+          r.requesterName
+        )}
+        , {describeAge(r.createdAt, now)}
       </p>
 
       <div className="meta">

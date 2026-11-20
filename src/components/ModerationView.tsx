@@ -147,7 +147,8 @@ export default function ModerationView() {
               <p className="muted">
                 Answer to{" "}
                 <Link href={`/fires/${entry.requestId}`}>{sparks.length > 0 ? sparks.join(", ") : "this fire"}</Link>{" "}
-                by {authorName}
+                by{" "}
+                {entry.author ? <Link href={`/profile/${entry.author.id}`}>{authorName}</Link> : authorName}
               </p>
               <h2 className="my-answer-name">{entry.name}</h2>
               <p className="entry-concept">{entry.concept}</p>
