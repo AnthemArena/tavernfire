@@ -1212,6 +1212,21 @@ describe("stokes on fires", () => {
   });
 });
 
+describe("the list of sparks in use", () => {
+  test("anyone can read it, even signed out, but nobody can write it", async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "sparks", "statue"), { word: "statue", count: 3 });
+    });
+    const signedOut = env.unauthenticatedContext().firestore();
+    await assertSucceeds(getDoc(doc(signedOut, "sparks", "statue")));
+    await assertSucceeds(getDocs(collection(signedOut, "sparks")));
+    const alice = env.authenticatedContext("alice", { email_verified: true }).firestore();
+    await assertFails(setDoc(doc(alice, "sparks", "statue"), { word: "statue", count: 99 }));
+    await assertFails(updateDoc(doc(alice, "sparks", "statue"), { count: 99 }));
+    await assertFails(deleteDoc(doc(alice, "sparks", "statue")));
+  });
+});
+
 describe("everything else is locked", () => {
   test("unknown collections are refused", async () => {
     const db = env.authenticatedContext("alice").firestore();

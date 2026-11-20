@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { initializeApp, deleteApp, type App } from "firebase-admin/app";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
 import { recountUpvotes } from "../functions/src/upvotes.ts";
+import { recountSparks } from "../functions/src/sparks.ts";
 import { addTrend, recountStokes } from "../functions/src/trending.ts";
 
 let app: App;
@@ -76,4 +77,28 @@ test("activity warms a fire up: fresher and bigger activity ranks higher", async
   await addTrend(db, "old", 2, t);
   assert.equal((await db.collection("requests").doc("old").get()).get("trendScore"), 4);
   await addTrend(db, "missing", 2, t); // no error for a fire that is gone
+});
+
+test("the list of sparks follows the fires that use them", async () => {
+  const fire = (id: string, norms: string[]) =>
+    db.collection("requests").doc(id).set({ sparksNorm: norms });
+  await fire("s1", ["glowing", "statue", "time"]);
+  await fire("s2", ["glowing", "river", "statue"]);
+
+  assert.deepEqual(await recountSparks(db, ["statue", "glowing", "time", "river"]), {
+    statue: 2,
+    glowing: 2,
+    time: 1,
+    river: 1,
+  });
+  // Recounting twice changes nothing.
+  await recountSparks(db, ["statue"]);
+  assert.equal((await db.collection("sparks").doc("statue").get()).get("count"), 2);
+  assert.equal((await db.collection("sparks").doc("statue").get()).get("word"), "statue");
+
+  // A spark no fire uses any more leaves the list.
+  await db.collection("requests").doc("s1").delete();
+  await recountSparks(db, ["time", "statue"]);
+  assert.equal((await db.collection("sparks").doc("time").get()).exists, false);
+  assert.equal((await db.collection("sparks").doc("statue").get()).get("count"), 1);
 });

@@ -403,5 +403,12 @@ service cloud.firestore {
       allow update: if false;
       allow delete: if signedIn() && resource.data.voterId == request.auth.uid;
     }
+
+    // The list of sparks in use, for suggestions on the Light a fire form.
+    // Anyone can read it; only the countSparks Cloud Function writes it.
+    match /sparks/{word} {
+      allow read: if true;
+      allow write: if false;
+    }
   }
 }

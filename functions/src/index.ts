@@ -4,6 +4,7 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
 import { runLifecycle } from "./lifecycle.ts";
 import { recountUpvotes } from "./upvotes.ts";
+import { recountSparks, sparksChanged, sparksOf } from "./sparks.ts";
 import { addTrend, recountStokes, STOKE_WEIGHT, UPVOTE_WEIGHT } from "./trending.ts";
 
 initializeApp();
@@ -58,5 +59,17 @@ export const countStokes = onDocumentWritten(
     await recountStokes(db, requestId);
     const added = event.data?.before.exists === false && event.data?.after.exists === true;
     if (added) await addTrend(db, requestId, STOKE_WEIGHT, Date.now());
+  },
+);
+
+// When a fire is lit or deleted (or its sparks change), recount the sparks it uses.
+// Other changes to a fire (stokes, trend scores) are ignored.
+export const countSparks = onDocumentWritten(
+  { document: "requests/{requestId}", region: "europe-west2", maxInstances: 5 },
+  async (event) => {
+    const before = sparksOf(event.data?.before.data());
+    const after = sparksOf(event.data?.after.data());
+    if (!sparksChanged(before, after)) return;
+    await recountSparks(getFirestore(), [...before, ...after]);
   },
 );

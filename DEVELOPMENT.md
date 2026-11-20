@@ -172,3 +172,10 @@ still show if a request has been revealed.
 - `/rules`, `/terms` and `/privacy` are plain-language pages (`src/app/rules|terms|privacy`), linked from the footer, the sign-up form and the answer form. They are not lawyer-reviewed.
 - Answers and fires are licensed to everyone under CC BY 4.0 (authors keep ownership; credit is needed when work is shared or published). Wording lives in `src/app/terms/page.tsx`; names and links in `src/lib/site.ts`.
 - **Before launch:** make sure `CONTACT_EMAIL` in `src/lib/site.ts` is a real inbox, and update `LEGAL_UPDATED` whenever the wording changes.
+
+## Sparks in use
+
+- `sparks/{word}` holds each normalised spark and how many fires use it (`{ word, count }`). Only the `countSparks` Cloud Function writes it (it recounts when a fire is created, deleted or its sparks change); anyone can read it.
+- The Light a fire form reads it to suggest existing sparks while you type (`src/lib/spark-suggestions.ts`). Suggestions are optional; people can still type any word.
+- Fires lit before this function was deployed are not in the list until one of them is written to. For a quick start, light (or delete) a test fire per spark, or run a one-off recount over `requests` with `recountSparks`.
+- Deploy with `firebase deploy --only "firestore:rules,functions"`.

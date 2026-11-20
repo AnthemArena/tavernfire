@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { SparkError, buildSparkFields } from "@/lib/sparks";
+import { displayWord, findSparks, fireCount, type SparkSuggestion } from "@/lib/spark-suggestions";
 import { NAME_CHANGE_DAYS, NAME_MAX, NameError } from "@/lib/names";
 import type { RequestKind } from "@/lib/requests";
 import {
@@ -40,6 +41,9 @@ export default function PostRequestForm() {
   // When the problem is with one spark box, which one, and a suggested fix.
   const [sparkProblem, setSparkProblem] = useState<{ index: number; message: string; fix: string | null } | null>(null);
   const sparkInputs = useRef<(HTMLInputElement | null)[]>([]);
+  // Sparks already in use that match the box being typed in. Suggestions are optional.
+  const [focusedSpark, setFocusedSpark] = useState<number | null>(null);
+  const [suggestions, setSuggestions] = useState<SparkSuggestion[]>([]);
   const [busy, setBusy] = useState(false);
   const [slow, setSlow] = useState(false);
   // The id of the request we just posted, once the server has confirmed it.
@@ -48,6 +52,33 @@ export default function PostRequestForm() {
   // moment (the first visit to a page can be slow in development), so it never
   // flashes up just before a quick navigation.
   const [showPosted, setShowPosted] = useState(false);
+
+  const typedInFocused = focusedSpark === null ? "" : sparks[focusedSpark];
+  useEffect(() => {
+    if (focusedSpark === null) return;
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      findSparks(getDb(), typedInFocused, sparks)
+        .then((found) => {
+          if (!cancelled) setSuggestions(found);
+        })
+        .catch(() => {
+          if (!cancelled) setSuggestions([]);
+        });
+    }, 200);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+    // `sparks` is read for the words to leave out; typing in a box already changes typedInFocused.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusedSpark, typedInFocused]);
+
+  function pickSuggestion(index: number, word: string) {
+    setSpark(index, displayWord(word));
+    const next = sparkInputs.current[index + 1];
+    if (next && sparks[index + 1] === "") next.focus();
+  }
 
   function setSpark(index: number, value: string) {
     setSparks((current) => current.map((s, i) => (i === index ? value : s)));
@@ -190,10 +221,31 @@ export default function PostRequestForm() {
                   aria-invalid={sparkProblem?.index === index ? true : undefined}
                   aria-describedby={sparkProblem?.index === index ? "spark-problem" : undefined}
                   onChange={(e) => setSpark(index, e.target.value)}
+                  onFocus={() => setFocusedSpark(index)}
+                  onBlur={() => setFocusedSpark((current) => (current === index ? null : current))}
                 />
               </div>
             ))}
           </div>
+          {focusedSpark !== null && suggestions.length > 0 && (
+            <div className="spark-suggestions" role="group" aria-label="Sparks already in use">
+              <span className="muted">
+                {typedInFocused.trim() === "" ? "Popular sparks:" : "Already in use:"}
+              </span>
+              {suggestions.map((s) => (
+                <button
+                  type="button"
+                  key={s.word}
+                  className="spark-suggestion"
+                  // Keep the cursor in the box so it does not close the list before the click lands.
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => pickSuggestion(focusedSpark, s.word)}
+                >
+                  {displayWord(s.word)} <span className="muted">· {fireCount(s.count)}</span>
+                </button>
+              ))}
+            </div>
+          )}
           {sparkProblem && (
             <div className="error spark-problem" id="spark-problem" role="alert">
               <p>{sparkProblem.message}</p>
