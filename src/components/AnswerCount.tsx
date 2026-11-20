@@ -31,6 +31,7 @@ export default function AnswerCount({ requestId }: { requestId: string }) {
   }, [requestId]);
 
   if (count === null) return <span className="muted">Answers…</span>;
+  if (count === 0) return <span>No answers yet. Be the first.</span>;
   return (
     <span>
       <strong>{count}</strong> {count === 1 ? "answer" : "answers"}

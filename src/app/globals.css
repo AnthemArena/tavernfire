@@ -1640,3 +1640,8 @@ a:hover {
 .spark-suggestion:hover {
   border-color: var(--accent);
 }
+
+.request-ask {
+  margin: 12px 0 0;
+  font-size: 18px;
+}

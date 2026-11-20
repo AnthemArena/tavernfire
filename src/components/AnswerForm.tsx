@@ -21,7 +21,7 @@ import { getCategory } from "@/lib/categories";
 function Counter({ used, max }: { used: number; max: number }) {
   return (
     <span className="counter" aria-hidden="true">
-      {used} of {max}
+      {used} of {max} characters
     </span>
   );
 }
@@ -94,8 +94,8 @@ export default function AnswerForm({
     const missingName = name.trim() === "";
     const missingConcept = concept.trim() === "";
     if (missingName || missingConcept) {
-      if (missingName) setNameError("Give your answer a name.");
-      if (missingConcept) setConceptError("Describe your answer.");
+      if (missingName) setNameError(`Give your ${copy.noun} a name.`);
+      if (missingConcept) setConceptError("Add a description.");
       (missingName ? nameInput : conceptInput).current?.focus();
       return;
     }
@@ -211,8 +211,12 @@ export default function AnswerForm({
       <h3 className="card-title">{editing ? "Edit your answer" : "Write your answer"}</h3>
       {!editing && (
         <p className="card-lede">
-          Write it yourself. Your name is shown with your answer.
+          Write it yourself; AI-written answers aren&apos;t allowed. Your display name is shown with
+          your answer. <Link href="/rules">Read the rules</Link>.
         </p>
+      )}
+      {!editing && request && (
+        <p className="hint">Your answer should fit all three sparks: {request.sparks.join(", ")}.</p>
       )}
 
       <div className="field">

@@ -19,7 +19,7 @@ type State =
   | { kind: "failed"; message: string };
 
 const BAD_LINK =
-  "This link has expired or has already been used. Request a new one and try again.";
+  "This link has expired, or you've already used it. Verification links work once, so if you've used it you're verified. Otherwise, sign in and we'll send you a new one.";
 
 function linkError(err: unknown): string {
   const code =
@@ -96,12 +96,10 @@ export default function EmailActionView() {
 
       {state.kind === "verified" && (
         <>
-          <h1 className="auth-title">Email verified</h1>
-          <p className="auth-lede">
-            Thank you. Your email is confirmed, so you can now pick your favourites when voting opens.
-          </p>
+          <h1 className="auth-title">Your email is verified</h1>
+          <p className="auth-lede">You can now stoke fires and upvote answers.</p>
           <Link href="/" className="btn btn-primary btn-block">
-            Back to Tavernfire
+            Browse fires
           </Link>
         </>
       )}

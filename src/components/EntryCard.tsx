@@ -180,7 +180,8 @@ export default function EntryCard({
             type="button"
             className={upvote.mine ? "vote-btn vote-btn-on" : "vote-btn"}
             aria-pressed={upvote.mine}
-            aria-label={`Upvote, ${upvote.count} ${upvote.count === 1 ? "upvote" : "upvotes"}`}
+            title="A good answer."
+            aria-label={`Upvote this answer, ${upvote.count} ${upvote.count === 1 ? "upvote" : "upvotes"}`}
             onClick={upvote.onToggle}
           >
             <UpArrow />

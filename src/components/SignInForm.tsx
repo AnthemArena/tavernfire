@@ -78,8 +78,8 @@ export default function SignInForm() {
       <h1 className="auth-title">{isSignUp ? "Create your account" : "Sign in"}</h1>
       <p className="auth-lede">
         {isSignUp
-          ? "Join to post requests and answer other people's."
-          : "Welcome back. Sign in to post requests and answer them."}
+          ? "Join to light fires and answer other people's."
+          : "Welcome back. Sign in to light fires and answer other people's."}
       </p>
 
       <button
@@ -145,6 +145,12 @@ export default function SignInForm() {
           </p>
         )}
 
+        {isSignUp && (
+          <p className="hint">
+            We&apos;ll email you a link to verify your address. You&apos;ll need it to stoke fires and
+            upvote answers.
+          </p>
+        )}
         {isSignUp && (
           <p className="hint">
             By creating an account you agree to the <Link href="/terms">terms</Link> and{" "}

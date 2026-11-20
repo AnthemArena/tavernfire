@@ -9,10 +9,11 @@ import { shownStokes, stokeId, type PendingStoke } from "@/lib/stokes";
 import VerifyEmailNotice from "@/components/VerifyEmailNotice";
 import { getDb } from "@/lib/firebase";
 import { useNow } from "@/lib/use-now";
+import { getCategory } from "@/lib/categories";
 import { useDocumentTitle } from "@/lib/use-document-title";
-import PhaseLabel from "@/components/PhaseLabel";
 import Answers from "@/components/Answers";
 import {
+  describeAge,
   kindLabel,
   toRequestItem,
   type RequestItem,
@@ -137,12 +138,20 @@ export default function RequestView({ id }: { id: string }) {
         ))}
       </div>
 
-      {r.note && <p className="request-lede">{r.note}</p>}
+      <p className="request-ask">
+        Needed: {getCategory(r.kind).answer.needed} that fits all three sparks.
+      </p>
+      {r.note && (
+        <p className="request-lede">
+          <span className="muted">From the table:</span> {r.note}
+        </p>
+      )}
 
       <div className="meta">
         <span className="badge">{kindLabel(r.kind)}</span>
-        <span>Posted by {r.requesterName}</span>
-        <PhaseLabel request={r} now={now} />
+        <span>
+          Lit by {r.requesterName}, {describeAge(r.createdAt, now)}
+        </span>
         {isOwnFire ? (
           <span className="stoke-static">
             <Flame />
@@ -153,6 +162,7 @@ export default function RequestView({ id }: { id: string }) {
             type="button"
             className={stoked ? "stoke-btn stoke-btn-on" : "stoke-btn"}
             aria-pressed={stoked}
+            title="A good fire: a question worth answering."
             aria-label={`Stoke this fire, ${stokes} ${stokes === 1 ? "stoke" : "stokes"}`}
             onClick={() => void toggleStoke()}
           >

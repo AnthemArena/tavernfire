@@ -12,10 +12,10 @@ import {
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useNow } from "@/lib/use-now";
-import PhaseLabel from "@/components/PhaseLabel";
 import AnswerCount from "@/components/AnswerCount";
 import { LAUNCHED_CATEGORIES, isCompactPicker } from "@/lib/categories";
 import {
+  describeAge,
   kindLabel,
   toRequestItem,
   type RequestItem,
@@ -38,8 +38,8 @@ const HEADINGS: Record<Sort, string> = {
 };
 
 const EMPTY: Record<Sort, string> = {
-  trending: "Nothing is trending yet. Stoke a fire or upvote an answer to get things moving.",
-  top: "No fire has been stoked yet.",
+  trending: "Nothing's trending yet. Stoke a fire you'd like answered, or upvote an answer you like.",
+  top: "No fire has been stoked yet. Stoke one you'd like to see answered.",
   new: "Nothing is burning yet. Be the first to light a fire.",
 };
 
@@ -231,7 +231,9 @@ function RequestCard({ request: r, now }: { request: RequestItem; now: Date }) {
       {r.note && <p className="request-note">{r.note}</p>}
       <div className="meta">
         <span className="badge">{kindLabel(r.kind)}</span>
-        <PhaseLabel request={r} now={now} />
+        <span>
+          Lit by {r.requesterName}, {describeAge(r.createdAt, now)}
+        </span>
         {r.stokeCount > 0 && (
           <span className="stoke-static">
             <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
@@ -241,7 +243,6 @@ function RequestCard({ request: r, now }: { request: RequestItem; now: Date }) {
           </span>
         )}
         <AnswerCount requestId={r.id} />
-        <span className="meta-poster">Posted by {r.requesterName}</span>
       </div>
     </Link>
   );

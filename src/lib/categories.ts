@@ -12,7 +12,11 @@
 //   firestore.rules, so it cannot be posted yet.
 
 export type CategoryAnswerCopy = {
-  /** Label of the Name box. Defaults to "Name". */
+  /** What one answer is, in a sentence: "a creature". Used in "Needed: a creature that fits all three sparks." */
+  needed: string;
+  /** What one answer is called in messages: "creature", "NPC". */
+  noun: string;
+  /** Label of the Name box, e.g. "Creature name". */
   nameLabel?: string;
   /** An optional short line under the answer form, e.g. "No stats needed." */
   help?: string;
@@ -62,6 +66,9 @@ export const CATEGORIES = [
     launched: true,
     group: "Characters",
     answer: {
+      needed: "an NPC",
+      noun: "NPC",
+      nameLabel: "NPC name",
       namePlaceholder: "e.g. Vhane, the Last Hour",
       conceptPlaceholder: "Who are they? What do they look like, and what do they want?",
       tagsLabel: "Traits",
@@ -77,6 +84,9 @@ export const CATEGORIES = [
     launched: true,
     group: "Places and worlds",
     answer: {
+      needed: "a location",
+      noun: "location",
+      nameLabel: "Location name",
       namePlaceholder: "e.g. The Hollow Observatory",
       conceptPlaceholder: "What is this place like? What is hidden here?",
       tagsLabel: "Traits",
@@ -94,6 +104,9 @@ export const CATEGORIES = [
     group: "Things",
     notePlaceholder: "Who carries it, what level, what it should feel like",
     answer: {
+      needed: "an item",
+      noun: "item",
+      nameLabel: "Item name",
       namePlaceholder: "e.g. The Lantern of Second Chances",
       conceptPlaceholder: "What is it? What does it look like, and what is its story?",
       tagsLabel: "Features",
@@ -111,6 +124,9 @@ export const CATEGORIES = [
     group: "Characters",
     notePlaceholder: "Where it lives, how dangerous it should be, party level",
     answer: {
+      needed: "a creature",
+      noun: "creature",
+      nameLabel: "Creature name",
       namePlaceholder: "e.g. The Glasswing Moth",
       conceptPlaceholder: "What is it? How does it look and behave, and where does it live?",
       tagsLabel: "Traits",
@@ -128,6 +144,8 @@ export const CATEGORIES = [
     group: "Places and worlds",
     notePlaceholder: "Which people or world, and what the table needs it for",
     answer: {
+      needed: "a culture or faith",
+      noun: "culture",
       nameLabel: "Name of the people or custom",
       namePlaceholder: "e.g. The Ash-Road Funeral Rites",
       conceptPlaceholder: "What do they believe or do? When, how, and why?",
