@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
+import { NotificationsProvider } from "@/lib/notifications-context";
+import ToastHost from "@/components/ToastHost";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import "./globals.css";
@@ -40,9 +42,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body>
         <AuthProvider>
-          <SiteHeader />
-          {children}
-          <SiteFooter />
+          <NotificationsProvider>
+            <SiteHeader />
+            {children}
+            <SiteFooter />
+            <ToastHost />
+          </NotificationsProvider>
         </AuthProvider>
       </body>
     </html>

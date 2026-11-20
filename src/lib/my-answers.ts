@@ -1,4 +1,4 @@
-// What to say about each of your own answers on the account page.
+// What to say about each of your own answers on the settings page.
 
 import { describeAge } from "./requests.ts";
 import type { EntryItem } from "./entries.ts";

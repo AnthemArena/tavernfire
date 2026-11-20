@@ -11,7 +11,7 @@
     "emulators": "firebase emulators:start",
     "test": "node --test src/lib/*.test.ts functions/src/*.test.ts",
     "test:rules": "firebase emulators:exec --only firestore --project demo-tavernfire \"node --test --test-concurrency=1 tests/*.test.ts\"",
-    "sync:functions": "node -e \"const fs=require('fs');for(const f of ['ranking','xp'])fs.copyFileSync('src/lib/'+f+'.ts','functions/src/'+f+'.ts')\""
+    "sync:functions": "node -e \"const fs=require('fs');for(const f of ['ranking','xp','achievements'])fs.copyFileSync('src/lib/'+f+'.ts','functions/src/'+f+'.ts')\""
   },
   "dependencies": {
     "firebase": "^13.4.0",

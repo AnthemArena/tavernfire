@@ -412,6 +412,17 @@ service cloud.firestore {
         && entry.get('authorId', '') != request.auth.uid;
     }
 
+    // Notifications (a stoke, an upvote, an answer, an achievement, a new rank). Only
+    // functions create them. Their owner reads them and can mark one read; nothing else.
+    match /notifications/{id} {
+      allow read: if signedIn() && resource.data.recipientId == request.auth.uid;
+      allow update: if signedIn()
+        && resource.data.recipientId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+        && request.resource.data.read == true;
+      allow create, delete: if false;
+    }
+
     match /upvotes/{upvoteId} {
       // Only your own, so a person can list what they have upvoted on a fire
       // (the query must filter on voterId == your uid).

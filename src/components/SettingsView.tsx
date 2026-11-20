@@ -29,7 +29,7 @@ import PhaseLabel from "@/components/PhaseLabel";
 import AnswerCount from "@/components/AnswerCount";
 
 /** Your own page: your name, and the requests you have posted. Only you see it. */
-export default function AccountView() {
+export default function SettingsView() {
   const { user, displayName, xp, bio, chooseBio, avatar, avatarChangedAt, chooseAvatar, chooseName, nameChangeOn, signOut, loading, emailVerified, resendVerification, refreshVerification } =
     useAuth();
 
@@ -37,8 +37,8 @@ export default function AccountView() {
   if (!user) {
     return (
       <div className="card">
-        <h1 className="card-title">Your account</h1>
-        <p className="card-lede">Sign in to see your display name and your fires.</p>
+        <h1 className="card-title">Settings</h1>
+        <p className="card-lede">Sign in to see your settings and your fires.</p>
         <Link className="btn btn-primary btn-block" href="/signin">
           Sign in
         </Link>
@@ -48,7 +48,7 @@ export default function AccountView() {
 
   return (
     <div className="account">
-      <h1 className="page-title">Your account</h1>
+      <h1 className="page-title">Settings</h1>
       <NameCard
         displayName={displayName}
         chooseName={chooseName}

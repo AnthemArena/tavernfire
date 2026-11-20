@@ -47,3 +47,9 @@ test("the copy in functions is identical to src/lib/xp.ts", () => {
   const b = readFileSync(new URL("../../functions/src/xp.ts", import.meta.url), "utf8");
   assert.equal(b, a, "run `npm run sync:functions` to copy src/lib/xp.ts into functions/src");
 });
+
+test("the achievements copy in functions is identical too", () => {
+  const a = readFileSync(new URL("./achievements.ts", import.meta.url), "utf8");
+  const b = readFileSync(new URL("../../functions/src/achievements.ts", import.meta.url), "utf8");
+  assert.equal(b, a, "run `npm run sync:functions` to copy src/lib/achievements.ts into functions/src");
+});

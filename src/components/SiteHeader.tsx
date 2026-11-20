@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
+import NotificationBell from "@/components/NotificationBell";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 
@@ -42,7 +43,7 @@ function SignInButton() {
   );
 }
 
-/** The signed-in person's circle: name, account and sign out in one small menu. */
+/** The signed-in person's circle: name, settings and sign out in one small menu. */
 function AvatarMenu() {
   const { user, displayName, avatar, signOut } = useAuth();
   const [open, setOpen] = useState(false);
@@ -92,7 +93,7 @@ function AvatarMenu() {
           {displayName ? (
             <p className="avatar-name">{displayName}</p>
           ) : (
-            <Link href="/account" className="avatar-item" onClick={() => setOpen(false)}>
+            <Link href="/settings" className="avatar-item" onClick={() => setOpen(false)}>
               Choose a display name
             </Link>
           )}
@@ -101,8 +102,8 @@ function AvatarMenu() {
               Your profile
             </Link>
           )}
-          <Link href="/account" className="avatar-item" onClick={() => setOpen(false)}>
-            Your account
+          <Link href="/settings" className="avatar-item" onClick={() => setOpen(false)}>
+            Settings
           </Link>
           <button
             type="button"
@@ -145,7 +146,10 @@ export default function SiteHeader() {
             Light a fire
           </Link>
           {loading ? null : user ? (
-            <AvatarMenu />
+            <>
+              <NotificationBell />
+              <AvatarMenu />
+            </>
           ) : (
             <Suspense fallback={null}>
               <SignInButton />

@@ -1440,3 +1440,59 @@ describe("XP and level are only written by the server", () => {
     await assertFails(setDoc(doc(db, "users", "eve5"), { displayName: null, xp: 9999, createdAt: serverTimestamp() }));
   });
 });
+
+describe("notifications", () => {
+  async function seedNotification(id: string, recipientId: string) {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "notifications", id), {
+        recipientId,
+        type: "stoke",
+        requestId: "r1",
+        read: false,
+        createdAt: new Date(),
+      });
+    });
+  }
+
+  test("you can list your own notifications", async () => {
+    await seedNotification("n1", "alice");
+    await seedNotification("n2", "bob");
+    const db = env.authenticatedContext("alice").firestore();
+    await assertSucceeds(getDocs(query(collection(db, "notifications"), where("recipientId", "==", "alice"))));
+    await assertSucceeds(getDoc(doc(db, "notifications", "n1")));
+  });
+
+  test("you cannot read someone else's, or list everyone's", async () => {
+    await seedNotification("n2", "bob");
+    const db = env.authenticatedContext("alice").firestore();
+    await assertFails(getDoc(doc(db, "notifications", "n2")));
+    await assertFails(getDocs(query(collection(db, "notifications"), where("recipientId", "==", "bob"))));
+    await assertFails(getDocs(collection(db, "notifications")));
+    const visitor = env.unauthenticatedContext().firestore();
+    await assertFails(getDoc(doc(visitor, "notifications", "n2")));
+  });
+
+  test("you can mark your own as read, and nothing else", async () => {
+    await seedNotification("n1", "alice");
+    const db = env.authenticatedContext("alice").firestore();
+    await assertSucceeds(updateDoc(doc(db, "notifications", "n1"), { read: true }));
+    await assertFails(updateDoc(doc(db, "notifications", "n1"), { read: false }));
+    await assertFails(updateDoc(doc(db, "notifications", "n1"), { read: true, recipientId: "bob" }));
+    await assertFails(updateDoc(doc(db, "notifications", "n1"), { read: true, type: "levelup" }));
+  });
+
+  test("you cannot mark someone else's as read", async () => {
+    await seedNotification("n2", "bob");
+    const db = env.authenticatedContext("alice").firestore();
+    await assertFails(updateDoc(doc(db, "notifications", "n2"), { read: true }));
+  });
+
+  test("the app can neither create nor delete notifications", async () => {
+    await seedNotification("n1", "alice");
+    const db = env.authenticatedContext("alice").firestore();
+    await assertFails(
+      setDoc(doc(db, "notifications", "fake"), { recipientId: "alice", type: "levelup", level: 5, read: false, createdAt: new Date() }),
+    );
+    await assertFails(deleteDoc(doc(db, "notifications", "n1")));
+  });
+});

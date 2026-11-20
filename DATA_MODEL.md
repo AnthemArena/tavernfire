@@ -26,7 +26,7 @@ Require three distinct sparks. (Open decision: allow fewer than three?)
 ## Collections
 
 ### `users/{uid}` (public profile)
-- `displayName` (null until chosen), `nameKey`, `nameChangedAt`, `avatar` (a preset id, absent until chosen), `avatarChangedAt`, `xp` and `level` (written only by Cloud Functions), `bio` (text up to 280 characters, no links; absent until written), `createdAt`. Nothing is copied from the Google account (no name, no photo).
+- `displayName` (null until chosen), `nameKey`, `nameChangedAt`, `avatar` (a preset id, absent until chosen), `avatarChangedAt`, `xp`, `level` and `achievements` (written only by Cloud Functions), `bio` (text up to 280 characters, no links; absent until written), `createdAt`. Nothing is copied from the Google account (no name, no photo).
 - The name is chosen the first time someone posts a request: 3 to 20 characters (letters, numbers, spaces and `. _ ' -`), unique ignoring capitals, spaces and punctuation, reserved words refused, changeable once every 7 days. `requests.requesterName` must equal it (rules check).
 - `displayNames/{nameKey}`: `{ uid, displayName, createdAt }`, one per name; looked up one at a time by signed-in people, never listed. Claim order: create the lookup, update the profile, delete the old lookup. Known gap: unfinished claims can park a name; a Cloud Function replaces this later.
 - `bio` (optional)
@@ -169,3 +169,7 @@ Reveal writes, on each visible entry: `authorId` (from the private answer marker
 Ballots are refused by the rules once a request is `revealed` or `closed`.
 
 The small-request rule used: voting runs whenever there are two or more entries (owner can still change this by editing `decide()`).
+
+## notifications/{id}
+
+One document per thing that happened to a member, made only by Cloud Functions (`functions/src/notify.ts`). Fields: `recipientId`, `type` (`stoke`, `upvote`, `answer`, `achievement`, `levelup`), `read`, `createdAt`, and per type `requestId`, `sparks`, `entryName`, `actorName` (answers only; stokes and upvotes are anonymous), `achievement`, `level`. The id is fixed by the cause (`stoke_<stokeId>`, `upvote_<upvoteId>`, `answer_<entryId>`, `achievement_<uid>_<id>`, `levelup_<uid>_<level>`), so repeats cannot send a second one. The owner can read their own and set `read` to true; nothing else.

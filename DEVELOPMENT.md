@@ -110,7 +110,7 @@ used by ordinary fires.
 
 - The pick buttons are built but not for release on their own: set `NEXT_PUBLIC_ENABLE_VOTING=false` on any live deploy until the results and reveal ship.
 - Email sign-ups get a verification email; voting needs a verified email (Google sign-ins already are). In the emulator the link appears in the Auth emulator's UI (http://localhost:4000/auth) under the user, or in the emulator terminal output.
-- The new "your requests" list on the account page needs the index in `firestore.indexes.json`; publish it with `npx firebase deploy --only firestore:indexes` when going live (the emulator does not need it).
+- The new "your requests" list on the settings page needs the index in `firestore.indexes.json`; publish it with `npx firebase deploy --only firestore:indexes` when going live (the emulator does not need it).
 - Windows: answers and voting open for 3 days, then voting only for 2 more (`ANSWER_WINDOW_DAYS`, `VOTING_WINDOW_DAYS` in `src/lib/requests.ts`; a test keeps `firestore.rules` in step).
 
 ## Hosting (Firebase App Hosting)
@@ -199,7 +199,7 @@ still show if a request has been revealed.
 
 ## Avatars
 
-Members pick a portrait from the art packs on the account page. The pictures are `public/avatars/<pack>-<n>.webp` (256 px wide, converted from the original PNGs), and the pack list is `PACKS` in `src/lib/avatars.ts`. The ids (like `demon-12`) are also checked in `firestore.rules` (`validAvatar`, a pattern naming the packs and the 1 to 50 range); tests fail if the two disagree or a picture file is missing.
+Members pick a portrait from the art packs on the settings page. The pictures are `public/avatars/<pack>-<n>.webp` (256 px wide, converted from the original PNGs), and the pack list is `PACKS` in `src/lib/avatars.ts`. The ids (like `demon-12`) are also checked in `firestore.rules` (`validAvatar`, a pattern naming the packs and the 1 to 50 range); tests fail if the two disagree or a picture file is missing.
 
 - **Adding a pack:** save its images as `<pack>-1.webp`, `<pack>-2.webp`…, add it to `PACKS`, and add the pack name to the pattern in `validAvatar`. Then deploy the rules.
 - The choice is stored as `users/{uid}.avatar` plus `avatarChangedAt`. The rules allow a change once an hour (`avatarFree`).
@@ -210,7 +210,7 @@ Members pick a portrait from the art packs on the account page. The pictures are
 
 ## Bios
 
-`users/{uid}.bio`: plain text, at most 280 characters, no web addresses (`validBio` in the rules; the same limits are in `src/lib/bio.ts` and a test keeps them in step). Written on the account page ("About you"), shown on the profile and under "Lit by" on the fire page. The fire page reads the lighter's profile when it opens, so the bio is always their current one; nothing is copied onto fires. Bios are not yet covered by moderation (reporting a profile is on the later list), which is why links are refused.
+`users/{uid}.bio`: plain text, at most 280 characters, no web addresses (`validBio` in the rules; the same limits are in `src/lib/bio.ts` and a test keeps them in step). Written on the settings page ("About you"), shown on the profile and under "Lit by" on the fire page. The fire page reads the lighter's profile when it opens, so the bio is always their current one; nothing is copied onto fires. Bios are not yet covered by moderation (reporting a profile is on the later list), which is why links are refused.
 
 ## XP and ranks
 
@@ -218,4 +218,12 @@ The points and ranks are in `src/lib/xp.ts` (5 XP for a fire, 5 for an answer, 1
 
 The `xpFromFires` and `xpFromAnswers` functions recount a member's XP from their visible posts whenever a post appears, goes away, is hidden or restored, or its stoke or upvote count changes, and save `xp` and `level` on `users/{uid}`. Because it recounts, hidden answers stop counting and running twice is harmless. The app can't write these two fields (rules test). To change the points later, edit the table, sync, deploy; XP then corrects itself as members' posts change (to correct everyone at once, a small script can recompute all members).
 
-Ranks show on the profile, the account page ("Your rank", with a progress bar) and the fire page. They are not on every card or answer byline yet: that would mean copying the level onto each post and updating it like avatars.
+Ranks show on the profile, the settings page ("Your rank", with a progress bar) and the fire page. They are not on every card or answer byline yet: that would mean copying the level onto each post and updating it like avatars.
+
+## Notifications, toasts and achievements
+
+- **Making them:** `countStokes`, `countUpvotes` and `countAnswers` also call `notifyStoke`, `notifyUpvote` and `notifyAnswer`; the xp function (`recomputeXp`) announces new ranks and achievements. Each uses a fixed id, so retries and un-vote/re-vote cannot repeat a notification. Nobody is told about their own actions.
+- **Showing them:** `NotificationsProvider` (in the layout) listens to the member's newest 30 notifications. The bell lists them; `ToastHost` pops up the ones that arrive while the member is on the site (not the ones already waiting). Bursts of stokes or upvotes are combined into one toast ("3 upvotes on your answers."). Clicking one marks it read and goes to the fire or profile.
+- **Wording:** `src/lib/notifications.ts`. To add a kind: add it there, in `notify.ts`, in `NotificationIcon`, and in the rules test.
+- **Achievements:** the list is `src/lib/achievements.ts` (copied to `functions/src`; run `npm run sync:functions`). Once earned they are kept on the profile even if posts are later hidden. A new rank is announced as a level-up, not an achievement.
+- **Index:** notifications need the (recipientId, createdAt desc) index in `firestore.indexes.json`; deploy with the rules.

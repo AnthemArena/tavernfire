@@ -64,7 +64,7 @@ export default function PrivacyPage() {
 
       <h2>Your choices</h2>
       <ul>
-        <li>You can change your display name from your account page.</li>
+        <li>You can change your display name from your settings page.</li>
         <li>You can delete your own answers while you are signed in.</li>
         <li>
           To delete your account and the data we hold, or to ask what we hold about you, write

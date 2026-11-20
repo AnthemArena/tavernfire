@@ -43,9 +43,11 @@ If traits return, sparks rank above them in search, and the interface keeps the 
 - Answers with a consistent template, edit for 24 hours
 - Upvotes on answers, Stoke on fires, counted by Cloud Functions
 - Public profiles at `/profile/<id>` (avatar, name, member since, fires, answers, upvotes received)
-- Ranks from XP: Cinderling, Flamebearer, Pyromancer, Blazewalker, Phoenix Ascendant. Posting earns a little, upvotes and stokes earn most; shown on profiles, the account page and the fire page
+- Ranks from XP: Cinderling, Flamebearer, Pyromancer, Blazewalker, Phoenix Ascendant. Posting earns a little, upvotes and stokes earn most; shown on profiles, the settings page and the fire page
+- Notifications: a bell in the header and toasts while you're on the site, for a stoke on your fire, an upvote on your answer, an answer to your fire, a new achievement and a new rank
+- Achievements (first fire, first answer, first stoke, first upvote, ten upvotes), shown on the profile
 - A short bio (280 characters, plain text, no links) on the profile and at the top of the member's fires
-- Preset avatars (100 fantasy portraits in two packs, Demons and Undead, picked on the account page) shown beside names everywhere: small on cards, medium on the fire page and header, large on the profile
+- Preset avatars (100 fantasy portraits in two packs, Demons and Undead, picked on the settings page) shown beside names everywhere: small on cards, medium on the fire page and header, large on the profile
 - Account page (your fires and your answers)
 - Report answer, and a moderator review queue at `/moderation` (hide an answer or dismiss its reports)
 

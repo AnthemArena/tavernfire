@@ -5,6 +5,7 @@ import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import { RankBadge } from "@/components/RankBadge";
 import { isAvatarId, type AvatarId } from "@/lib/avatars";
+import { achievementById } from "@/lib/achievements";
 import { collection, doc, getDoc, getDocs, limit, query, where } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useNow } from "@/lib/use-now";
@@ -17,7 +18,7 @@ import AnswerCount from "@/components/AnswerCount";
 
 const LIST_LIMIT = 100;
 
-type Profile = { name: string; since: Date | null; avatar: AvatarId | null; bio: string; xp: number };
+type Profile = { name: string; since: Date | null; avatar: AvatarId | null; bio: string; xp: number; achievements: string[] };
 type AnswerRow = { entry: EntryItem; request: RequestItem };
 type Loaded = { profile: Profile; fires: RequestItem[]; answers: AnswerRow[] };
 type State = { status: "loading" } | { status: "missing" } | { status: "error" } | ({ status: "ready" } & Loaded);
@@ -95,6 +96,9 @@ export default function ProfileView({ uid }: { uid: string }) {
               avatar: isAvatarId(data?.avatar) ? data.avatar : null,
               bio: typeof data?.bio === "string" ? data.bio : "",
               xp: typeof data?.xp === "number" && data.xp > 0 ? data.xp : 0,
+              achievements: Array.isArray(data?.achievements)
+                ? (data.achievements as unknown[]).filter((a): a is string => typeof a === "string")
+                : [],
             },
             fires,
             answers,
@@ -148,6 +152,18 @@ export default function ProfileView({ uid }: { uid: string }) {
           {since && <p className="profile-since">Member since {since}</p>}
         </div>
         {profile.bio && <p className="profile-bio">{profile.bio}</p>}
+        {profile.achievements.some((id) => achievementById(id)) && (
+          <ul className="achievement-list" aria-label="Achievements">
+            {profile.achievements.map((id) => {
+              const a = achievementById(id);
+              return a ? (
+                <li key={id} className="achievement" title={a.description}>
+                  {a.name}
+                </li>
+              ) : null;
+            })}
+          </ul>
+        )}
         <dl className="profile-stats">
           <Stat label="Fires lit" value={fires.length} />
           <Stat label="Answers" value={answers.length} />

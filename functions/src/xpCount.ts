@@ -5,6 +5,8 @@
 
 import type { Firestore } from "firebase-admin/firestore";
 import { rankFor, xpFor, type XpCounts } from "./xp.ts";
+import { earnedAchievements } from "./achievements.ts";
+import { createNotification } from "./notify.ts";
 
 /** Count what a member has posted and received. Hidden posts are left out. */
 export async function countFor(db: Firestore, uid: string): Promise<XpCounts> {
@@ -25,19 +27,42 @@ export async function countFor(db: Firestore, uid: string): Promise<XpCounts> {
   };
 }
 
-export type XpResult = { xp: number; level: number; previousLevel: number } | null;
+export type XpResult = { xp: number; level: number; previousLevel: number; newAchievements: string[] } | null;
 
-/** Recompute a member's XP and level and save them if they changed. Null if there is no such member. */
+/**
+ * Recompute a member's XP, level and achievements and save what changed, then tell them
+ * about any new rank or achievement. Null if there is no such member.
+ */
 export async function recomputeXp(db: Firestore, uid: string): Promise<XpResult> {
   const ref = db.collection("users").doc(uid);
   const profile = await ref.get();
   if (!profile.exists) return null;
-  const xp = xpFor(await countFor(db, uid));
+  const counts = await countFor(db, uid);
+  const xp = xpFor(counts);
   const level = rankFor(xp).level;
   const oldXp = typeof profile.get("xp") === "number" ? (profile.get("xp") as number) : null;
   const oldLevel = typeof profile.get("level") === "number" ? (profile.get("level") as number) : 1;
-  if (oldXp !== xp || oldLevel !== level) await ref.update({ xp, level });
-  return { xp, level, previousLevel: oldLevel };
+
+  // Achievements are kept once earned, even if the posts behind them are hidden later.
+  const had = profile.get("achievements");
+  const kept = Array.isArray(had) ? had.filter((a): a is string => typeof a === "string") : [];
+  const newAchievements = earnedAchievements(counts).filter((a) => !kept.includes(a));
+
+  const patch: Record<string, unknown> = {};
+  if (oldXp !== xp) patch.xp = xp;
+  if (oldLevel !== level || profile.get("level") === undefined) patch.level = level;
+  if (newAchievements.length > 0) patch.achievements = [...kept, ...newAchievements];
+  if (Object.keys(patch).length > 0) await ref.update(patch);
+
+  // Fixed ids mean a repeat run cannot announce the same thing twice. Going up several
+  // ranks at once announces each one.
+  for (let l = oldLevel + 1; l <= level; l++) {
+    await createNotification(db, `levelup_${uid}_${l}`, { recipientId: uid, type: "levelup", level: l });
+  }
+  for (const a of newAchievements) {
+    await createNotification(db, `achievement_${uid}_${a}`, { recipientId: uid, type: "achievement", achievement: a });
+  }
+  return { xp, level, previousLevel: oldLevel, newAchievements };
 }
 
 type Doc = Record<string, unknown> | undefined;

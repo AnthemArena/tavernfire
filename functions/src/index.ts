@@ -8,6 +8,7 @@ import { recountUpvotes } from "./upvotes.ts";
 import { recomputeFireAnswers } from "./answers.ts";
 import { applyModeration, isModerationAction } from "./moderation.ts";
 import { avatarOf, syncAvatar } from "./avatars.ts";
+import { notifyAnswer, notifyStoke, notifyUpvote } from "./notify.ts";
 import { recomputeXp, xpMayChange } from "./xpCount.ts";
 import { recountSparks, sparksChanged, sparksOf } from "./sparks.ts";
 import { addTrend, recountStokes, STOKE_WEIGHT, UPVOTE_WEIGHT } from "./trending.ts";
@@ -50,6 +51,7 @@ export const countUpvotes = onDocumentWritten(
     if (added && typeof data?.requestId === "string") {
       await addTrend(db, data.requestId, UPVOTE_WEIGHT, Date.now());
     }
+    if (added) await notifyUpvote(db, event.params.upvoteId, entryId, data?.voterId);
   },
 );
 
@@ -63,7 +65,10 @@ export const countStokes = onDocumentWritten(
     const db = getFirestore();
     await recountStokes(db, requestId);
     const added = event.data?.before.exists === false && event.data?.after.exists === true;
-    if (added) await addTrend(db, requestId, STOKE_WEIGHT, Date.now());
+    if (added) {
+      await addTrend(db, requestId, STOKE_WEIGHT, Date.now());
+      await notifyStoke(db, event.params.stokeId, requestId, data?.voterId);
+    }
   },
 );
 
@@ -87,7 +92,12 @@ export const countAnswers = onDocumentWritten(
     const data = event.data?.after.data() ?? event.data?.before.data();
     const requestId = data?.requestId;
     if (typeof requestId !== "string") return;
-    await recomputeFireAnswers(getFirestore(), requestId);
+    const db = getFirestore();
+    await recomputeFireAnswers(db, requestId);
+    // A new answer tells the fire's lighter.
+    if (event.data?.before.exists === false && event.data?.after.exists === true) {
+      await notifyAnswer(db, event.params.entryId, event.data.after.data() ?? {});
+    }
   },
 );
 
