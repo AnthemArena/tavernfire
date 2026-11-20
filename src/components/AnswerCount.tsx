@@ -5,11 +5,11 @@ import { collection, getCountFromServer, query, where } from "firebase/firestore
 import { getDb } from "@/lib/firebase";
 
 /**
- * How many answers a request has, counted from its entries. (The count stored on
+ * How many answers a request has, counted from its entries. `own` is true on the viewer's own fire. (The count stored on
  * the request is not kept up to date yet; that needs a Cloud Function.)
  * It is counted once when the card appears, not live.
  */
-export default function AnswerCount({ requestId }: { requestId: string }) {
+export default function AnswerCount({ requestId, own = false }: { requestId: string; own?: boolean }) {
   const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
@@ -31,7 +31,8 @@ export default function AnswerCount({ requestId }: { requestId: string }) {
   }, [requestId]);
 
   if (count === null) return <span className="muted">Answers…</span>;
-  if (count === 0) return <span>No answers yet. Be the first.</span>;
+  // On your own fire "be the first" would be an invitation you cannot accept.
+  if (count === 0) return <span>{own ? "No answers yet." : "No answers yet. Be the first."}</span>;
   return (
     <span>
       <strong>{count}</strong> {count === 1 ? "answer" : "answers"}

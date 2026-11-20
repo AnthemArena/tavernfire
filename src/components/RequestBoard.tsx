@@ -13,6 +13,7 @@ import {
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useNow } from "@/lib/use-now";
+import { useAuth } from "@/lib/auth-context";
 import AnswerCount from "@/components/AnswerCount";
 import { LAUNCHED_CATEGORIES, isCompactPicker } from "@/lib/categories";
 import {
@@ -218,6 +219,7 @@ export default function RequestBoard() {
 }
 
 function RequestCard({ request: r, now }: { request: RequestItem; now: Date }) {
+  const { user } = useAuth();
   return (
     <Link href={`/fires/${r.id}`} className="request-card">
       <div className="request-card-top">
@@ -244,7 +246,7 @@ function RequestCard({ request: r, now }: { request: RequestItem; now: Date }) {
             {r.stokeCount} {r.stokeCount === 1 ? "stoke" : "stokes"}
           </span>
         )}
-        <AnswerCount requestId={r.id} />
+        <AnswerCount requestId={r.id} own={r.requesterId === user?.uid} />
       </div>
     </Link>
   );

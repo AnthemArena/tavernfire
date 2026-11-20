@@ -174,10 +174,10 @@ export default function ProfileView({ uid }: { uid: string }) {
       <section className="profile-content" aria-label="Fires and answers">
         <div className="tabs" role="group" aria-label="Profile sections">
           <button type="button" className="tab" aria-pressed={shownTab === "answers"} onClick={() => setTab("answers")}>
-            Answers
+            Answers {answers.length}
           </button>
           <button type="button" className="tab" aria-pressed={shownTab === "fires"} onClick={() => setTab("fires")}>
-            Fires
+            Fires {fires.length}
           </button>
         </div>
 
@@ -251,7 +251,7 @@ export default function ProfileView({ uid }: { uid: string }) {
                   <div className="meta">
                     <span className="badge">{kindLabel(r.kind)}</span>
                     <PhaseLabel request={r} now={now} />
-                    <AnswerCount requestId={r.id} />
+                    <AnswerCount requestId={r.id} own={isMe} />
                   </div>
                 </Link>
               </li>

@@ -1,34 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
-import {
-  collection,
-  collectionGroup,
-  doc,
-  getDoc,
-  getDocs,
-  onSnapshot,
-  orderBy,
-  query,
-  where,
-} from "firebase/firestore";
-import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
-import { useNow } from "@/lib/use-now";
 import Avatar from "@/components/Avatar";
 import { RankProgress } from "@/components/RankBadge";
 import { AVATARS, PACKS, describeWhen, nextAvatarChange, type AvatarId, type PackId } from "@/lib/avatars";
 import { AvatarError } from "@/lib/display-name";
 import { BIO_MAX, BioError } from "@/lib/bio";
 import { NAME_CHANGE_DAYS, NAME_MAX, NameError } from "@/lib/names";
-import { kindLabel, toRequestItem, type RequestItem } from "@/lib/requests";
-import { toEntryItem, type EntryItem } from "@/lib/entries";
-import { answerStatus } from "@/lib/my-answers";
-import PhaseLabel from "@/components/PhaseLabel";
-import AnswerCount from "@/components/AnswerCount";
 
-/** Your own page: your name, and the requests you have posted. Only you see it. */
+/** Your settings: display name, rank, avatar, bio and email. Only you see it. */
 export default function SettingsView() {
   const { user, displayName, xp, bio, chooseBio, avatar, avatarChangedAt, chooseAvatar, chooseName, nameChangeOn, signOut, loading, emailVerified, resendVerification, refreshVerification } =
     useAuth();
@@ -49,6 +31,9 @@ export default function SettingsView() {
   return (
     <div className="account">
       <h1 className="page-title">Settings</h1>
+      <p className="hint">
+        Your fires and answers are on <Link href={`/profile/${user.uid}`}>your profile</Link>.
+      </p>
       <NameCard
         displayName={displayName}
         chooseName={chooseName}
@@ -60,7 +45,7 @@ export default function SettingsView() {
         </h2>
         <RankProgress xp={xp} />
         <p className="hint">
-          You earn XP by lighting fires and answering, and more when people upvote your answers or stoke your fires.
+          Lighting fires and answering earns XP. Upvotes and stokes earn more.
         </p>
       </section>
       <AvatarCard
@@ -77,8 +62,6 @@ export default function SettingsView() {
         resend={resendVerification}
         refresh={refreshVerification}
       />
-      <MyRequests uid={user.uid} />
-      <MyAnswers uid={user.uid} />
       <button type="button" className="btn btn-outline account-signout" onClick={() => signOut()}>
         Sign out
       </button>
@@ -275,9 +258,9 @@ function EmailCard({
       <h2 className="card-title" id="email-heading">
         Email
       </h2>
-      <p className="account-name">
-        <strong>{email ?? "No email on this account"}</strong>{" "}
-        <span className="muted">{verified ? "(verified)" : "(not verified)"}</span>
+      <p className="email-line">
+        {email ?? "No email on this account"}{" "}
+        <span className={verified ? "badge badge-ok" : "badge badge-warn"}>{verified ? "Verified" : "Not verified"}</span>
       </p>
       {!verified && (
         <>
@@ -363,7 +346,7 @@ function NameCard({
       </p>
       <p className="hint">
         {displayName
-          ? "Shown next to your fires and on your answers."
+          ? "Shown on your fires and answers."
           : "You'll be asked for one when you light your first fire or write your first answer. You can also choose it here."}
       </p>
 
@@ -416,191 +399,6 @@ function NameCard({
           Display name saved.
         </p>
       )}
-    </section>
-  );
-}
-
-function MyRequests({ uid }: { uid: string }) {
-  const [items, setItems] = useState<RequestItem[] | null>(null);
-  const [failed, setFailed] = useState(false);
-  const now = useNow();
-
-  useEffect(() => {
-    const q = query(
-      collection(getDb(), "requests"),
-      where("requesterId", "==", uid),
-      where("moderation", "==", "ok"),
-      orderBy("createdAt", "desc"),
-    );
-    return onSnapshot(
-      q,
-      (snap) => {
-        setItems(
-          snap.docs
-            .map((d) => toRequestItem(d.id, d.data({ serverTimestamps: "estimate" })))
-            .filter((r): r is RequestItem => r !== null),
-        );
-        setFailed(false);
-      },
-      (err) => {
-        console.error("Could not load your requests", err);
-        setFailed(true);
-      },
-    );
-  }, [uid]);
-
-  return (
-    <section aria-labelledby="my-requests">
-      <h2 className="section-title" id="my-requests">
-        Your fires
-      </h2>
-      {failed ? (
-        <p className="empty" role="alert">
-          Couldn&apos;t load your fires right now. Please try again in a moment.
-        </p>
-      ) : items === null ? (
-        <p className="empty" role="status">
-          Loading…
-        </p>
-      ) : items.length === 0 ? (
-        <p className="empty">
-          You haven&apos;t lit a fire yet. <Link href="/fires/new">Light one now.</Link>
-        </p>
-      ) : (
-        <ul className="request-list">
-          {items.map((r) => (
-            <li key={r.id}>
-              <Link href={`/fires/${r.id}`} className="request-card">
-                <div className="request-card-top">
-                  <div className="sparks">
-                    {r.sparks.map((s) => (
-                      <span className="spark" key={s}>
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div className="meta">
-                  <span className="badge">{kindLabel(r.kind)}</span>
-                  <PhaseLabel request={r} now={now} />
-                  <AnswerCount requestId={r.id} />
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
-
-type AnswerRow = {
-  entryId: string;
-  request: RequestItem;
-  entry: EntryItem | null;
-  /** The private marker exists but the entry never finished saving. */
-  unfinished: boolean;
-  at: number;
-};
-
-/** Your answers, across all requests. Only you can see this list. */
-function MyAnswers({ uid }: { uid: string }) {
-  const [rows, setRows] = useState<AnswerRow[] | null>(null);
-  const [failed, setFailed] = useState(false);
-  const now = useNow();
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const db = getDb();
-        const markers = await getDocs(
-          query(collectionGroup(db, "answerLocks"), where("authorId", "==", uid)),
-        );
-        const found = await Promise.all(
-          markers.docs.map(async (m): Promise<AnswerRow | null> => {
-            const requestId = m.get("requestId") as string;
-            const entryId = m.get("entryId") as string;
-            const requestSnap = await getDoc(doc(db, "requests", requestId)).catch(() => null);
-            const request =
-              requestSnap && requestSnap.exists()
-                ? toRequestItem(requestSnap.id, requestSnap.data() ?? {})
-                : null;
-            if (!request) return null; // a hidden or removed request
-            // A hidden entry is refused to its own author, so treat any failure as "not shown".
-            const entrySnap = await getDoc(doc(db, "entries", entryId)).catch(() => null);
-            const entry =
-              entrySnap && entrySnap.exists() ? toEntryItem(entrySnap.id, entrySnap.data() ?? {}) : null;
-            const created = m.get("createdAt") as { toDate?: () => Date } | undefined;
-            return {
-              entryId,
-              request,
-              entry,
-              unfinished: entrySnap !== null && !entrySnap.exists(),
-              at: created?.toDate?.().getTime() ?? 0,
-            };
-          }),
-        );
-        if (cancelled) return;
-        setRows(found.filter((r): r is AnswerRow => r !== null).sort((a, b) => b.at - a.at));
-      } catch (err) {
-        console.error("Could not load your answers", err);
-        if (!cancelled) setFailed(true);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [uid]);
-
-  return (
-    <section aria-labelledby="my-answers">
-      <h2 className="section-title" id="my-answers">
-        Your answers
-      </h2>
-      {failed ? (
-        <p className="empty" role="alert">
-          Couldn&apos;t load your answers right now. Please try again in a moment.
-        </p>
-      ) : rows === null ? (
-        <p className="empty" role="status">
-          Loading…
-        </p>
-      ) : rows.length === 0 ? (
-        <p className="empty">
-          You haven&apos;t answered any fires yet. <Link href="/">Find a fire to answer.</Link>
-        </p>
-      ) : (
-        <ul className="request-list">
-          {rows.map((r) => (
-            <li key={r.entryId}>
-              <Link href={`/fires/${r.request.id}`} className="request-card">
-                <div className="request-card-top">
-                  <div className="sparks">
-                    {r.request.sparks.map((s) => (
-                      <span className="spark" key={s}>
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <p className="my-answer-name">
-                  {r.entry ? r.entry.name : r.unfinished ? "This answer didn't finish saving" : "Answer not shown"}
-                </p>
-                <div className="meta">
-                  <span className="badge">{kindLabel(r.request.kind)}</span>
-                  <span>
-                    {r.unfinished ? "Open the request to send it again" : answerStatus(r.entry, now)}
-                  </span>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-      <p className="hint account-note">
-        Only you can see this page. Your fires and answers are also shown on your public profile.
-      </p>
     </section>
   );
 }

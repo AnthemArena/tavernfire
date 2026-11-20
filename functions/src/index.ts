@@ -138,6 +138,22 @@ export const xpFromAnswers = onDocumentWritten(
   },
 );
 
+// A moderator recounts everyone's XP, ranks and achievements in one go. Use it once after
+// the XP functions are first deployed (posts from before then are not counted until they
+// change), or after changing the points table.
+export const recountAllXp = onCall({ region: "europe-west2", maxInstances: 1, timeoutSeconds: 300 }, async (request) => {
+  if (request.auth?.token.role !== "moderator") {
+    throw new HttpsError("permission-denied", "Moderators only.");
+  }
+  const db = getFirestore();
+  const members = await db.collection("users").select().get();
+  let counted = 0;
+  for (const m of members.docs) {
+    if (await recomputeXp(db, m.id)) counted++;
+  }
+  return { members: counted };
+});
+
 // A moderator hides, restores or clears the reports on an answer. Only people whose
 // account has the moderator role (see scripts/set-moderator.mjs) can call it.
 export const moderateAnswer = onCall({ region: "europe-west2", maxInstances: 5 }, async (request) => {

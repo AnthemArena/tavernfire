@@ -128,6 +128,7 @@ export default function ModerationView() {
 
   return (
     <div className="moderation">
+      <RecountXp />
       <h1 className="page-title">Reported answers</h1>
       <p className="hint">
         <strong>Hide</strong> removes the answer from the site. <strong>Dismiss</strong> clears the reports and lets
@@ -186,5 +187,42 @@ export default function ModerationView() {
         </ul>
       )}
     </div>
+  );
+}
+
+/** One-off tool: recount everyone's XP, ranks and achievements (after the XP functions are first deployed). */
+function RecountXp() {
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  async function run() {
+    setBusy(true);
+    setResult(null);
+    try {
+      const res = await httpsCallable<unknown, { members: number }>(getCloudFunctions(), "recountAllXp")({});
+      setResult(`Counted ${res.data.members} members.`);
+    } catch {
+      setResult("Couldn't recount just now. Try again in a moment.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="card">
+      <h2 className="card-title">Recount XP</h2>
+      <p className="hint">
+        Works out everyone&apos;s XP, rank and achievements again from their posts. Run it once after the XP functions are
+        first deployed, or after changing the points.
+      </p>
+      <button type="button" className="btn btn-outline" disabled={busy} onClick={() => void run()}>
+        {busy ? "Counting…" : "Recount XP for everyone"}
+      </button>
+      {result && (
+        <p className="hint" role="status">
+          {result}
+        </p>
+      )}
+    </section>
   );
 }

@@ -182,7 +182,8 @@ export default function LibraryView() {
       )}
       {results && results.length === 0 && searching && (
         <p className="empty">
-          No fires with those sparks yet. <Link href="/fires/new">Light one</Link>.
+          No fires with those sparks yet.{" "}
+          <Link href={`/fires/new?s=${encodeURIComponent(searched.join(","))}`}>Light one</Link>.
         </p>
       )}
 

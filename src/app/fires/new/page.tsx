@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Link from "next/link";
 import PostRequestForm from "@/components/PostRequestForm";
 
@@ -19,7 +20,9 @@ export default function LightAFirePage() {
           all three.
         </p>
       </section>
-      <PostRequestForm />
+      <Suspense fallback={null}>
+        <PostRequestForm />
+      </Suspense>
     </main>
   );
 }

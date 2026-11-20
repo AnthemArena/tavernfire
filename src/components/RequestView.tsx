@@ -175,9 +175,14 @@ export default function RequestView({ id }: { id: string }) {
           ) : (
             r.requesterName
           )}
+          {lighterId && (
+            <>
+              {" "}
+              <RankBadge xp={lighterXp} size={18} iconOnly />
+            </>
+          )}
           , {describeAge(r.createdAt, now)}
         </span>
-        {lighterId && <RankBadge xp={lighterXp} size={18} iconOnly />}
       </p>
 
       <div className="meta">

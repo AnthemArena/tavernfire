@@ -60,7 +60,7 @@ export default function NotificationBell() {
             )}
           </div>
           {items.length === 0 ? (
-            <p className="bell-empty">Nothing yet. Stokes, upvotes and answers on your posts will show up here.</p>
+            <p className="bell-empty">Nothing yet. Activity on your fires and answers will show up here.</p>
           ) : (
             <ul className="bell-list">
               {items.map((n) => (

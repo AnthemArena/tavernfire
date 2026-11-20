@@ -161,7 +161,7 @@ still show if a request has been revealed.
 
 - Someone with no display name is asked for one on the answer form (the name is shown on
   the answer when voting ends). Posting a request asks the same way.
-- The account page lists your own answers, found with a collection-group read of your
+- (The settings page used to list your own answers; that list is gone, the profile has them. The collection-group read it used was) found with a collection-group read of your
   answer markers (`answerLocks` where `authorId` is you). That needs the new rule and the
   collection-group index on `answerLocks.authorId`, so deploy with
   `firebase deploy --only "firestore,functions"`. The reveal now also stores `result.tied`
@@ -227,3 +227,9 @@ Ranks show on the profile, the settings page ("Your rank", with a progress bar) 
 - **Wording:** `src/lib/notifications.ts`. To add a kind: add it there, in `notify.ts`, in `NotificationIcon`, and in the rules test.
 - **Achievements:** the list is `src/lib/achievements.ts` (copied to `functions/src`; run `npm run sync:functions`). Once earned they are kept on the profile even if posts are later hidden. A new rank is announced as a level-up, not an achievement.
 - **Index:** notifications need the (recipientId, createdAt desc) index in `firestore.indexes.json`; deploy with the rules.
+
+## Settings and the one-off XP recount
+
+The settings page holds settings only (display name, rank, avatar, bio, email). Your fires and answers are on your public profile, which the page links to.
+
+After the XP functions are first deployed, posts made before then are not counted until something changes on them. A moderator can run **Recount XP for everyone** on the moderation page (`/moderation`): it calls the `recountAllXp` function, which recounts every member's XP, rank and achievements. Run it once after deploying, or after changing the points table. Members whose rank or achievements change get the usual notifications.

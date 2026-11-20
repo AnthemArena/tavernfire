@@ -2011,3 +2011,37 @@ a:hover {
   font-size: 12px;
   font-weight: 600;
 }
+
+.email-line {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.badge-ok {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.badge-warn {
+  color: #e8b4a0;
+  border-color: #e8b4a0;
+}
+.avatar-grid {
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.profile-stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.profile-stat {
+  padding: 10px;
+}
+.profile-stat dt {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.profile-stat dd {
+  font-size: 24px;
+}

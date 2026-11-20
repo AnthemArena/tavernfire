@@ -42,6 +42,13 @@ export function parseSparks(raw: string | string[]): string[] {
   return out;
 }
 
+/** The three spark boxes to start the Light a fire form with, from ?s=statue,time (empty boxes pad it to three). */
+export function sparksFromParam(raw: string | null): string[] {
+  const words = parseSparks(raw ?? "").map((w) => w.charAt(0).toLocaleUpperCase("en") + w.slice(1));
+  while (words.length < SPARK_COUNT) words.push("");
+  return words;
+}
+
 /** How many of the searched sparks a fire has. */
 export function overlap(fireSparks: string[], searched: string[]): number {
   return searched.filter((s) => fireSparks.includes(s)).length;

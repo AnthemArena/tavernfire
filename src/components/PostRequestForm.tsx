@@ -2,11 +2,12 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { SparkError, buildSparkFields } from "@/lib/sparks";
+import { sparksFromParam } from "@/lib/library";
 import { displayWord, fireCount } from "@/lib/spark-suggestions";
 import { useSparkSuggestions } from "@/lib/use-spark-suggestions";
 import { NAME_CHANGE_DAYS, NAME_MAX, NameError } from "@/lib/names";
@@ -31,7 +32,9 @@ export default function PostRequestForm() {
   const [changingName, setChangingName] = useState(false);
   const showNameField = !displayName || changingName;
 
-  const [sparks, setSparks] = useState(["", "", ""]);
+  // Arriving from a search that found nothing fills in the words that were searched (?s=a,b).
+  const params = useSearchParams();
+  const [sparks, setSparks] = useState(() => sparksFromParam(params.get("s")));
   const [kind, setKind] = useState<RequestKind>("npc");
   const [note, setNote] = useState("");
   // Asked for once, the first time someone posts a request.

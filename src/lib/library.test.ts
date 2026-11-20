@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { matchHeading, overlap, pairKeysOf, parseSparks, rankResults, type LibraryResult } from "./library.ts";
+import { matchHeading, overlap, pairKeysOf, parseSparks, sparksFromParam, rankResults, type LibraryResult } from "./library.ts";
 import type { RequestItem } from "./requests.ts";
 
 test("parseSparks cleans, dedupes and caps at three", () => {
@@ -62,4 +62,11 @@ test("headings", () => {
   assert.equal(matchHeading(2, 2), "Fires with these sparks");
   assert.equal(matchHeading(1, 2), "Share one of your sparks");
   assert.equal(matchHeading(1, 1), "Fires with this spark");
+});
+
+test("a search that found nothing starts the Light a fire form with those words", () => {
+  assert.deepEqual(sparksFromParam("zzzz,qqqq"), ["Zzzz", "Qqqq", ""]);
+  assert.deepEqual(sparksFromParam("statue,time,glowing,extra"), ["Statue", "Time", "Glowing"]);
+  assert.deepEqual(sparksFromParam(null), ["", "", ""]);
+  assert.deepEqual(sparksFromParam(""), ["", "", ""]);
 });
