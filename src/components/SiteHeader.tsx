@@ -9,7 +9,7 @@ import { useAuth } from "@/lib/auth-context";
 function MainNav() {
   const pathname = usePathname();
   const onRequests =
-    pathname === "/" || pathname.startsWith("/requests") || pathname.startsWith("/fires");
+    pathname === "/" || pathname.startsWith("/fires");
   return (
     <nav className="nav" aria-label="Main">
       <Link

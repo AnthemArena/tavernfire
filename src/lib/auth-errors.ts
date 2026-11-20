@@ -6,7 +6,7 @@ const MESSAGES: Record<string, string> = {
   "auth/user-not-found": "That email and password don't match.",
   "auth/invalid-email": "That doesn't look like a valid email address.",
   "auth/email-already-in-use": "There's already an account with that email. Try signing in instead.",
-  "auth/weak-password": "Choose a password with at least 6 characters.",
+  "auth/weak-password": "Choose a password with at least 8 characters.",
   "auth/missing-password": "Enter your password.",
   "auth/too-many-requests": "Too many attempts. Wait a moment and try again.",
   "auth/network-request-failed": "Couldn't reach the server. Check your connection and try again.",

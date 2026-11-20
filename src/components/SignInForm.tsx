@@ -57,6 +57,10 @@ export default function SignInForm() {
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
+    if (mode === "signup" && password.length < 8) {
+      setError("Use at least 8 characters for your password.");
+      return;
+    }
     void run(() =>
       mode === "signup"
         ? signUpWithEmail(email, password)
@@ -116,7 +120,7 @@ export default function SignInForm() {
             onChange={(e) => setPassword(e.target.value)}
           />
           {isSignUp ? (
-            <p className="hint">At least 6 characters.</p>
+            <p className="hint">Use at least 8 characters.</p>
           ) : (
             <p className="hint">
               <button type="button" className="btn-link" onClick={onForgotPassword} disabled={busy}>

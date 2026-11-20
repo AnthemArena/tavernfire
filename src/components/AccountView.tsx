@@ -207,7 +207,7 @@ function MyRequests({ uid }: { uid: string }) {
         <ul className="request-list">
           {items.map((r) => (
             <li key={r.id}>
-              <Link href={`/requests/${r.id}`} className="request-card">
+              <Link href={`/fires/${r.id}`} className="request-card">
                 <div className="request-card-top">
                   <div className="sparks">
                     {r.sparks.map((s) => (
@@ -311,7 +311,7 @@ function MyAnswers({ uid }: { uid: string }) {
         <ul className="request-list">
           {rows.map((r) => (
             <li key={r.entryId}>
-              <Link href={`/requests/${r.request.id}`} className="request-card">
+              <Link href={`/fires/${r.request.id}`} className="request-card">
                 <div className="request-card-top">
                   <div className="sparks">
                     {r.request.sparks.map((s) => (

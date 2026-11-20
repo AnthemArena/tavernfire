@@ -33,7 +33,7 @@ const SORTS: { value: Sort; label: string }[] = [
 
 const HEADINGS: Record<Sort, string> = {
   trending: "Trending fires",
-  top: "Top fires",
+  top: "Most stoked fires",
   new: "New fires",
 };
 
@@ -218,7 +218,7 @@ export default function RequestBoard() {
 
 function RequestCard({ request: r, now }: { request: RequestItem; now: Date }) {
   return (
-    <Link href={`/requests/${r.id}`} className="request-card">
+    <Link href={`/fires/${r.id}`} className="request-card">
       <div className="request-card-top">
         <div className="sparks">
           {r.sparks.map((s) => (

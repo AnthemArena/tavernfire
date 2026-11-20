@@ -111,7 +111,7 @@ export default function PostRequestForm() {
       setSlow(false);
       setPostedId(ref.id);
       setTimeout(() => setShowPosted(true), NOTICE_DELAY_MS);
-      router.push(`/requests/${ref.id}`);
+      router.push(`/fires/${ref.id}`);
     } catch (err) {
       clearTimeout(slowTimer);
       console.error("Could not post request", err);
@@ -158,7 +158,7 @@ export default function PostRequestForm() {
           <p className="notice-title">Fire lit</p>
           <p>Opening your fire now.</p>
           <div className="notice-actions">
-            <Link className="btn btn-outline" href={`/requests/${postedId}`}>
+            <Link className="btn btn-outline" href={`/fires/${postedId}`}>
               Open your fire
             </Link>
             <button type="button" className="btn btn-outline" onClick={postAnother}>

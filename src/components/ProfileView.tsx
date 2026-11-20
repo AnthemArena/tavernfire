@@ -166,7 +166,7 @@ export default function ProfileView({ uid }: { uid: string }) {
                 const r = entry.reveal;
                 return (
                   <li key={entry.id}>
-                    <Link href={`/requests/${request.id}`} className="request-card">
+                    <Link href={`/fires/${request.id}`} className="request-card">
                       <div className="request-card-top">
                         <div className="sparks">
                           {request.sparks.map((s) => (
@@ -198,7 +198,7 @@ export default function ProfileView({ uid }: { uid: string }) {
           <ul className="request-list">
             {fires.map((r) => (
               <li key={r.id}>
-                <Link href={`/requests/${r.id}`} className="request-card">
+                <Link href={`/fires/${r.id}`} className="request-card">
                   <div className="request-card-top">
                     <div className="sparks">
                       {r.sparks.map((s) => (

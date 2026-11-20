@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: "Request – Tavernfire",
 };
 
-export default function RequestPage(props: PageProps<"/requests/[id]">) {
+export default function RequestPage(props: PageProps<"/fires/[id]">) {
   return (
     <main className="container">
       <Suspense fallback={<p className="muted page-note">Loading…</p>}>
@@ -19,7 +19,7 @@ export default function RequestPage(props: PageProps<"/requests/[id]">) {
 async function RequestLoader({
   params,
 }: {
-  params: PageProps<"/requests/[id]">["params"];
+  params: PageProps<"/fires/[id]">["params"];
 }) {
   const { id } = await params;
   return <RequestView id={id} />;
