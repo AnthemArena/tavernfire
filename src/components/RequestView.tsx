@@ -152,7 +152,7 @@ export default function RequestView({ id }: { id: string }) {
         ← Fires
       </Link>
 
-      <p className="kicker">The three sparks</p>
+      <p className="kicker">The three sparks for {getCategory(r.kind).answer.needed}</p>
       <h1 className="visually-hidden">
         Fire: {r.sparks.join(", ")}
       </h1>
@@ -164,9 +164,6 @@ export default function RequestView({ id }: { id: string }) {
         ))}
       </div>
 
-      <p className="request-ask">
-        Needed: {getCategory(r.kind).answer.needed}.
-      </p>
       {r.note && (
         <p className="request-lede">
           <span className="muted">From the table:</span> {r.note}
