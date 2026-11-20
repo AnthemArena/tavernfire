@@ -25,14 +25,15 @@ import AnswerCount from "@/components/AnswerCount";
 
 /** Your own page: your name, and the requests you have posted. Only you see it. */
 export default function AccountView() {
-  const { user, displayName, chooseName, nameChangeOn, signOut, loading } = useAuth();
+  const { user, displayName, chooseName, nameChangeOn, signOut, loading, emailVerified, resendVerification, refreshVerification } =
+    useAuth();
 
   if (loading) return <p className="muted page-note">Loading…</p>;
   if (!user) {
     return (
       <div className="card">
         <h1 className="card-title">Your account</h1>
-        <p className="card-lede">Sign in to see your name and your requests.</p>
+        <p className="card-lede">Sign in to see your display name and your fires.</p>
         <Link className="btn btn-primary btn-block" href="/signin">
           Sign in
         </Link>
@@ -48,12 +49,98 @@ export default function AccountView() {
         chooseName={chooseName}
         waitUntil={displayName ? nameChangeOn() : null}
       />
+      <EmailCard
+        email={user.email}
+        verified={emailVerified}
+        google={user.providerData.some((p) => p.providerId === "google.com")}
+        resend={resendVerification}
+        refresh={refreshVerification}
+      />
       <MyRequests uid={user.uid} />
       <MyAnswers uid={user.uid} />
       <button type="button" className="btn btn-outline account-signout" onClick={() => signOut()}>
         Sign out
       </button>
     </div>
+  );
+}
+
+function EmailCard({
+  email,
+  verified,
+  google,
+  resend,
+  refresh,
+}: {
+  email: string | null;
+  verified: boolean;
+  google: boolean;
+  resend: () => Promise<void>;
+  refresh: () => Promise<boolean>;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+
+  async function run(action: () => Promise<string | null>) {
+    setBusy(true);
+    setNote(null);
+    try {
+      setNote(await action());
+    } catch {
+      setNote("Couldn't do that just now. Try again in a moment.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="card" aria-labelledby="email-heading">
+      <h2 className="card-title" id="email-heading">
+        Email
+      </h2>
+      <p className="account-name">
+        <strong>{email ?? "No email on this account"}</strong>{" "}
+        <span className="muted">{verified ? "(verified)" : "(not verified)"}</span>
+      </p>
+      {!verified && (
+        <>
+          <p className="hint">Verify your email to stoke fires and upvote answers.</p>
+          <div className="notice-actions">
+            <button
+              type="button"
+              className="btn btn-outline"
+              disabled={busy}
+              onClick={() =>
+                run(async () => {
+                  await resend();
+                  return "Sent. Check your inbox and spam folder.";
+                })
+              }
+            >
+              Resend the email
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline"
+              disabled={busy}
+              onClick={() =>
+                run(async () =>
+                  (await refresh()) ? null : "We can't see that it's verified yet. Open the link in the email, then try again.",
+                )
+              }
+            >
+              I&apos;ve verified it
+            </button>
+          </div>
+        </>
+      )}
+      {google && <p className="hint">You signed in with Google. We don&apos;t show your Google name.</p>}
+      {note && (
+        <p className="hint" role="status">
+          {note}
+        </p>
+      )}
+    </section>
   );
 }
 
