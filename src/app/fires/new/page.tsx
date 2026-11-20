@@ -16,8 +16,8 @@ export default function LightAFirePage() {
         <h1 className="section-title">Light a fire</h1>
         <p className="hero-lede">
           Give three single words and say what you need. People answer with
-          something that fits all of them. Answers stay open for 3 days, then
-          voting runs for 5.
+          something that fits all of them. Your fire stays open, and answers can
+          arrive at any time.
         </p>
       </section>
       <PostRequestForm />

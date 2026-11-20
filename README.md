@@ -10,7 +10,7 @@ Someone lights a fire: three sparks and what they need. The community answers wi
 
 - **Spark:** a single word that starts an idea (for example *Statue*, *Time*, *Glowing*). A fire has three sparks.
 - **Fire:** a request. Three sparks plus the type of thing needed (NPC, location, item or creature to start), with an optional note about the table or session. Fires stay open.
-- **Answer / entry:** one person's response to a fire: a name, a description, and up to five optional traits. Shown under the author's name.
+- **Answer:** one person's response to a fire: a name, a description, and up to five optional traits. Shown under the author's name.
 - **Traits:** the author-chosen descriptors on an answer (for example *Ancient, Patient, Guardian*). Not the same thing as sparks.
 - **Stoke:** a vote on the fire itself ("good fire", a question worth answering).
 - **Upvote:** a vote on an answer ("good answer").
@@ -44,7 +44,7 @@ Sparks rank above traits in search, and the interface keeps the two visibly sepa
 - Upvotes on answers, Stoke on fires, counted by Cloud Functions
 - Public profiles at `/profile/<id>` (name, member since, fires, answers, upvotes received)
 - Account page (your fires and your answers)
-- Report entry (reports are stored; moderator tools are not built yet)
+- Report answer (reports are stored; moderator tools are not built yet)
 
 **Next**
 - Library: search by spark and by trait
@@ -67,7 +67,7 @@ The site is for things made by people. This is a shared community standard, not 
 - Authors submit only their own work.
 - Allowed: proofreading and spell-checking; using reference material for inspiration, with attribution where appropriate.
 - Not allowed: asking an AI to generate or substantially rewrite the answer.
-- **Report entry** (with reasons: AI-generated, plagiarism, spam, abuse) sends an answer to private moderator review. A report never penalises an author automatically.
+- **Report answer** (with reasons: AI-generated, plagiarism, spam, abuse) sends an answer to private moderator review. A report never penalises an author automatically.
 - Authors can appeal.
 - Account reputation builds over time; new accounts get more scrutiny.
 

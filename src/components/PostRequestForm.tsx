@@ -371,8 +371,7 @@ export default function PostRequestForm() {
             {busy ? "Lighting…" : "Light the fire"}
           </button>
           <p className="hint">
-            Answers stay open for 3 days. Write your own work; no AI-generated
-            entries.
+            Fires stay open. Write your own work; no AI-generated answers.
           </p>
         </form>
       )}

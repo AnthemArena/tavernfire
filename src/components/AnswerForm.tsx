@@ -93,8 +93,8 @@ export default function AnswerForm({
     const missingName = name.trim() === "";
     const missingConcept = concept.trim() === "";
     if (missingName || missingConcept) {
-      if (missingName) setNameError("Give your entry a name.");
-      if (missingConcept) setConceptError("Describe your entry.");
+      if (missingName) setNameError("Give your answer a name.");
+      if (missingConcept) setConceptError("Describe your answer.");
       (missingName ? nameInput : conceptInput).current?.focus();
       return;
     }
@@ -142,8 +142,8 @@ export default function AnswerForm({
         refusals.current += 1;
         setError(
           refusals.current > 1
-            ? "This entry is locked. Your text is still here, so you can copy it."
-            : "Couldn't save. This entry may be locked. Your text is still here.",
+            ? "This answer is locked. Your text is still here, so you can copy it."
+            : "Couldn't save. This answer may be locked. Your text is still here.",
         );
         setRefused(true);
         setBusy(false);

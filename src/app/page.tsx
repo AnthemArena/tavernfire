@@ -11,7 +11,7 @@ export default function Home() {
           <p className="hero-lede">
             A spark is a single word that starts an idea. Light a fire with
             three of them, say what you need, and the community answers. Every
-            entry is written by a person and yours to use at the table.
+            answer is written by a person.
           </p>
           <Link className="btn btn-primary hero-cta" href="/fires/new">
             Light a fire

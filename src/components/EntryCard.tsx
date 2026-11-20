@@ -51,7 +51,7 @@ function ReportForm({ entryId, onClose }: { entryId: string; onClose: () => void
       onClose();
     } catch (err) {
       console.error("Could not send report", err);
-      setError("Couldn't send your report. You may have reported this entry already.");
+      setError("Couldn't send your report. You may have reported this answer already.");
       setBusy(false);
     }
   }
@@ -60,7 +60,7 @@ function ReportForm({ entryId, onClose }: { entryId: string; onClose: () => void
     <form className="report-form" onSubmit={onSubmit}>
       <div className="field">
         <label className="label" htmlFor={`reason-${entryId}`}>
-          What&apos;s wrong with this entry?
+          What&apos;s wrong with this answer?
         </label>
         <select
           id={`reason-${entryId}`}
@@ -202,7 +202,7 @@ export default function EntryCard({
         <h3 id={`entry-${entry.id}`} className="entry-name">
           {entry.name}
         </h3>
-        {isMine && <span className="badge badge-mine">Your entry</span>}
+        {isMine && <span className="badge badge-mine">Your answer</span>}
       </div>
 
       <p className="entry-concept">{entry.concept}</p>
@@ -249,7 +249,7 @@ export default function EntryCard({
             </button>
           ) : (
             <span className="entry-anon">
-              {`Entries are locked ${ENTRY_EDIT_WINDOW_HOURS} hours after posting.`}
+              {`Answers are locked ${ENTRY_EDIT_WINDOW_HOURS} hours after posting.`}
             </span>
           ))}
 
@@ -266,7 +266,7 @@ export default function EntryCard({
                 className="btn-link btn-link-action"
                 onClick={() => setReporting(true)}
               >
-                Report entry
+                Report answer
               </button>
             )
           ))}

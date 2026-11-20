@@ -90,11 +90,11 @@ export function buildEntryFields(input: {
   const name = input.name.trim();
   const concept = input.concept.trim();
 
-  if (name === "") throw new Error("Give your entry a name.");
+  if (name === "") throw new Error("Give your answer a name.");
   if (name.length > ENTRY_NAME_MAX) {
     throw new Error(`The name can be up to ${ENTRY_NAME_MAX} characters.`);
   }
-  if (concept === "") throw new Error("Describe your entry.");
+  if (concept === "") throw new Error("Describe your answer.");
   if (concept.length > ENTRY_CONCEPT_MAX) {
     throw new Error(`The description can be up to ${ENTRY_CONCEPT_MAX} characters.`);
   }

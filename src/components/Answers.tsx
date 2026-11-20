@@ -182,10 +182,10 @@ export default function Answers({ request }: { request: RequestItem }) {
       </p>
     );
   } else if (mine) {
-    // Their entry is pinned at the top, marked "Your entry".
+    // Their entry is pinned at the top, marked "Your answer".
     action = alreadyAnswered ? (
       <p className="notice notice-plain" role="status">
-        You&apos;ve already answered this fire. Your entry is below.
+        You&apos;ve already answered this fire. Your answer is below.
       </p>
     ) : justSubmitted ? (
       <p className="notice notice-success" role="status">
