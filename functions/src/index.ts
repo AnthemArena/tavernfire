@@ -1,7 +1,9 @@
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
+import { onDocumentWritten } from "firebase-functions/v2/firestore";
 import { runLifecycle } from "./lifecycle.ts";
+import { recountUpvotes } from "./upvotes.ts";
 
 initializeApp();
 
@@ -24,5 +26,16 @@ export const advanceLifecycle = onSchedule(
     }
     const report = await runLifecycle(getFirestore(), new Date());
     console.log("Lifecycle pass", JSON.stringify(report));
+  },
+);
+
+// Whenever an upvote is added or removed, recount that answer's upvotes.
+export const countUpvotes = onDocumentWritten(
+  { document: "upvotes/{upvoteId}", region: "europe-west2", maxInstances: 5 },
+  async (event) => {
+    const data = event.data?.after.data() ?? event.data?.before.data();
+    const entryId = data?.entryId;
+    if (typeof entryId !== "string") return;
+    await recountUpvotes(getFirestore(), entryId);
   },
 );

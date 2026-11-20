@@ -58,6 +58,8 @@ export type EntryItem = {
   name: string;
   concept: string;
   traits: string[];
+  /** How many people have upvoted it. Kept by a Cloud Function. */
+  upvoteCount: number;
   /** Who wrote it. Null on older entries that were never revealed. */
   author: { id: string; name: string } | null;
   /** Results from the earlier blind-voting design. Null on newer entries. */
@@ -172,6 +174,7 @@ export function toEntryItem(
     traits: Array.isArray(data.traits)
       ? (data.traits as unknown[]).filter((t): t is string => typeof t === "string")
       : [],
+    upvoteCount: typeof data.upvoteCount === "number" && data.upvoteCount > 0 ? data.upvoteCount : 0,
     author:
       typeof data.authorId === "string" && data.authorId !== "" && typeof data.authorName === "string" && data.authorName !== ""
         ? { id: data.authorId, name: data.authorName }

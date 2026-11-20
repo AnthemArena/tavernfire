@@ -1489,3 +1489,65 @@ a:hover {
   flex-direction: column;
   gap: 24px;
 }
+
+/* Upvotes on answers */
+.entry-card-row {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.entry-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.entry-vote {
+  flex: none;
+}
+
+.vote-btn,
+.vote-static {
+  width: 56px;
+  min-height: 64px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font: 600 16px var(--font-sans);
+  color: var(--ink);
+}
+
+.vote-btn {
+  background: none;
+  border: 1px solid var(--control-border);
+  cursor: pointer;
+}
+
+.vote-btn:hover {
+  background: var(--chip);
+}
+
+.vote-btn-on {
+  background: var(--tint-accent);
+  border-color: var(--accent);
+  color: var(--accent-hover);
+}
+
+.vote-static {
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+@media (max-width: 480px) {
+  .entry-card-row {
+    gap: 12px;
+  }
+  .vote-btn,
+  .vote-static {
+    width: 48px;
+  }
+}

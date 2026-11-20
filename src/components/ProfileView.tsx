@@ -117,6 +117,7 @@ export default function ProfileView({ uid }: { uid: string }) {
   }
 
   const { profile, fires, answers } = state;
+  const upvotes = answers.reduce((sum, a) => sum + a.entry.upvoteCount, 0);
   const since = profile.since
     ? profile.since.toLocaleDateString("en-GB", { month: "long", year: "numeric" })
     : null;
@@ -142,6 +143,7 @@ export default function ProfileView({ uid }: { uid: string }) {
         <dl className="profile-stats">
           <Stat label="Fires lit" value={fires.length} />
           <Stat label="Answers" value={answers.length} />
+          <Stat label="Upvotes received" value={upvotes} />
         </dl>
       </aside>
 
@@ -177,6 +179,9 @@ export default function ProfileView({ uid }: { uid: string }) {
                       <p className="my-answer-name">{entry.name}</p>
                       <div className="meta">
                         <span className="badge">{kindLabel(request.kind)}</span>
+                        <span>
+                          {entry.upvoteCount} {entry.upvoteCount === 1 ? "upvote" : "upvotes"}
+                        </span>
                         {entry.createdAt && <span>Posted {describeAge(entry.createdAt, now)}</span>}
                         {r?.favourite && <span className="badge badge-favourite">Community favourite</span>}
                         {r?.rank != null && <span className="badge badge-rank">{rankLabel(r.rank, r.tied)}</span>}

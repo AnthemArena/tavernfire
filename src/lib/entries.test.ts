@@ -60,6 +60,7 @@ test("toEntryItem rejects malformed data and tolerates missing optional fields",
     name: "n",
     concept: "c",
     traits: [],
+    upvoteCount: 0,
     author: null,
     reveal: null,
   });

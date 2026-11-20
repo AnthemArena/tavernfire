@@ -105,12 +105,21 @@ function ReportForm({ entryId, onClose }: { entryId: string; onClose: () => void
   );
 }
 
+function UpArrow() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+      <path d="M12 4l8 10h-5v6H9v-6H4z" />
+    </svg>
+  );
+}
+
 export default function EntryCard({
   entry,
   isMine,
   reported,
   now,
   editUntil,
+  upvote,
 }: {
   entry: EntryItem;
   isMine: boolean;
@@ -118,6 +127,8 @@ export default function EntryCard({
   now: Date;
   /** When the author's edit window ends; null if it is not known yet. */
   editUntil: Date | null;
+  /** The upvote button. `onToggle` is absent for your own answer, which shows the count only. */
+  upvote: { count: number; mine: boolean; onToggle?: () => void };
 }) {
   const { user } = useAuth();
   const [reporting, setReporting] = useState(false);
@@ -162,7 +173,31 @@ export default function EntryCard({
   }
 
   return (
-    <article className="card entry-card" aria-labelledby={`entry-${entry.id}`}>
+    <article className="card entry-card entry-card-row" aria-labelledby={`entry-${entry.id}`}>
+      <div className="entry-vote">
+        {upvote.onToggle ? (
+          <button
+            type="button"
+            className={upvote.mine ? "vote-btn vote-btn-on" : "vote-btn"}
+            aria-pressed={upvote.mine}
+            aria-label={`Upvote, ${upvote.count} ${upvote.count === 1 ? "upvote" : "upvotes"}`}
+            onClick={upvote.onToggle}
+          >
+            <UpArrow />
+            <span>{upvote.count}</span>
+          </button>
+        ) : (
+          <span
+            className="vote-static"
+            role="img"
+            aria-label={`${upvote.count} ${upvote.count === 1 ? "upvote" : "upvotes"}`}
+          >
+            <UpArrow />
+            <span>{upvote.count}</span>
+          </span>
+        )}
+      </div>
+      <div className="entry-body">
       <div className="entry-head">
         <h3 id={`entry-${entry.id}`} className="entry-name">
           {entry.name}
@@ -240,6 +275,7 @@ export default function EntryCard({
       {reporting && !reported && (
         <ReportForm entryId={entry.id} onClose={() => setReporting(false)} />
       )}
+      </div>
     </article>
   );
 }

@@ -90,6 +90,12 @@ used by ordinary fires.
   `LIFECYCLE_ENABLED=true` is set in its environment. Redeploy it with
   `firebase deploy --only "firestore,functions"` before or together with the rules.
 - `NEXT_PUBLIC_ENABLE_VOTING` no longer exists; the pick buttons were removed from the app.
+- **Upvotes on answers:** one document per person per answer at `upvotes/{entryId}_{uid}`
+  (verified email, not your own answer, no cap on how many you give). The function
+  `countUpvotes` (Firestore trigger, europe-west2) recounts and stores `upvoteCount` on the
+  entry; the app only adds the person's own change while that catches up. The first deploy of
+  a Firestore-triggered function can fail once while Google finishes setting up Eventarc
+  permissions; wait a few minutes and run the deploy again.
 - The 3-day answer window is gone from the rules. The 24-hour edit window (from the answer's
   own `createdAt`) and the 5-day ballot rule (kept for duels) remain, and a test keeps them in step.
 

@@ -1024,6 +1024,119 @@ describe("ballots (picking favourites)", () => {
   });
 });
 
+describe("upvotes on answers", () => {
+  /** carol wrote entry e1 on r1; dave wrote e2; e3 is hidden. */
+  async function seedAnswers() {
+    await seedRequest("r1");
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore();
+      await setDoc(doc(db, "entries", "e1"), newEntryData("r1", { authorId: "carol", createdAt: new Date() }));
+      await setDoc(doc(db, "entries", "e2"), newEntryData("r1", { authorId: "dave", createdAt: new Date() }));
+      await setDoc(doc(db, "entries", "e3"), newEntryData("r1", { authorId: "dave", moderation: "hidden", createdAt: new Date() }));
+    });
+  }
+
+  const person = (uid: string, verified = true) =>
+    env.authenticatedContext(uid, { email_verified: verified }).firestore();
+
+  const upvoteData = (uid: string, entryId: string, overrides: Record<string, unknown> = {}) => ({
+    entryId,
+    requestId: "r1",
+    voterId: uid,
+    createdAt: serverTimestamp(),
+    ...overrides,
+  });
+
+  const cast = (db: Db, uid: string, entryId: string, overrides: Record<string, unknown> = {}) =>
+    setDoc(doc(db, "upvotes", `${entryId}_${uid}`), upvoteData(uid, entryId, overrides));
+
+  test("a verified person can upvote someone else's answer, and take it back", async () => {
+    await seedAnswers();
+    const bob = person("bob");
+    await assertSucceeds(cast(bob, "bob", "e1"));
+    await assertSucceeds(cast(bob, "bob", "e2"));
+    await assertSucceeds(deleteDoc(doc(bob, "upvotes", "e1_bob")));
+  });
+
+  test("there is no cap on how many answers a person can upvote", async () => {
+    await seedAnswers();
+    const bob = person("bob");
+    for (const id of ["e1", "e2"]) await assertSucceeds(cast(bob, "bob", id));
+  });
+
+  test("you cannot upvote your own answer", async () => {
+    await seedAnswers();
+    await assertFails(cast(person("carol"), "carol", "e1"));
+  });
+
+  test("the requester can upvote answers to their own fire", async () => {
+    await seedAnswers();
+    await assertSucceeds(cast(person("seed-user"), "seed-user", "e1"));
+  });
+
+  test("one upvote per person per answer", async () => {
+    await seedAnswers();
+    const bob = person("bob");
+    await assertSucceeds(cast(bob, "bob", "e1"));
+    await assertFails(cast(bob, "bob", "e1"));
+  });
+
+  test("an unverified email or a signed-out visitor cannot upvote", async () => {
+    await seedAnswers();
+    await assertFails(cast(person("bob", false), "bob", "e1"));
+    await assertFails(cast(env.unauthenticatedContext().firestore(), "bob", "e1"));
+  });
+
+  test("the upvote must be your own, under the right id, and match the answer", async () => {
+    await seedAnswers();
+    const bob = person("bob");
+    await assertFails(cast(bob, "bob", "e1", { voterId: "alice" }));
+    await assertFails(setDoc(doc(bob, "upvotes", "e1_alice"), upvoteData("alice", "e1")));
+    await assertFails(setDoc(doc(bob, "upvotes", "whatever"), upvoteData("bob", "e1")));
+    await assertFails(cast(bob, "bob", "e1", { requestId: "r2" }));
+    await assertFails(cast(bob, "bob", "e1", { createdAt: new Date() }));
+    await assertFails(cast(bob, "bob", "e1", { weight: 10 }));
+  });
+
+  test("not on a hidden or missing answer", async () => {
+    await seedAnswers();
+    const bob = person("bob");
+    await assertFails(cast(bob, "bob", "e3"));
+    await assertFails(cast(bob, "bob", "nope"));
+  });
+
+  test("an upvote cannot be edited, and only its owner can remove it", async () => {
+    await seedAnswers();
+    await assertSucceeds(cast(person("bob"), "bob", "e1"));
+    await assertFails(updateDoc(doc(person("bob"), "upvotes", "e1_bob"), { entryId: "e2" }));
+    await assertFails(deleteDoc(doc(person("alice"), "upvotes", "e1_bob")));
+  });
+
+  test("you can list your own upvotes on a fire, and nobody else's", async () => {
+    await seedAnswers();
+    await assertSucceeds(cast(person("bob"), "bob", "e1"));
+    await assertSucceeds(cast(person("alice"), "alice", "e2"));
+    const mine = query(
+      collection(person("bob"), "upvotes"),
+      where("voterId", "==", "bob"),
+      where("requestId", "==", "r1"),
+    );
+    const snap = await assertSucceeds(getDocs(mine));
+    assert.equal(snap.size, 1);
+    await assertFails(
+      getDocs(query(collection(person("bob"), "upvotes"), where("voterId", "==", "alice"))),
+    );
+    await assertFails(getDocs(collection(person("bob"), "upvotes")));
+    await assertFails(getDocs(query(collection(env.unauthenticatedContext().firestore(), "upvotes"), where("voterId", "==", "bob"))));
+  });
+
+  test("the total on an answer cannot be written from the app", async () => {
+    await seedAnswers();
+    await assertFails(updateDoc(doc(person("carol"), "entries", "e1"), { upvoteCount: 99 }));
+    await assertFails(updateDoc(doc(person("bob"), "entries", "e1"), { upvoteCount: increment(1) }));
+  });
+});
+
 describe("everything else is locked", () => {
   test("unknown collections are refused", async () => {
     const db = env.authenticatedContext("alice").firestore();

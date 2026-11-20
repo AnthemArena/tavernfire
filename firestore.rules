@@ -351,5 +351,33 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/entries/$(request.resource.data.entryId));
       allow update, delete: if false;
     }
+
+    // Upvotes on answers. One document per person per answer, with the id
+    // entryId_uid, so a second upvote is the same document and is refused. Created
+    // and deleted only by the voter. Needs a verified email, and you cannot upvote
+    // your own answer (the entry carries its author's id). The total shown on an
+    // answer (upvoteCount on the entry) is kept by a Cloud Function, never the app.
+    function validUpvote(upvoteId, d) {
+      let entry = get(/databases/$(database)/documents/entries/$(d.entryId)).data;
+      return d.keys().hasOnly(['entryId', 'requestId', 'voterId', 'createdAt'])
+        && d.keys().hasAll(['entryId', 'requestId', 'voterId', 'createdAt'])
+        && d.voterId == request.auth.uid
+        && d.entryId is string
+        && upvoteId == d.entryId + '_' + request.auth.uid
+        && d.requestId == entry.requestId
+        && d.createdAt == request.time
+        && request.auth.token.email_verified == true
+        && entry.moderation == 'ok'
+        && entry.get('authorId', '') != request.auth.uid;
+    }
+
+    match /upvotes/{upvoteId} {
+      // Only your own, so a person can list what they have upvoted on a fire
+      // (the query must filter on voterId == your uid).
+      allow read: if signedIn() && resource.data.voterId == request.auth.uid;
+      allow create: if signedIn() && validUpvote(upvoteId, request.resource.data);
+      allow update: if false;
+      allow delete: if signedIn() && resource.data.voterId == request.auth.uid;
+    }
   }
 }
