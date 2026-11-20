@@ -191,7 +191,9 @@ export default function RequestView({ id }: { id: string }) {
         {isOwnFire ? (
           <span className="stoke-static">
             <Flame />
-            {stokes} {stokes === 1 ? "stoke" : "stokes"}
+            <span>
+              <strong>{stokes}</strong> {stokes === 1 ? "stoke" : "stokes"}
+            </span>
           </span>
         ) : (
           <button

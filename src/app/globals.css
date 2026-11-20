@@ -1629,6 +1629,9 @@ a:hover {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  color: inherit;
+}
+.stoke-static strong {
   color: var(--ink);
   font-weight: 600;
 }

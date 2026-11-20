@@ -257,7 +257,9 @@ function RequestCard({ request: r, now }: { request: RequestItem; now: Date }) {
               <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
                 <path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 1-5 3-7 0 3 1 4 2 4-1-3-1-6 1-9z" />
               </svg>
-              {r.stokeCount} {r.stokeCount === 1 ? "stoke" : "stokes"}
+              <span>
+                <strong>{r.stokeCount}</strong> {r.stokeCount === 1 ? "stoke" : "stokes"}
+              </span>
             </span>
           )}
           <AnswerCountLabel count={r.answerCount} own={r.requesterId === user?.uid} />
