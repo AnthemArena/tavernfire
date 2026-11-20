@@ -1,20 +1,18 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import SignInForm from "@/components/SignInForm";
-import { safeNext } from "@/lib/next-path";
 
 export const metadata: Metadata = {
   title: "Sign in – Tavernfire",
 };
 
-export default async function SignInPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ next?: string | string[] }>;
-}) {
-  const { next } = await searchParams;
+export default function SignInPage() {
   return (
     <main className="container narrow">
-      <SignInForm next={safeNext(Array.isArray(next) ? next[0] : next)} />
+      {/* The form reads ?next= (where to go after signing in) in the browser, so it sits in a Suspense boundary. */}
+      <Suspense fallback={null}>
+        <SignInForm />
+      </Suspense>
     </main>
   );
 }

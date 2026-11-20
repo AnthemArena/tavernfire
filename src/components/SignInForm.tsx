@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { useEffect, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { safeNext } from "@/lib/next-path";
 import { useAuth } from "@/lib/auth-context";
 import { friendlyAuthError } from "@/lib/auth-errors";
 
-export default function SignInForm({ next = "/" }: { next?: string }) {
+export default function SignInForm() {
   const router = useRouter();
+  const next = safeNext(useSearchParams().get("next"));
   const {
     user,
     loading,
