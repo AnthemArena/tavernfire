@@ -166,3 +166,9 @@ still show if a request has been revealed.
   collection-group index on `answerLocks.authorId`, so deploy with
   `firebase deploy --only "firestore,functions"`. The reveal now also stores `result.tied`
   (for "Joint 2nd"), so redeploy the function too.
+
+## Legal pages
+
+- `/rules`, `/terms` and `/privacy` are plain-language pages (`src/app/rules|terms|privacy`), linked from the footer, the sign-up form and the answer form. They are not lawyer-reviewed.
+- Answers and fires are licensed to everyone under CC BY 4.0 (authors keep ownership; credit is needed when work is shared or published). Wording lives in `src/app/terms/page.tsx`; names and links in `src/lib/site.ts`.
+- **Before launch:** make sure `CONTACT_EMAIL` in `src/lib/site.ts` is a real inbox, and update `LEGAL_UPDATED` whenever the wording changes.

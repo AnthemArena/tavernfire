@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { collection, doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
@@ -328,6 +329,13 @@ export default function AnswerForm({
       {error && (
         <p className="error" role="alert">
           {error}
+        </p>
+      )}
+
+      {!editing && (
+        <p className="hint">
+          By submitting, you confirm this is your own work. You keep ownership, and you license
+          it to everyone under CC BY 4.0. <Link href="/terms">Read the terms</Link>.
         </p>
       )}
 

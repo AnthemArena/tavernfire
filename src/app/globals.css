@@ -1596,3 +1596,24 @@ a:hover {
   color: var(--accent);
   font-weight: 600;
 }
+
+/* Rules, terms and privacy pages */
+.footer-links {
+  display: inline-flex;
+  gap: 16px;
+}
+.footer-links a {
+  color: var(--muted);
+}
+.legal h2 {
+  font-size: 20px;
+  margin: 28px 0 8px;
+}
+.legal p,
+.legal li {
+  line-height: 1.65;
+}
+.legal ul {
+  padding-left: 20px;
+  margin: 8px 0;
+}

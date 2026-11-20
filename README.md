@@ -64,7 +64,7 @@ Because all types share the same sparks, one set of three can eventually yield a
 
 The site is for things made by people. This is a shared community standard, not a guarantee, because AI-written text cannot be reliably detected.
 
-- Authors submit only their own work.
+- Authors submit only their own work. Answers are licensed to everyone under CC BY 4.0 (see the Terms page).
 - Allowed: proofreading and spell-checking; using reference material for inspiration, with attribution where appropriate.
 - Not allowed: asking an AI to generate or substantially rewrite the answer.
 - **Report answer** (with reasons: AI-generated, plagiarism, spam, abuse) sends an answer to private moderator review. A report never penalises an author automatically.

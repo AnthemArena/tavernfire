@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -139,6 +140,13 @@ export default function SignInForm() {
         {error && (
           <p className="error" role="alert">
             {error}
+          </p>
+        )}
+
+        {isSignUp && (
+          <p className="hint">
+            By creating an account you agree to the <Link href="/terms">terms</Link> and{" "}
+            <Link href="/rules">rules</Link>. See the <Link href="/privacy">privacy page</Link>.
           </p>
         )}
 
