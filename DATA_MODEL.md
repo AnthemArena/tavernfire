@@ -1,5 +1,7 @@
 # Tavernfire: Firestore data model (draft)
 
+> **Current design (2026-11-20): open fires.** Ordinary fires (requests) no longer close or go to a blind vote. Answers carry `authorId` and `authorName` from the start; people upvote answers (`upvotes/{entryId}_{uid}`, total in `entries.upvoteCount`) and stoke fires (`stokes/{requestId}_{uid}`, total in `requests.stokeCount`, plus `trendScore`, `trendAt`, `trendRank` for Trending), all counted by Cloud Functions. The sections below on hidden authors, `entryAuthors`, `votes`, `ballots` and the voting lifecycle describe the earlier blind-voting design; that code is kept for duels. See `DEVELOPMENT.md` ("Open fires") and the project plan.
+
 Stack assumed: Next.js + TypeScript, Firebase Auth, Firestore, Cloud Functions (scheduled and callable).
 
 ## Principles
