@@ -42,8 +42,9 @@ export default function TermsPage() {
         </li>
         <li>
           The licence cannot be taken back for people who already used your work under it.
-          You can still delete your answer; that stops new uses from this site, but copies
-          already made stay licensed.
+          To have your answer removed from this site, write to{" "}
+          <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. That stops new uses from
+          this site, but copies already made stay licensed.
         </li>
       </ul>
       <p>
@@ -62,9 +63,9 @@ export default function TermsPage() {
         <li>Don&apos;t try to break, overload or get around the site, or to vote more than once per answer or fire.</li>
         <li>Don&apos;t post anything illegal.</li>
         <li>
-          Don&apos;t bulk-copy (scrape) Tavernfire, or use its content to train AI models,
-          without asking us first. This is a rule for using the site. It is separate from
-          the licence on individual answers, which stays as described above.
+          Don&apos;t bulk-copy (scrape) Tavernfire without asking us first. This is a rule
+          for using the site. It is separate from the licence on individual answers, and we
+          can&apos;t control what people do with copies made under that licence.
         </li>
       </ul>
 

@@ -220,7 +220,7 @@ export default function AnswerForm({
       )}
       {!editing && (
         <p className="card-lede">
-          Write it yourself. AI-written answers aren&apos;t allowed. <Link href="/rules">Read the rules</Link>.
+          Write it yourself. Tavernfire is for answers written by people. <Link href="/rules">Read the rules</Link>.
         </p>
       )}
 
@@ -325,7 +325,7 @@ export default function AnswerForm({
       {!editing && (
         <p className="hint">
           By submitting, you confirm this is your own work. You keep ownership, and you license
-          it to everyone under CC BY 4.0. That means anyone can reuse it with credit.{" "}
+          it to everyone under CC BY 4.0. That means anyone can reuse it with credit, and copies already made stay licensed.{" "}
           <Link href="/terms">Read the terms</Link>.
         </p>
       )}

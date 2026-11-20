@@ -65,15 +65,14 @@ export default function PrivacyPage() {
       <h2>Your choices</h2>
       <ul>
         <li>You can change your display name from your settings page.</li>
-        <li>You can delete your own answers while you are signed in.</li>
         <li>
-          To delete your account and the data we hold, or to ask what we hold about you, write
-          to <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+          To have an answer removed, to delete your account and the data we hold, or to ask
+          what we hold about you, write to <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
         </li>
       </ul>
       <p>
-        Content licensed to others under the <Link href="/terms">terms</Link> before you
-        deleted it stays licensed to them.
+        Content licensed to others under the <Link href="/terms">terms</Link> before it
+        was removed stays licensed to them.
       </p>
 
       <h2>Changes</h2>
