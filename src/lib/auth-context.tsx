@@ -23,7 +23,8 @@ import {
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { getDb, getFirebaseAuth } from "@/lib/firebase";
 import { nextNameChange } from "@/lib/names";
-import { EMPTY_PROFILE, claimName, loadProfile, type Profile } from "@/lib/display-name";
+import { EMPTY_PROFILE, claimName, loadProfile, saveAvatar, type Profile } from "@/lib/display-name";
+import type { AvatarId } from "@/lib/avatars";
 
 /**
  * Create the public profile document the first time someone signs in. It holds
@@ -51,6 +52,12 @@ type AuthContextValue = {
   chooseName: (name: string) => Promise<string>;
   /** When the name can next be changed, or null if it can be changed now. Call after sign-in, not while prerendering. */
   nameChangeOn: () => Date | null;
+  /** The preset avatar the person chose, or null. */
+  avatar: AvatarId | null;
+  /** When the avatar was last changed (it can be changed once an hour), or null. */
+  avatarChangedAt: Date | null;
+  /** Save a preset avatar. Throws an AvatarError with a message to show. */
+  chooseAvatar: (avatar: AvatarId) => Promise<void>;
   /** True until Firebase has told us whether someone is signed in. */
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
@@ -132,6 +139,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [user, profile],
   );
 
+  const chooseAvatar = useCallback(
+    async (avatar: AvatarId) => {
+      if (!user) throw new Error("Not signed in");
+      setProfile(await saveAvatar(user.uid, avatar, profile));
+    },
+    [user, profile],
+  );
+
   const sendPasswordReset = useCallback(async (email: string) => {
     await sendPasswordResetEmail(getFirebaseAuth(), email.trim());
   }, []);
@@ -149,6 +164,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       displayName: profile.displayName,
       chooseName,
       nameChangeOn: () => nextNameChange(profile.nameChangedAt, new Date()),
+      avatar: profile.avatar,
+      avatarChangedAt: profile.avatarChangedAt,
+      chooseAvatar,
       loading,
       signInWithGoogle,
       signInWithEmail,
@@ -156,7 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sendPasswordReset,
       signOut,
     }),
-    [user, emailVerified, resendVerification, refreshVerification, profile.displayName, profile.nameChangedAt, chooseName, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, sendPasswordReset, signOut],
+    [user, emailVerified, resendVerification, refreshVerification, profile.displayName, profile.nameChangedAt, profile.avatar, profile.avatarChangedAt, chooseName, chooseAvatar, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, sendPasswordReset, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

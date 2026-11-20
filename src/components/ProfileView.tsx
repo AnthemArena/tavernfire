@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Avatar from "@/components/Avatar";
+import { isAvatarId, type AvatarId } from "@/lib/avatars";
 import { collection, doc, getDoc, getDocs, limit, query, where } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useNow } from "@/lib/use-now";
@@ -14,7 +16,7 @@ import AnswerCount from "@/components/AnswerCount";
 
 const LIST_LIMIT = 100;
 
-type Profile = { name: string; since: Date | null };
+type Profile = { name: string; since: Date | null; avatar: AvatarId | null };
 type AnswerRow = { entry: EntryItem; request: RequestItem };
 type Loaded = { profile: Profile; fires: RequestItem[]; answers: AnswerRow[] };
 type State = { status: "loading" } | { status: "missing" } | { status: "error" } | ({ status: "ready" } & Loaded);
@@ -86,7 +88,11 @@ export default function ProfileView({ uid }: { uid: string }) {
         if (!cancelled) {
           setState({
             status: "ready",
-            profile: { name, since: typeof created?.toDate === "function" ? created.toDate() : null },
+            profile: {
+              name,
+              since: typeof created?.toDate === "function" ? created.toDate() : null,
+              avatar: isAvatarId(data?.avatar) ? data.avatar : null,
+            },
             fires,
             answers,
           });
@@ -132,17 +138,7 @@ export default function ProfileView({ uid }: { uid: string }) {
   return (
     <div className="profile-layout">
       <aside className="profile-card" aria-label="About this person">
-        <svg width="96" height="96" viewBox="0 0 96 96" role="img" aria-label="Avatar: ember sigil">
-          <circle cx="48" cy="48" r="45" fill="var(--chip)" stroke="var(--accent)" strokeWidth="2" />
-          <path
-            d="M48 22c3 9 12 14 12 26a12 12 0 0 1-24 0c0-6 3-9 6-13 1 5 4 7 6 7-1-7-1-14 0-20z"
-            fill="var(--accent)"
-          />
-          <path
-            d="M48 50c2 4 6 6 6 11a6 6 0 0 1-12 0c0-3 2-5 3-7 1 2 2 3 3 3z"
-            fill="var(--parchment)"
-          />
-        </svg>
+        <Avatar id={profile.avatar} name={profile.name} size="lg" />
         <div>
           <h1 className="profile-name">{profile.name}</h1>
           {since && <p className="profile-since">Member since {since}</p>}

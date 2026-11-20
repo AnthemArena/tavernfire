@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import Avatar from "@/components/Avatar";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getDb } from "@/lib/firebase";
 import { getCategory } from "@/lib/categories";
@@ -208,7 +209,10 @@ export default function LibraryView() {
                     </div>
                     <div className="meta">
                       <span className="badge">{getCategory(fire.kind).label}</span>
-                      <span>Lit by {fire.requesterName}</span>
+                      <span className="by-line">
+                        <Avatar id={fire.requesterAvatar} name={fire.requesterName} size="sm" />
+                        Lit by {fire.requesterName}
+                      </span>
                       {fire.stokeCount > 0 && (
                         <span>
                           {fire.stokeCount} {fire.stokeCount === 1 ? "stoke" : "stokes"}

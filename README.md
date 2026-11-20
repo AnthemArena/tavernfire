@@ -42,7 +42,8 @@ If traits return, sparks rank above them in search, and the interface keeps the 
 - Light a fire (NPC, location, item, creature), the Fires page with Trending, Top and New
 - Answers with a consistent template, edit for 24 hours
 - Upvotes on answers, Stoke on fires, counted by Cloud Functions
-- Public profiles at `/profile/<id>` (name, member since, fires, answers, upvotes received)
+- Public profiles at `/profile/<id>` (avatar, name, member since, fires, answers, upvotes received)
+- Preset avatars (10 illustrations, picked on the account page) shown beside names everywhere: small on cards, medium on the fire page and header, large on the profile
 - Account page (your fires and your answers)
 - Report answer, and a moderator review queue at `/moderation` (hide an answer or dismiss its reports)
 
@@ -53,7 +54,7 @@ If traits return, sparks rank above them in search, and the interface keeps the 
 **Later**
 - Duels and timed "blitz" modes (anonymous, one vote per match, hosted by an admin or on a schedule)
 - Personal collections (for example per campaign) and an "I used this" counter
-- Profile bio, avatar presets and image uploads, and reporting a profile
+- Profile bio, uploaded avatar images, and reporting a profile
 - Daily challenges, leaderboards, reputation levels
 - More types: player characters, abilities, factions, spells, rumours, traps, plot hooks, adventure seeds
 - Optional system-specific stat blocks (the default stays system-neutral)

@@ -5,6 +5,7 @@ import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import Link from "next/link";
+import Avatar from "@/components/Avatar";
 import {
   describeEditTimeLeft,
   ENTRY_EDIT_WINDOW_HOURS,
@@ -211,9 +212,10 @@ export default function EntryCard({
       <div className="entry-foot">
         <span className="entry-anon">
           {entry.author && !isMine && (
-            <>
-              by <Link href={`/profile/${entry.author.id}`}>{entry.author.name}</Link>
-            </>
+            <span className="by-line">
+              <Avatar id={entry.author.avatar} name={entry.author.name} size="sm" />
+              by <Link href={`/profile/${entry.author.id}`}>&nbsp;{entry.author.name}</Link>
+            </span>
           )}
           {entry.edited && (
             <span className="entry-edited">{isMine || !entry.author ? "Edited" : " · Edited"}</span>

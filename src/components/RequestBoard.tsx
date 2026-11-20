@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Avatar from "@/components/Avatar";
 import {
   collection,
   limit,
@@ -231,7 +232,8 @@ function RequestCard({ request: r, now }: { request: RequestItem; now: Date }) {
       {r.note && <p className="request-note">{r.note}</p>}
       <div className="meta">
         <span className="badge">{kindLabel(r.kind)}</span>
-        <span>
+        <span className="by-line">
+          <Avatar id={r.requesterAvatar} name={r.requesterName} size="sm" />
           Lit by {r.requesterName}, {describeAge(r.createdAt, now)}
         </span>
         {r.stokeCount > 0 && (

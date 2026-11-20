@@ -56,6 +56,17 @@ service cloud.firestore {
         || request.time > me.nameChangedAt + duration.value(7, 'd');
     }
 
+    // The preset avatars. Keep in step with src/lib/avatars.ts (a test checks this).
+    function validAvatar(a) {
+      return a is string && a in ['ember', 'd20', 'lantern', 'mug', 'crown', 'skull', 'potion', 'sword', 'key', 'moon'];
+    }
+
+    // An avatar can be changed again an hour after the last change.
+    function avatarFree(me) {
+      return me.get('avatarChangedAt', null) == null
+        || request.time > me.avatarChangedAt + duration.value(60, 'm');
+    }
+
     // Public profiles. Anyone can read. The profile starts with no name
     // (displayName null); the owner then claims one through displayNames below.
     match /users/{uid} {
@@ -78,6 +89,16 @@ service cloud.firestore {
              == request.resource.data.displayName
         && request.resource.data.nameChangedAt == request.time
         && nameFree(resource.data);
+
+      // Choosing or changing the avatar: one of the preset ids, at least an hour
+      // after the last change. A function (syncAvatar) then copies it onto the
+      // member's fires and answers.
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['avatar', 'avatarChangedAt'])
+        && validAvatar(request.resource.data.avatar)
+        && request.resource.data.avatarChangedAt == request.time
+        && avatarFree(resource.data);
 
       allow delete: if false;
     }
@@ -118,10 +139,12 @@ service cloud.firestore {
         ])
         && d.keys().hasOnly([
           'sparks', 'sparksNorm', 'sparkKey', 'pairKeys', 'kind', 'note',
-          'requesterId', 'requesterName', 'status', 'moderation',
+          'requesterId', 'requesterName', 'requesterAvatar', 'status', 'moderation',
           'answerCount', 'stokeCount', 'createdAt'
         ])
         && d.requesterId == request.auth.uid
+        // The avatar copied onto the fire is the member's current one (absent if none).
+        && d.get('requesterAvatar', null) == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('avatar', null)
         && d.requesterName is string
         && d.requesterName == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('displayName', null)
         && d.sparks is list && d.sparks.size() == 3
@@ -285,7 +308,7 @@ service cloud.firestore {
       return d.keys().hasOnly([
           'requestId', 'kind', 'name', 'concept', 'traits', 'traitsNorm',
           'sparksNorm', 'sparkKey', 'pairKeys', 'moderation', 'createdAt',
-          'authorId', 'authorName', 'upvoteCount'
+          'authorId', 'authorName', 'authorAvatar', 'upvoteCount'
         ])
         && d.keys().hasAll([
           'requestId', 'kind', 'name', 'concept', 'traits', 'traitsNorm',
@@ -297,6 +320,7 @@ service cloud.firestore {
         && d.upvoteCount == 0
         && d.authorId == request.auth.uid
         && d.authorName == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.displayName
+        && d.get('authorAvatar', null) == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('avatar', null)
         && d.requestId is string
         && lock.authorId == request.auth.uid
         && lock.requestId == d.requestId

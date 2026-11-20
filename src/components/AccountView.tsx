@@ -16,6 +16,9 @@ import {
 import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { useNow } from "@/lib/use-now";
+import Avatar from "@/components/Avatar";
+import { AVATARS, nextAvatarChange, type AvatarId } from "@/lib/avatars";
+import { AvatarError } from "@/lib/display-name";
 import { NAME_CHANGE_DAYS, NAME_MAX, NameError } from "@/lib/names";
 import { kindLabel, toRequestItem, type RequestItem } from "@/lib/requests";
 import { toEntryItem, type EntryItem } from "@/lib/entries";
@@ -25,7 +28,7 @@ import AnswerCount from "@/components/AnswerCount";
 
 /** Your own page: your name, and the requests you have posted. Only you see it. */
 export default function AccountView() {
-  const { user, displayName, chooseName, nameChangeOn, signOut, loading, emailVerified, resendVerification, refreshVerification } =
+  const { user, displayName, avatar, avatarChangedAt, chooseAvatar, chooseName, nameChangeOn, signOut, loading, emailVerified, resendVerification, refreshVerification } =
     useAuth();
 
   if (loading) return <p className="muted page-note">Loading…</p>;
@@ -49,6 +52,12 @@ export default function AccountView() {
         chooseName={chooseName}
         waitUntil={displayName ? nameChangeOn() : null}
       />
+      <AvatarCard
+        name={displayName ?? user.email ?? "You"}
+        current={avatar}
+        changedAt={avatarChangedAt}
+        choose={chooseAvatar}
+      />
       <EmailCard
         email={user.email}
         verified={emailVerified}
@@ -62,6 +71,85 @@ export default function AccountView() {
         Sign out
       </button>
     </div>
+  );
+}
+
+function AvatarCard({
+  name,
+  current,
+  changedAt,
+  choose,
+}: {
+  name: string;
+  current: AvatarId | null;
+  changedAt: Date | null;
+  choose: (avatar: AvatarId) => Promise<void>;
+}) {
+  const [picked, setPicked] = useState<AvatarId | null>(current);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+  const waitUntil = nextAvatarChange(changedAt, new Date());
+
+  async function save() {
+    if (!picked) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await choose(picked);
+      setSaved(true);
+    } catch (err) {
+      setError(err instanceof AvatarError ? err.message : "Couldn't save that avatar. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="card" aria-labelledby="avatar-heading">
+      <h2 className="card-title" id="avatar-heading">
+        Avatar
+      </h2>
+      <p className="hint">Shown next to your name on your fires and answers.</p>
+      <div className="avatar-grid" role="group" aria-label="Choose an avatar">
+        {AVATARS.map((a) => (
+          <button
+            key={a.id}
+            type="button"
+            className="avatar-choice"
+            aria-pressed={picked === a.id}
+            aria-label={a.label}
+            title={a.label}
+            onClick={() => {
+              setPicked(a.id);
+              setSaved(false);
+              setError(null);
+            }}
+          >
+            <Avatar id={a.id} name={name} size="lg" />
+          </button>
+        ))}
+      </div>
+      {waitUntil && picked !== current && (
+        <p className="hint">
+          You can change your avatar again at{" "}
+          {waitUntil.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}.
+        </p>
+      )}
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+      <button type="button" className="btn btn-primary" disabled={busy || !picked || picked === current} onClick={save}>
+        {busy ? "Saving…" : "Save avatar"}
+      </button>
+      {saved && (
+        <p className="notice notice-success" role="status">
+          Avatar saved.
+        </p>
+      )}
+    </section>
   );
 }
 

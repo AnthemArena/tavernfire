@@ -26,7 +26,7 @@ const NOTICE_DELAY_MS = 700;
 
 export default function PostRequestForm() {
   const router = useRouter();
-  const { user, displayName, chooseName, nameChangeOn, loading } = useAuth();
+  const { user, displayName, avatar, chooseName, nameChangeOn, loading } = useAuth();
   // True while a named person has opened the field to change their name.
   const [changingName, setChangingName] = useState(false);
   const showNameField = !displayName || changingName;
@@ -118,6 +118,7 @@ export default function PostRequestForm() {
         note: note.trim(),
         requesterId: user.uid,
         requesterName,
+        ...(avatar ? { requesterAvatar: avatar } : {}),
         status: "open",
         moderation: "ok",
         answerCount: 0,

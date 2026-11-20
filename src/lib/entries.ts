@@ -6,6 +6,7 @@
 
 import { normaliseSpark } from "./sparks.ts";
 import { isCategoryId } from "./categories.ts";
+import { isAvatarId, type AvatarId } from "./avatars.ts";
 import type { RequestKind } from "./requests.ts";
 
 export const ENTRY_NAME_MAX = 60;
@@ -61,7 +62,7 @@ export type EntryItem = {
   /** How many people have upvoted it. Kept by a Cloud Function. */
   upvoteCount: number;
   /** Who wrote it. Null on older entries that were never revealed. */
-  author: { id: string; name: string } | null;
+  author: { id: string; name: string; avatar: AvatarId | null } | null;
   /** Results from the earlier blind-voting design. Null on newer entries. */
   reveal: EntryReveal | null;
 };
@@ -177,7 +178,7 @@ export function toEntryItem(
     upvoteCount: typeof data.upvoteCount === "number" && data.upvoteCount > 0 ? data.upvoteCount : 0,
     author:
       typeof data.authorId === "string" && data.authorId !== "" && typeof data.authorName === "string" && data.authorName !== ""
-        ? { id: data.authorId, name: data.authorName }
+        ? { id: data.authorId, name: data.authorName, avatar: isAvatarId(data.authorAvatar) ? data.authorAvatar : null }
         : null,
     reveal: toReveal(data),
   };

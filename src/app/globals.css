@@ -1717,3 +1717,60 @@ a:hover {
 .lit-by {
   margin: 20px 0 8px;
 }
+
+/* Avatars: sit inline beside a name */
+.avatar {
+  flex: none;
+  vertical-align: middle;
+}
+.avatar-sm {
+  margin-right: 6px;
+}
+.avatar-md {
+  margin-right: 8px;
+}
+.by-line {
+  display: inline-flex;
+  align-items: center;
+}
+
+.avatar-button .avatar {
+  margin: 0;
+}
+.avatar-button:has(.avatar) {
+  padding: 0;
+  border-color: transparent;
+  background: none;
+}
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 10px;
+  margin: 12px 0 16px;
+}
+.avatar-choice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.avatar-choice .avatar {
+  width: 52px;
+  height: 52px;
+  margin: 0;
+}
+.avatar-choice:hover {
+  border-color: var(--control-border);
+}
+.avatar-choice[aria-pressed="true"] {
+  border-color: var(--accent);
+}
+.avatar-choice:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Avatar from "@/components/Avatar";
 import { useRouter } from "next/navigation";
 import { deleteDoc, doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import { useAuth } from "@/lib/auth-context";
@@ -146,14 +147,17 @@ export default function RequestView({ id }: { id: string }) {
         </p>
       )}
 
-      <p className="lit-by">
-        Lit by{" "}
-        {r.requesterId ? (
-          <Link href={`/profile/${r.requesterId}`}>{r.requesterName}</Link>
-        ) : (
-          r.requesterName
-        )}
-        , {describeAge(r.createdAt, now)}
+      <p className="lit-by by-line">
+        <Avatar id={r.requesterAvatar} name={r.requesterName} size="md" />
+        <span>
+          Lit by{" "}
+          {r.requesterId ? (
+            <Link href={`/profile/${r.requesterId}`}>{r.requesterName}</Link>
+          ) : (
+            r.requesterName
+          )}
+          , {describeAge(r.createdAt, now)}
+        </span>
       </p>
 
       <div className="meta">

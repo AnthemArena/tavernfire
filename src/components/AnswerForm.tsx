@@ -51,7 +51,7 @@ export default function AnswerForm({
   /** Shown only when there is something else on the page to go back to. */
   onCancel?: () => void;
 }) {
-  const { user, displayName, chooseName } = useAuth();
+  const { user, displayName, avatar, chooseName } = useAuth();
   const copy = getCategory(editing?.kind ?? request?.kind ?? "npc").answer;
   const idPart = editing?.id ?? "new";
 
@@ -171,6 +171,7 @@ export default function AnswerForm({
         moderation: "ok",
         authorId: user.uid,
         authorName: postAs,
+        ...(avatar ? { authorAvatar: avatar } : {}),
         upvoteCount: 0,
         createdAt: serverTimestamp(),
       });

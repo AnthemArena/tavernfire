@@ -196,3 +196,13 @@ still show if a request has been revealed.
 - Not built: moderating fires or profiles, a list of hidden answers with a restore button, and notifying authors.
 
 - **Repairing the sparks list:** `node scripts/rebuild-sparks.mjs` shows what is wrong with `sparks/{word}` counts, and `--apply` fixes them. It needs the same admin key as `scripts/set-moderator.mjs`.
+
+## Avatars
+
+Members pick one of ten preset illustrations on the account page. The list lives in `src/lib/avatars.ts` (ids and labels) and the artwork in `src/components/Avatar.tsx`. The same ids are in `firestore.rules` (`validAvatar`); a test fails if the two lists differ.
+
+- The choice is stored as `users/{uid}.avatar` plus `avatarChangedAt`. The rules allow a change once an hour (`avatarFree`).
+- Unlike names, avatars stay current on old posts. Each fire has `requesterAvatar` and each answer `authorAvatar` (left off when the member has none), copied when posting; the rules check they match the profile. When the profile avatar changes, the `propagateAvatar` function (`functions/src/avatars.ts`) updates the member's fires and answers. It is safe to run twice.
+- `Avatar` has three sizes: `sm` (cards and bylines), `md` (header, fire page), `lg` (profile and picker). With no avatar it shows the first letter of the name.
+- Uploaded pictures are a later step: they would be another kind of value in the same `avatar` field, with their own checks.
+- Deploy with the usual `firebase deploy --only "firestore:rules,firestore:indexes,functions"` (the new function is `propagateAvatar`).

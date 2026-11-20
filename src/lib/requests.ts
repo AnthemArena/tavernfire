@@ -4,6 +4,7 @@ export const ANSWER_WINDOW_DAYS = 3;
 /** Answers and voting for 3 days, then voting only for 2 more. */
 export const VOTING_WINDOW_DAYS = 5;
 
+import { isAvatarId, type AvatarId } from "./avatars.ts";
 import { getCategory, isCategoryId, type CategoryId } from "./categories.ts";
 
 /** The type of a request. The list of types lives in categories.ts. */
@@ -26,6 +27,8 @@ export type RequestItem = {
   note: string;
   requesterId: string;
   requesterName: string;
+  /** The lighter's preset avatar, kept current by a Cloud Function. Null if none. */
+  requesterAvatar: AvatarId | null;
   answerCount: number;
   /** How many people have stoked it ("good fire"). Kept by a Cloud Function. */
   stokeCount: number;
@@ -79,6 +82,7 @@ export function toRequestItem(
       typeof data.requesterName === "string" && data.requesterName
         ? data.requesterName
         : "Someone",
+    requesterAvatar: isAvatarId(data.requesterAvatar) ? data.requesterAvatar : null,
     answerCount: typeof data.answerCount === "number" ? data.answerCount : 0,
     stokeCount: typeof data.stokeCount === "number" && data.stokeCount > 0 ? data.stokeCount : 0,
     topAnswer: toTopAnswer(data.topAnswer),

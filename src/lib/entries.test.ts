@@ -105,7 +105,7 @@ test("toEntryItem reads the author when an entry carries one", () => {
   const item = toEntryItem("a", {
     name: "n", concept: "c", requestId: "r", authorId: "u1", authorName: "Marrow Fen",
   });
-  assert.deepEqual(item?.author, { id: "u1", name: "Marrow Fen" });
+  assert.deepEqual(item?.author, { id: "u1", name: "Marrow Fen", avatar: null });
   assert.equal(toEntryItem("a", { name: "n", concept: "c", requestId: "r", authorId: "u1" })?.author, null);
 });
 

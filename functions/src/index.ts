@@ -7,6 +7,7 @@ import { runLifecycle } from "./lifecycle.ts";
 import { recountUpvotes } from "./upvotes.ts";
 import { recomputeFireAnswers } from "./answers.ts";
 import { applyModeration, isModerationAction } from "./moderation.ts";
+import { avatarOf, syncAvatar } from "./avatars.ts";
 import { recountSparks, sparksChanged, sparksOf } from "./sparks.ts";
 import { addTrend, recountStokes, STOKE_WEIGHT, UPVOTE_WEIGHT } from "./trending.ts";
 
@@ -86,6 +87,19 @@ export const countAnswers = onDocumentWritten(
     const requestId = data?.requestId;
     if (typeof requestId !== "string") return;
     await recomputeFireAnswers(getFirestore(), requestId);
+  },
+);
+
+// When a member picks a new avatar, copy it onto their fires and answers.
+// Other changes to the profile (such as the display name) are ignored.
+export const propagateAvatar = onDocumentWritten(
+  { document: "users/{uid}", region: "europe-west2", maxInstances: 3 },
+  async (event) => {
+    const before = avatarOf(event.data?.before.data());
+    const after = avatarOf(event.data?.after.data());
+    if (before === after) return;
+    const changed = await syncAvatar(getFirestore(), event.params.uid, after);
+    console.log("Avatar synced", event.params.uid, changed);
   },
 );
 

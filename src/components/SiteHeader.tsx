@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Avatar from "@/components/Avatar";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 
@@ -43,7 +44,7 @@ function SignInButton() {
 
 /** The signed-in person's circle: name, account and sign out in one small menu. */
 function AvatarMenu() {
-  const { user, displayName, signOut } = useAuth();
+  const { user, displayName, avatar, signOut } = useAuth();
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement | null>(null);
 
@@ -75,11 +76,15 @@ function AvatarMenu() {
         aria-controls="avatar-panel"
         onClick={() => setOpen((v) => !v)}
       >
-        {initial ?? (
+        {avatar && displayName ? (
+          <Avatar id={avatar} name={displayName} size="md" />
+        ) : (
+          initial ?? (
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor">
             <circle cx="12" cy="8" r="4" />
             <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7z" />
           </svg>
+          )
         )}
       </button>
       {open && (
