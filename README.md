@@ -21,14 +21,14 @@ Someone lights a fire: three sparks and what they need. The community answers wi
 1. **Light a fire.** Choose three sparks and a type. Optionally add context, such as party level or tone.
 2. **Anyone can answer, at any time.** Answers carry the author's chosen name and link to their public profile. You can't answer your own fire, and you answer each fire once. You can edit an answer for 24 hours.
 3. **People vote, as much as they like.** Upvote answers and stoke fires. One vote per person per item, no cap on how many things you can vote on, and no voting for your own answers or fires. Voting needs a verified email.
-4. **Fires are found three ways.** *Trending* (recent stokes and upvotes, fading over a few days), *Top* (most stoked) and *New*.
+4. **Fires are found three ways.** *Trending* (recent stokes and upvotes, fading over a few days), *Most stoked* and *New*.
 5. **Everything is kept.** Every fire stays filed under its three sparks, with its answers, for the Library.
 
 There is deliberately no contest, deadline or reveal for ordinary fires: the site isn't trying to be competitive. (An earlier design had a 3-day answer window, blind voting and a reveal. That code is kept for duels. See `DEVELOPMENT.md`.)
 
 ## Discovery
 
-- **Fires page:** Trending, Top and New, with a filter by type.
+- **Fires page:** Trending, Most stoked and New, with a filter by type.
 - **Library:** search fires by spark at `/library`. Search one, two or all three sparks; exact matches rank first, then fires that share two, then one, most stoked first. Each result shows its answer count and best answer. With nothing searched it shows a cloud of the most used sparks and the most stoked fires.
 - **By trait (on hold, see Traits above):** author-chosen, capped at about five per answer, with suggestions drawn from existing traits to avoid near-duplicates (Ancient, Old, Aged).
 
@@ -39,7 +39,7 @@ If traits return, sparks rank above them in search, and the interface keeps the 
 **Built and live**
 - Sign-in with Google or email (with verification emails and a custom email-link page)
 - Chosen display names (unique, changeable every 7 days)
-- Light a fire (NPC, location, item, creature), the Fires page with Trending, Top and New
+- Light a fire (NPC, location, item, creature), the Fires page with Trending, Most stoked and New
 - Answers with a consistent template, edit for 24 hours
 - Upvotes on answers, Stoke on fires, counted by Cloud Functions
 - Public profiles at `/profile/<id>` (avatar, name, member since, fires, answers, upvotes received)

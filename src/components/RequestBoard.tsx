@@ -29,7 +29,7 @@ type Sort = "trending" | "top" | "new";
 
 const SORTS: { value: Sort; label: string }[] = [
   { value: "trending", label: "Trending" },
-  { value: "top", label: "Top" },
+  { value: "top", label: "Most stoked" },
   { value: "new", label: "New" },
 ];
 

@@ -100,7 +100,7 @@ used by ordinary fires.
   rules as upvotes; you cannot stoke your own fire). `countStokes` stores `stokeCount` on the
   request. Trending uses one stored number, `trendRank` (= ln(score) + time/tau, half-life 3
   days, stoke weight 2, upvote weight 1), written by the same functions; see
-  `functions/src/trending.ts`. The board's Trending, Top and New tabs each run one query and
+  `functions/src/trending.ts`. The board's Trending, Most stoked and New tabs each run one query and
   need the two new indexes in `firestore.indexes.json` (they take a few minutes to build after
   `firebase deploy --only "firestore,functions"`; until then those tabs show an error).
 - The 3-day answer window is gone from the rules. The 24-hour edit window (from the answer's
