@@ -313,7 +313,7 @@ export default function PostRequestForm() {
                 </p>
               )}
               <p className="hint" id="name-hint">
-                Shown next to your fires, and on your answers once voting ends.
+                Shown next to your fires and on your answers.
                 Pick something that isn&apos;t your real name; you can change it once
                 every {NAME_CHANGE_DAYS} days.
               </p>

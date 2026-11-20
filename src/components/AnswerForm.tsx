@@ -69,7 +69,7 @@ export default function AnswerForm({
   const [busy, setBusy] = useState(false);
   const nameInput = useRef<HTMLInputElement>(null);
   // Someone who has not chosen a name yet picks one here, shown with their answer
-  // once voting ends. (Editing never asks: the name is already set by then.)
+  // from the start. (Editing never asks: the name is already set by then.)
   const needsAuthorName = !editing && !displayName;
   const [authorName, setAuthorName] = useState("");
   const [authorNameError, setAuthorNameError] = useState<string | null>(null);
@@ -113,9 +113,10 @@ export default function AnswerForm({
 
     setBusy(true);
 
+    let postAs = displayName;
     if (needsAuthorName) {
       try {
-        await chooseName(authorName);
+        postAs = await chooseName(authorName);
       } catch (err) {
         setAuthorNameError(
           err instanceof NameError ? err.message : "Couldn't save that name. Try again.",
@@ -142,7 +143,7 @@ export default function AnswerForm({
         setError(
           refusals.current > 1
             ? "This entry is locked. Your text is still here, so you can copy it."
-            : "Couldn't save. This entry may be locked, or answers may have closed. Your text is still here.",
+            : "Couldn't save. This entry may be locked. Your text is still here.",
         );
         setRefused(true);
         setBusy(false);
@@ -156,9 +157,9 @@ export default function AnswerForm({
       const db = getDb();
 
       // Two writes, in order. First a private marker that says "this person is
-      // answering this request with this entry id" (it also records the hidden
-      // author, and stops a second answer). Then the public entry, which carries
-      // no author. Security rules check each against what already exists.
+      // answering this request with this entry id" (it stops a second answer).
+      // Then the public entry, which carries the author's id and name. Security
+      // rules check each against what already exists.
       if (!resumeEntryId) {
         await setDoc(doc(db, ...answerMarkerPath(request.id, user.uid)), {
           authorId: user.uid,
@@ -175,6 +176,8 @@ export default function AnswerForm({
         sparkKey: request.sparkKey,
         pairKeys: pairKeysFrom(request.sparksNorm),
         moderation: "ok",
+        authorId: user.uid,
+        authorName: postAs,
         createdAt: serverTimestamp(),
       });
       onSubmitted?.();
@@ -196,7 +199,7 @@ export default function AnswerForm({
       }
       onFailed?.();
       setError(
-        "Couldn't submit your answer. Answers may have just closed, or your connection dropped. Your text is still here, so you can try again.",
+        "Couldn't submit your answer. Your connection may have dropped. Your text is still here, so you can try again.",
       );
       setBusy(false);
     }
@@ -207,7 +210,7 @@ export default function AnswerForm({
       <h3 className="card-title">{editing ? "Edit your answer" : "Write your answer"}</h3>
       {!editing && (
         <p className="card-lede">
-          Write it yourself. Your name stays hidden until voting ends.
+          Write it yourself. Your name is shown with your answer.
         </p>
       )}
 
@@ -312,13 +315,13 @@ export default function AnswerForm({
               </p>
             )}
             <p className="hint" id="answer-name-hint">
-              Shown on your answer when voting ends. Pick something that isn&apos;t your real name;
+              Shown on your answer. Pick something that isn&apos;t your real name;
               you can change it once every {NAME_CHANGE_DAYS} days.
             </p>
           </div>
         ) : (
           <p className="hint">
-            Your name, <strong>{displayName}</strong>, is shown on your answer when voting ends.
+            Your name, <strong>{displayName}</strong>, is shown on your answer.
           </p>
         ))}
 

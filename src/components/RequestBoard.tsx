@@ -28,7 +28,6 @@ type Filter = "all" | RequestKind;
 
 export default function RequestBoard() {
   const [items, setItems] = useState<RequestItem[] | null>(null);
-  const [results, setResults] = useState<RequestItem[]>([]);
   const [failed, setFailed] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
   const now = useNow();
@@ -37,7 +36,9 @@ export default function RequestBoard() {
     const q = query(
       collection(getDb(), "requests"),
       where("moderation", "==", "ok"),
-      where("status", "in", ["open", "voting"]),
+      // Every status, so the existing index (moderation, status, createdAt) still
+      // serves this. Fires stay open now; Top and Trending will add their own indexes.
+      where("status", "in", ["open", "voting", "revealed", "closed"]),
       orderBy("createdAt", "desc"),
       limit(30),
     );
@@ -62,27 +63,6 @@ export default function RequestBoard() {
     );
   }, []);
 
-  // Requests whose results are out. A quiet second list; if it fails, the board still works.
-  useEffect(() => {
-    const q = query(
-      collection(getDb(), "requests"),
-      where("moderation", "==", "ok"),
-      where("status", "==", "revealed"),
-      orderBy("createdAt", "desc"),
-      limit(10),
-    );
-    return onSnapshot(
-      q,
-      (snapshot) =>
-        setResults(
-          snapshot.docs
-            .map((d) => toRequestItem(d.id, d.data({ serverTimestamps: "estimate" })))
-            .filter((item): item is RequestItem => item !== null),
-        ),
-      (err) => console.error("Could not load results", err),
-    );
-  }, []);
-
   // Only offer types that have open requests right now (an empty filter makes the
   // board look dead), and only once there are enough types to be worth filtering.
   const present = new Set((items ?? []).map((r) => r.kind));
@@ -99,14 +79,12 @@ export default function RequestBoard() {
   const visible =
     items === null ? [] : items.filter((r) => activeFilter === "all" || r.kind === activeFilter);
 
-  const visibleResults = results.filter((r) => activeFilter === "all" || r.kind === activeFilter);
-
   return (
     <>
     <section aria-labelledby="open-requests">
       <div className="board-head">
         <h2 id="open-requests" className="section-title">
-          Burning now
+          New fires
         </h2>
         {items === null && (
           // Holds the filter's place while requests load, so the list does not
@@ -173,21 +151,6 @@ export default function RequestBoard() {
         </ul>
       )}
     </section>
-    {visibleResults.length > 0 && (
-      <section aria-labelledby="recent-results" className="results-section">
-        <h2 id="recent-results" className="section-title">
-          Recent fires
-        </h2>
-        <p className="section-sub">Finished fires, with their best answers.</p>
-        <ul className="request-list">
-          {visibleResults.map((r) => (
-            <li key={r.id}>
-              <RequestCard request={r} now={now} />
-            </li>
-          ))}
-        </ul>
-      </section>
-    )}
     </>
   );
 }

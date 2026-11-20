@@ -166,7 +166,7 @@ service cloud.firestore {
       //      doubles as the hidden author record until the reveal. Create-only,
       //      and keyed by the person, so a second answer is refused.
       //   2. entries/{entryId}: the public entry, accepted only if the person's
-      //      marker names this entry id. The entry never holds its author.
+      //      marker names this entry id. The entry carries its author's id and name.
       match /answerLocks/{uid} {
         // Only the person it belongs to (and moderators) can read it.
         allow read: if signedIn() && (uid == request.auth.uid || isModerator());
@@ -234,8 +234,6 @@ service cloud.firestore {
         && d.entryId is string && d.entryId.size() >= 1 && d.entryId.size() <= 40
         && d.createdAt == request.time
         && rq.moderation == 'ok'
-        && rq.status == 'open'
-        && request.time < rq.createdAt + duration.value(3, 'd')
         && rq.requesterId != request.auth.uid;
     }
 
@@ -261,43 +259,43 @@ service cloud.firestore {
     //  - within 24 hours of posting (measured from createdAt, which never changes,
     //    so editing does not restart the clock; keep in step with
     //    ENTRY_EDIT_WINDOW_HOURS in src/lib/entries.ts),
-    //  - while the request still accepts answers,
     //  - if nobody has reported the entry (a report adds an entryFlags document),
     //  - changing only name, concept, traits and traitsNorm, and stamping editedAt.
     function validEntryEdit(n, o, entryId) {
-      let rq = get(/databases/$(database)/documents/requests/$(o.requestId)).data;
       let lock = get(/databases/$(database)/documents/requests/$(o.requestId)/answerLocks/$(request.auth.uid)).data;
       return lock.entryId == entryId
         && o.moderation == 'ok'
         && n.diff(o).affectedKeys().hasOnly(['name', 'concept', 'traits', 'traitsNorm', 'editedAt'])
         && n.editedAt == request.time
         && request.time < o.createdAt + duration.value(24, 'h')
-        && request.time < rq.createdAt + duration.value(3, 'd')
         && !exists(/databases/$(database)/documents/entryFlags/$(entryId))
         && validEntryContent(n);
     }
 
-    // An entry (an answer). It never holds its author. The request it answers is
-    // looked up, so the checks below cannot be dodged by sending a different
-    // kind, different sparks, or answering after the 3-day window.
+    // An entry (an answer). It carries its author's id and chosen name from the
+    // start (fires are open, answers are not anonymous). The request it answers
+    // is looked up, so the checks below cannot be dodged by sending a different
+    // kind or different sparks. There is no answer deadline.
     function validNewEntry(d, entryId) {
       let rq = get(/databases/$(database)/documents/requests/$(d.requestId)).data;
       let lock = get(/databases/$(database)/documents/requests/$(d.requestId)/answerLocks/$(request.auth.uid)).data;
       return d.keys().hasOnly([
           'requestId', 'kind', 'name', 'concept', 'traits', 'traitsNorm',
-          'sparksNorm', 'sparkKey', 'pairKeys', 'moderation', 'createdAt'
+          'sparksNorm', 'sparkKey', 'pairKeys', 'moderation', 'createdAt',
+          'authorId', 'authorName'
         ])
         && d.keys().hasAll([
           'requestId', 'kind', 'name', 'concept', 'traits', 'traitsNorm',
-          'sparksNorm', 'sparkKey', 'pairKeys', 'moderation', 'createdAt'
+          'sparksNorm', 'sparkKey', 'pairKeys', 'moderation', 'createdAt',
+          'authorId', 'authorName'
         ])
+        && d.authorId == request.auth.uid
+        && d.authorName == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.displayName
         && d.requestId is string
         && lock.authorId == request.auth.uid
         && lock.requestId == d.requestId
         && lock.entryId == entryId
         && rq.moderation == 'ok'
-        && rq.status == 'open'
-        && request.time < rq.createdAt + duration.value(3, 'd')
         && rq.requesterId != request.auth.uid
         && d.kind == rq.kind
         && d.sparkKey == rq.sparkKey

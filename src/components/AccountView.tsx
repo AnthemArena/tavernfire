@@ -99,7 +99,7 @@ function NameCard({
       </p>
       <p className="hint">
         {displayName
-          ? "Shown next to your requests, and on your answers when voting ends."
+          ? "Shown next to your fires and on your answers."
           : "You'll be asked for one when you post your first request. You can also pick it here."}
       </p>
 
@@ -327,7 +327,7 @@ function MyAnswers({ uid }: { uid: string }) {
                 <div className="meta">
                   <span className="badge">{kindLabel(r.request.kind)}</span>
                   <span>
-                    {r.unfinished ? "Open the request to send it again" : answerStatus(r.request, r.entry, now)}
+                    {r.unfinished ? "Open the request to send it again" : answerStatus(r.entry, now)}
                   </span>
                 </div>
               </Link>
@@ -336,7 +336,7 @@ function MyAnswers({ uid }: { uid: string }) {
         </ul>
       )}
       <p className="hint account-note">
-        Only you can see this list. Your name is shown on an answer when voting on its request ends.
+        Only you can see this list. Your answers also appear on your public profile.
       </p>
     </section>
   );

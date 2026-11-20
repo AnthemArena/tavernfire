@@ -28,10 +28,10 @@ export default function Home() {
           <div className="how-note">
             <p className="how-note-title">How a fire works</p>
             <ol>
-              <li>Answers open for 3 days.</li>
-              <li>Voting follows, with authors hidden.</li>
-              <li>Authors are revealed and winners highlighted.</li>
-              <li>Every entry stays in the library.</li>
+              <li>Someone lights a fire with three sparks.</li>
+              <li>Anyone can answer, under their own name.</li>
+              <li>People upvote the answers they like.</li>
+              <li>Every answer stays in the library.</li>
             </ol>
           </div>
         </aside>

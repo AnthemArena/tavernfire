@@ -5,7 +5,7 @@ import Link from "next/link";
 import { collection, doc, getDoc, getDocs, limit, query, where } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useNow } from "@/lib/use-now";
-import { kindLabel, toRequestItem, type RequestItem } from "@/lib/requests";
+import { describeAge, kindLabel, toRequestItem, type RequestItem } from "@/lib/requests";
 import { rankLabel, toEntryItem, type EntryItem } from "@/lib/entries";
 import PhaseLabel from "@/components/PhaseLabel";
 import AnswerCount from "@/components/AnswerCount";
@@ -63,7 +63,7 @@ export default function ProfileView({ uid }: { uid: string }) {
 
         const entries = entrySnap.docs
           .map((d) => toEntryItem(d.id, d.data()))
-          .filter((e): e is EntryItem => e !== null && e.reveal !== null);
+          .filter((e): e is EntryItem => e !== null);
         const requests = new Map<string, RequestItem | null>();
         await Promise.all(
           [...new Set(entries.map((e) => e.requestId))].map(async (id) => {
@@ -117,9 +117,6 @@ export default function ProfileView({ uid }: { uid: string }) {
   }
 
   const { profile, fires, answers } = state;
-  const finishedFires = fires.filter((f) => f.status === "revealed").length;
-  const picks = answers.reduce((sum, a) => sum + (a.entry.reveal?.picks ?? 0), 0);
-  const favourites = answers.filter((a) => a.entry.reveal?.favourite).length;
   const since = profile.since
     ? profile.since.toLocaleDateString("en-GB", { month: "long", year: "numeric" })
     : null;
@@ -143,12 +140,9 @@ export default function ProfileView({ uid }: { uid: string }) {
           {since && <p className="profile-since">Member since {since}</p>}
         </div>
         <dl className="profile-stats">
-          <Stat label="Fires lit" value={finishedFires} />
+          <Stat label="Fires lit" value={fires.length} />
           <Stat label="Answers" value={answers.length} />
-          <Stat label="Picks earned" value={picks} />
-          <Stat label="Favourites" value={favourites} gold />
         </dl>
-        <p className="profile-note">Counts include only fires that have finished voting.</p>
       </aside>
 
       <section className="profile-content" aria-label="Fires and answers">
@@ -163,9 +157,7 @@ export default function ProfileView({ uid }: { uid: string }) {
 
         {tab === "answers" ? (
           answers.length === 0 ? (
-            <p className="empty">
-              No answers to show yet. Answers appear here once voting on a fire has ended.
-            </p>
+            <p className="empty">No answers yet.</p>
           ) : (
             <ul className="request-list">
               {answers.map(({ entry, request }) => {
@@ -185,11 +177,9 @@ export default function ProfileView({ uid }: { uid: string }) {
                       <p className="my-answer-name">{entry.name}</p>
                       <div className="meta">
                         <span className="badge">{kindLabel(request.kind)}</span>
+                        {entry.createdAt && <span>Posted {describeAge(entry.createdAt, now)}</span>}
                         {r?.favourite && <span className="badge badge-favourite">Community favourite</span>}
                         {r?.rank != null && <span className="badge badge-rank">{rankLabel(r.rank, r.tied)}</span>}
-                        <span>
-                          {r?.picks ?? 0} {r?.picks === 1 ? "pick" : "picks"}
-                        </span>
                       </div>
                     </Link>
                   </li>
@@ -228,11 +218,11 @@ export default function ProfileView({ uid }: { uid: string }) {
   );
 }
 
-function Stat({ label, value, gold }: { label: string; value: number; gold?: boolean }) {
+function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="profile-stat">
       <dt>{label}</dt>
-      <dd className={gold ? "profile-stat-gold" : undefined}>{value}</dd>
+      <dd>{value}</dd>
     </div>
   );
 }

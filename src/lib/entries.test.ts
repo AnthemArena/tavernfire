@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
-import { ANSWER_WINDOW_DAYS, VOTING_WINDOW_DAYS } from "./requests.ts";
+import { VOTING_WINDOW_DAYS } from "./requests.ts";
 import {
   ENTRY_EDIT_WINDOW_HOURS,
   answerMarkerPath,
@@ -60,6 +60,7 @@ test("toEntryItem rejects malformed data and tolerates missing optional fields",
     name: "n",
     concept: "c",
     traits: [],
+    author: null,
     reveal: null,
   });
 });
@@ -93,13 +94,18 @@ test("your own entry is pinned first", () => {
   assert.deepEqual(out.map((x) => x.id), ["b", "a"]);
 });
 
-test("the edit window is 24 hours from posting, capped by when answers close", () => {
+test("the edit window is 24 hours from posting", () => {
   const posted = new Date("2026-11-18T10:00:00Z");
-  const farClose = new Date("2026-11-21T10:00:00Z");
-  assert.equal(editableUntil({ createdAt: posted }, farClose)?.toISOString(), "2026-11-19T10:00:00.000Z");
-  const soonClose = new Date("2026-11-18T12:00:00Z");
-  assert.equal(editableUntil({ createdAt: posted }, soonClose)?.toISOString(), "2026-11-18T12:00:00.000Z");
-  assert.equal(editableUntil({ createdAt: null }, farClose), null);
+  assert.equal(editableUntil({ createdAt: posted })?.toISOString(), "2026-11-19T10:00:00.000Z");
+  assert.equal(editableUntil({ createdAt: null }), null);
+});
+
+test("toEntryItem reads the author when an entry carries one", () => {
+  const item = toEntryItem("a", {
+    name: "n", concept: "c", requestId: "r", authorId: "u1", authorName: "Marrow Fen",
+  });
+  assert.deepEqual(item?.author, { id: "u1", name: "Marrow Fen" });
+  assert.equal(toEntryItem("a", { name: "n", concept: "c", requestId: "r", authorId: "u1" })?.author, null);
 });
 
 test("edit time left reads naturally", () => {
@@ -120,13 +126,11 @@ test("the entry edit window in firestore.rules matches ENTRY_EDIT_WINDOW_HOURS",
   for (const h of hours) assert.equal(h, ENTRY_EDIT_WINDOW_HOURS);
 });
 
-test("the answer and voting windows in firestore.rules match requests.ts", () => {
+// Fires are open, so answers have no deadline in the rules. Only the ballot rule
+// (kept for duels) still has a day window.
+test("the voting window in firestore.rules matches requests.ts, and answers have no deadline", () => {
   const days = [...rules.matchAll(/createdAt \+ duration\.value\((\d+), 'd'\)/g)].map((m) => Number(m[1]));
-  assert.ok(days.length > 0, "no day window found in firestore.rules");
-  assert.deepEqual(
-    [...new Set(days)].sort((a, b) => a - b),
-    [ANSWER_WINDOW_DAYS, VOTING_WINDOW_DAYS],
-  );
+  assert.deepEqual([...new Set(days)], [VOTING_WINDOW_DAYS]);
 });
 
 test("rankLabel gives ordinals and marks shared ranks", () => {

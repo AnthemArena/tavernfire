@@ -157,6 +157,22 @@ export function describeUntil(until: Date, now: Date): string {
   return "under an hour";
 }
 
+/** "today", "1 day ago", "3 days ago": how long ago something was posted. */
+export function describeAge(at: Date, now: Date): string {
+  const hour = 60 * 60 * 1000;
+  const day = 24 * hour;
+  const ms = Math.max(0, now.getTime() - at.getTime());
+  if (ms < hour) return "just now";
+  if (ms < day) {
+    const hours = Math.floor(ms / hour);
+    return hours === 1 ? "1 hour ago" : `${hours} hours ago`;
+  }
+  const days = Math.floor(ms / day);
+  if (days < 60) return days === 1 ? "1 day ago" : `${days} days ago`;
+  const months = Math.floor(days / 30);
+  return months < 24 ? `${months} months ago` : `${Math.floor(days / 365)} years ago`;
+}
+
 /** The short status line on cards and request pages. */
 export function describePhase(r: Pick<RequestItem, "status" | "createdAt">, now: Date): string {
   switch (displayPhase(r, now)) {

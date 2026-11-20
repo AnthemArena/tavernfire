@@ -15,6 +15,13 @@ export const advanceLifecycle = onSchedule(
     retryCount: 0,
   },
   async () => {
+    // Paused: ordinary fires no longer close or go to a vote (they stay open and
+    // are upvoted). The code stays for duels. Set LIFECYCLE_ENABLED=true in the
+    // function's environment to run it again.
+    if (process.env.LIFECYCLE_ENABLED !== "true") {
+      console.log("Lifecycle paused");
+      return;
+    }
     const report = await runLifecycle(getFirestore(), new Date());
     console.log("Lifecycle pass", JSON.stringify(report));
   },

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
+import Link from "next/link";
 import {
   describeEditTimeLeft,
   ENTRY_EDIT_WINDOW_HOURS,
@@ -13,11 +14,6 @@ import {
   type ReportReason,
 } from "@/lib/entries";
 import AnswerForm from "@/components/AnswerForm";
-
-// While a request is open or in voting, this card must never receive or render an
-// author name, an author id or a vote total, not even in hidden text or aria-labels.
-// Those arrive only after the reveal, through the `result` prop (which the page
-// builds from the entry's reveal data, present only once results are out).
 
 function ReportForm({ entryId, onClose }: { entryId: string; onClose: () => void }) {
   const { user } = useAuth();
@@ -115,9 +111,6 @@ export default function EntryCard({
   reported,
   now,
   editUntil,
-  answersClosed,
-  voting,
-  result,
 }: {
   entry: EntryItem;
   isMine: boolean;
@@ -125,12 +118,6 @@ export default function EntryCard({
   now: Date;
   /** When the author's edit window ends; null if it is not known yet. */
   editUntil: Date | null;
-  /** True once the request has stopped accepting answers. */
-  answersClosed: boolean;
-  /** Present when this person can pick favourites (signed in, verified, voting open). */
-  voting?: { picked: boolean; atCap: boolean; busy: boolean; onToggle: () => void };
-  /** Present once the results are revealed. */
-  result?: { rankText: string | null; picks: number; favourite: boolean; authorName: string | null };
 }) {
   const { user } = useAuth();
   const [reporting, setReporting] = useState(false);
@@ -181,8 +168,6 @@ export default function EntryCard({
           {entry.name}
         </h3>
         {isMine && <span className="badge badge-mine">Your entry</span>}
-        {result?.favourite && <span className="badge badge-favourite">Community favourite</span>}
-        {result?.rankText && <span className="badge badge-rank">{result.rankText}</span>}
       </div>
 
       <p className="entry-concept">{entry.concept}</p>
@@ -197,46 +182,15 @@ export default function EntryCard({
         </ul>
       )}
 
-      {voting && !isMine && (
-        <div className="entry-pick">
-          <button
-            type="button"
-            className={voting.picked ? "btn btn-picked" : "btn btn-outline"}
-            aria-pressed={voting.picked}
-            aria-disabled={voting.busy || (voting.atCap && !voting.picked) ? true : undefined}
-            aria-describedby={voting.atCap && !voting.picked ? `pick-hint-${entry.id}` : undefined}
-            onClick={() => {
-              if (voting.busy || (voting.atCap && !voting.picked)) return;
-              voting.onToggle();
-            }}
-          >
-            {voting.picked ? "Picked" : "Pick as a favourite"}
-          </button>
-          {voting.atCap && !voting.picked && (
-            <span className="hint" id={`pick-hint-${entry.id}`}>
-              All 3 picks used. Un-pick one to choose this.
-            </span>
-          )}
-        </div>
-      )}
-
       <div className="entry-foot">
         <span className="entry-anon">
-          {result
-            ? isMine
-              ? null
-              : `Written by ${result.authorName ?? "a Tavernfire member"}`
-            : isMine
-              ? null
-              : "Author hidden"}
-          {result && (result.picks > 0 || result.rankText) && (
-            <span className="entry-picks">
-              {isMine ? "" : " · "}
-              {result.picks} {result.picks === 1 ? "pick" : "picks"}
-            </span>
+          {entry.author && !isMine && (
+            <>
+              by <Link href={`/profile/${entry.author.id}`}>{entry.author.name}</Link>
+            </>
           )}
           {entry.edited && (
-            <span className="entry-edited">{isMine ? "Edited" : " · Edited"}</span>
+            <span className="entry-edited">{isMine || !entry.author ? "Edited" : " · Edited"}</span>
           )}
           {isMine && (
             <span className="entry-saved" role="status">
@@ -260,9 +214,7 @@ export default function EntryCard({
             </button>
           ) : (
             <span className="entry-anon">
-              {answersClosed
-                ? "Answers have closed, so this entry is locked."
-                : `Entries are locked ${ENTRY_EDIT_WINDOW_HOURS} hours after posting.`}
+              {`Entries are locked ${ENTRY_EDIT_WINDOW_HOURS} hours after posting.`}
             </span>
           ))}
 

@@ -77,7 +77,23 @@ With the emulators and `npm run dev` running:
 
 Policy: ids never change, and a launched category is never removed (the app skips requests whose type it does not know, so removing one would make them vanish). Renaming changes only the label. Every category uses the same answer shape (name, description, optional tags); only the wording differs. The post form shows a radio list up to four categories and a grouped drop-down from five (`COMPACT_PICKER_FROM`).
 
-## Picking favourites (voting)
+## Open fires (current design, from 2026-11-20)
+
+Ordinary fires never close. Anyone signed in can answer at any time; answers carry the
+author's id and chosen name from the start (`authorId`, `authorName` on `entries`, checked
+by the rules against the person's profile); there is no reveal. Upvotes and Stoke are next
+(see the project plan). The sections below describe the earlier blind-voting design: that
+code (lifecycle function, ballots, ranking, results screens) is kept for duels but is not
+used by ordinary fires.
+
+- The lifecycle function is **paused**: it logs "Lifecycle paused" and does nothing unless
+  `LIFECYCLE_ENABLED=true` is set in its environment. Redeploy it with
+  `firebase deploy --only "firestore,functions"` before or together with the rules.
+- `NEXT_PUBLIC_ENABLE_VOTING` no longer exists; the pick buttons were removed from the app.
+- The 3-day answer window is gone from the rules. The 24-hour edit window (from the answer's
+  own `createdAt`) and the 5-day ballot rule (kept for duels) remain, and a test keeps them in step.
+
+## Picking favourites (voting, earlier design)
 
 - The pick buttons are built but not for release on their own: set `NEXT_PUBLIC_ENABLE_VOTING=false` on any live deploy until the results and reveal ship.
 - Email sign-ups get a verification email; voting needs a verified email (Google sign-ins already are). In the emulator the link appears in the Auth emulator's UI (http://localhost:4000/auth) under the user, or in the emulator terminal output.

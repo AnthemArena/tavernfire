@@ -402,6 +402,9 @@ function newEntryData(requestId: string, overrides: Record<string, unknown> = {}
     }),
     ...entrySparkFields(["Statue", "Time", "Glowing"]),
     moderation: "ok",
+    // Answers are not anonymous: the entry carries its author's id and chosen name.
+    authorId: "bob",
+    authorName: "Marrow",
     createdAt: serverTimestamp(),
     ...overrides,
   };
@@ -437,7 +440,7 @@ async function submitAnswer(
       lockData(uid, requestId, entryId, opts.lock),
     );
   }
-  await setDoc(doc(db, "entries", entryId), newEntryData(requestId, opts.entry));
+  await setDoc(doc(db, "entries", entryId), newEntryData(requestId, { authorId: uid, ...opts.entry }));
 }
 
 describe("answers: submitting", () => {
@@ -469,15 +472,15 @@ describe("answers: submitting", () => {
     await assertSucceeds(submitAnswer(carol, "carol", "r1", "e3"));
   });
 
-  test("answers are refused after the 3-day window", async () => {
+  test("fires stay open: an answer is accepted long after the fire was lit", async () => {
     await seedRequest("r1");
     await env.withSecurityRulesDisabled(async (ctx) => {
       await updateDoc(doc(ctx.firestore(), "requests", "r1"), {
-        createdAt: new Date(Date.now() - 4 * DAY),
+        createdAt: new Date(Date.now() - 40 * DAY),
       });
     });
     const db = env.authenticatedContext("bob").firestore();
-    await assertFails(submitAnswer(db, "bob", "r1", "e1"));
+    await assertSucceeds(submitAnswer(db, "bob", "r1", "e1"));
   });
 
   test("answers to a hidden request are refused", async () => {
@@ -529,13 +532,20 @@ describe("answers: submitting", () => {
     );
   });
 
-  test("the entry itself cannot carry an author, votes or extra fields", async () => {
+  test("the entry must carry its own author and name, and nothing extra", async () => {
     await seedRequest("r1");
     const db = env.authenticatedContext("bob").firestore();
     await assertSucceeds(
       setDoc(doc(db, ...answerMarkerPath("r1", "bob")), lockData("bob", "r1", "e1")),
     );
-    await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { authorId: "bob" })));
+    // Someone else's id, a name that is not the profile's name, or no author at all.
+    await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { authorId: "alice" })));
+    await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { authorName: "Somebody Else" })));
+    await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { authorName: null })));
+    const noAuthor: Record<string, unknown> = newEntryData("r1");
+    delete noAuthor.authorId;
+    delete noAuthor.authorName;
+    await assertFails(setDoc(doc(db, "entries", "e1"), noAuthor));
     await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { voteCount: 99 })));
     await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { hook: "An old field" })));
     await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { moderation: "hidden" })));
@@ -570,7 +580,7 @@ describe("answers: reading", () => {
     await env.withSecurityRulesDisabled(async (ctx) => {
       const db = ctx.firestore();
       await setDoc(doc(db, "entries", entryId), {
-        ...newEntryData("r1", overrides),
+        ...newEntryData("r1", { authorId, ...overrides }),
         createdAt: new Date(),
       });
       await setDoc(doc(db, ...answerMarkerPath("r1", authorId)), {
@@ -628,7 +638,7 @@ describe("answers: reading", () => {
 async function seedPostedAnswer(entryId: string, authorId: string, postedAt: Date, requestId = "r1") {
   await env.withSecurityRulesDisabled(async (ctx) => {
     const db = ctx.firestore();
-    await setDoc(doc(db, "entries", entryId), { ...newEntryData(requestId), createdAt: postedAt });
+    await setDoc(doc(db, "entries", entryId), { ...newEntryData(requestId, { authorId }), createdAt: postedAt });
     await setDoc(doc(db, ...answerMarkerPath(requestId, authorId)), {
       authorId,
       requestId,
@@ -666,16 +676,16 @@ describe("answers: editing your own entry", () => {
     await assertFails(updateDoc(doc(db, "entries", "e1"), edit()));
   });
 
-  test("not after answers close, even inside 24 hours", async () => {
+  test("the window runs from the answer, not the fire: an answer to an old fire is editable for 24 hours", async () => {
     await seedRequest("r1");
     await env.withSecurityRulesDisabled(async (ctx) => {
       await updateDoc(doc(ctx.firestore(), "requests", "r1"), {
-        createdAt: new Date(Date.now() - 3.5 * DAY),
+        createdAt: new Date(Date.now() - 30 * DAY),
       });
     });
     await seedPostedAnswer("e1", "bob", new Date(Date.now() - 1 * HOUR));
     const db = env.authenticatedContext("bob").firestore();
-    await assertFails(updateDoc(doc(db, "entries", "e1"), edit()));
+    await assertSucceeds(updateDoc(doc(db, "entries", "e1"), edit()));
   });
 
   test("only the author can edit, and signed-out visitors cannot", async () => {
@@ -695,7 +705,7 @@ describe("answers: editing your own entry", () => {
     await assertFails(updateDoc(ref, edit({ sparkKey: "a|b|c" })));
     await assertFails(updateDoc(ref, edit({ moderation: "hidden" })));
     await assertFails(updateDoc(ref, edit({ createdAt: new Date() })));
-    await assertFails(updateDoc(ref, edit({ authorId: "bob" })));
+    await assertFails(updateDoc(ref, edit({ authorId: "alice" })));
     await assertFails(updateDoc(ref, edit({ editedAt: new Date() })));
     await assertFails(updateDoc(ref, { name: "No editedAt stamp" }));
   });

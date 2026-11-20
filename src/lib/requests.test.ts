@@ -99,3 +99,19 @@ test("toRequestItem reads status and ballot count, defaulting safely", () => {
   assert.equal(done?.ballotCount, 7);
   assert.equal(toRequestItem("r", { ...base, status: "weird" })?.status, "open");
 });
+
+import { describeAge } from "./requests.ts";
+
+test("describeAge says how long ago something was posted", () => {
+  const now = new Date("2026-11-20T12:00:00Z");
+  const ago = (ms: number) => new Date(now.getTime() - ms);
+  const H = 3600_000;
+  assert.equal(describeAge(ago(10 * 60_000), now), "just now");
+  assert.equal(describeAge(ago(1 * H), now), "1 hour ago");
+  assert.equal(describeAge(ago(5 * H), now), "5 hours ago");
+  assert.equal(describeAge(ago(24 * H), now), "1 day ago");
+  assert.equal(describeAge(ago(72 * H), now), "3 days ago");
+  assert.equal(describeAge(ago(90 * 24 * H), now), "3 months ago");
+  // A clock a little behind the server's never gives a negative age.
+  assert.equal(describeAge(new Date(now.getTime() + H), now), "just now");
+});

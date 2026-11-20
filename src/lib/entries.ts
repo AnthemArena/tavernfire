@@ -1,7 +1,8 @@
 // Shared types and helpers for entries (the answers to a request).
 //
-// An entry never carries its author. Who wrote it lives in a separate,
-// server-guarded collection (`entryAuthors`) until the reveal. See DATA_MODEL.md.
+// An entry carries its author's id and chosen name from the moment it is posted
+// (fires are open and answers are not anonymous). Older entries, written under
+// the earlier blind-voting design, have no author until their reveal.
 
 import { normaliseSpark } from "./sparks.ts";
 import { isCategoryId } from "./categories.ts";
@@ -57,7 +58,9 @@ export type EntryItem = {
   name: string;
   concept: string;
   traits: string[];
-  /** Null until the results are revealed. Author and vote data only ever come from here. */
+  /** Who wrote it. Null on older entries that were never revealed. */
+  author: { id: string; name: string } | null;
+  /** Results from the earlier blind-voting design. Null on newer entries. */
   reveal: EntryReveal | null;
 };
 
@@ -169,6 +172,10 @@ export function toEntryItem(
     traits: Array.isArray(data.traits)
       ? (data.traits as unknown[]).filter((t): t is string => typeof t === "string")
       : [],
+    author:
+      typeof data.authorId === "string" && data.authorId !== "" && typeof data.authorName === "string" && data.authorName !== ""
+        ? { id: data.authorId, name: data.authorName }
+        : null,
     reveal: toReveal(data),
   };
 }
@@ -206,14 +213,12 @@ export function orderForViewer<T extends { id: string }>(
 }
 
 /**
- * The moment the author's edit window ends: 24 hours after posting, but never
- * later than when the request stops accepting answers. Null if the posting time
- * is not known yet.
+ * The moment the author's edit window ends: 24 hours after posting. Null if the
+ * posting time is not known yet.
  */
-export function editableUntil(entry: Pick<EntryItem, "createdAt">, answersCloseAt: Date): Date | null {
+export function editableUntil(entry: Pick<EntryItem, "createdAt">): Date | null {
   if (!entry.createdAt) return null;
-  const windowEnd = entry.createdAt.getTime() + ENTRY_EDIT_WINDOW_HOURS * 60 * 60 * 1000;
-  return new Date(Math.min(windowEnd, answersCloseAt.getTime()));
+  return new Date(entry.createdAt.getTime() + ENTRY_EDIT_WINDOW_HOURS * 60 * 60 * 1000);
 }
 
 /** "23 hours left", "45 min left", or null when the window is over. */
