@@ -606,6 +606,10 @@ a:hover {
   border: 1px solid var(--spark-border);
   border-radius: 8px;
   padding: 6px 14px;
+  /* A 30-letter spark is wider than a phone card. It may break inside the chip, but never leave the card. */
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .badge {
