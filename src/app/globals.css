@@ -1799,6 +1799,9 @@ a:hover {
   overflow-wrap: anywhere;
 }
 .lit-by-bio {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
   margin: 0 0 12px 44px;
   font-size: 14px;
   line-height: 1.5;
@@ -1806,4 +1809,35 @@ a:hover {
   white-space: pre-line;
   overflow-wrap: anywhere;
   max-width: 60ch;
+}
+
+/* Ranks */
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 14px;
+}
+.rank-badge img {
+  flex: none;
+}
+.rank-progress {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+.rank-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--chip);
+  overflow: hidden;
+}
+.rank-bar-fill {
+  height: 100%;
+  background: var(--accent);
+}
+.rank-progress .hint {
+  margin: 0;
 }

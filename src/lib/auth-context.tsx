@@ -60,6 +60,8 @@ type AuthContextValue = {
   chooseAvatar: (avatar: AvatarId) => Promise<void>;
   /** The person's "about me" text (empty if none). */
   bio: string;
+  /** The person's experience points. */
+  xp: number;
   /** Save the "about me" text. Throws a BioError with a message to show. */
   chooseBio: (bio: string) => Promise<void>;
   /** True until Firebase has told us whether someone is signed in. */
@@ -180,6 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       avatarChangedAt: profile.avatarChangedAt,
       chooseAvatar,
       bio: profile.bio,
+      xp: profile.xp,
       chooseBio,
       loading,
       signInWithGoogle,
@@ -188,7 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sendPasswordReset,
       signOut,
     }),
-    [user, emailVerified, resendVerification, refreshVerification, profile.displayName, profile.nameChangedAt, profile.avatar, profile.avatarChangedAt, profile.bio, chooseName, chooseAvatar, chooseBio, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, sendPasswordReset, signOut],
+    [user, emailVerified, resendVerification, refreshVerification, profile.displayName, profile.nameChangedAt, profile.avatar, profile.avatarChangedAt, profile.bio, profile.xp, chooseName, chooseAvatar, chooseBio, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, sendPasswordReset, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
+import { RankBadge } from "@/components/RankBadge";
 import { useRouter } from "next/navigation";
 import { deleteDoc, doc, getDoc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import { useAuth } from "@/lib/auth-context";
@@ -43,6 +44,7 @@ export default function RequestView({ id }: { id: string }) {
   const [needVerify, setNeedVerify] = useState(false);
   const [stokeError, setStokeError] = useState<string | null>(null);
   const [lighterBio, setLighterBio] = useState("");
+  const [lighterXp, setLighterXp] = useState(0);
   const lighterId = state.status === "ready" ? state.request.requesterId : "";
   useDocumentTitle(state.status === "ready" ? state.request.sparks.join(", ") : null);
 
@@ -53,7 +55,10 @@ export default function RequestView({ id }: { id: string }) {
     getDoc(doc(getDb(), "users", lighterId))
       .then((snap) => {
         const bio = snap.data()?.bio;
-        if (!cancelled) setLighterBio(typeof bio === "string" ? bio : "");
+        const xp = snap.data()?.xp;
+        if (cancelled) return;
+        setLighterBio(typeof bio === "string" ? bio : "");
+        setLighterXp(typeof xp === "number" ? xp : 0);
       })
       .catch(() => {});
     return () => {
@@ -176,7 +181,12 @@ export default function RequestView({ id }: { id: string }) {
           , {describeAge(r.createdAt, now)}
         </span>
       </p>
-      {lighterBio && <p className="lit-by-bio">{lighterBio}</p>}
+      {lighterId && (
+        <p className="lit-by-bio">
+          <RankBadge xp={lighterXp} size={16} />
+          {lighterBio && <span className="lit-by-bio-text">{lighterBio}</span>}
+        </p>
+      )}
 
       <div className="meta">
         {isOwnFire ? (

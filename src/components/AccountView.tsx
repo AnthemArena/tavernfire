@@ -17,6 +17,7 @@ import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { useNow } from "@/lib/use-now";
 import Avatar from "@/components/Avatar";
+import { RankProgress } from "@/components/RankBadge";
 import { AVATARS, PACKS, nextAvatarChange, type AvatarId, type PackId } from "@/lib/avatars";
 import { AvatarError } from "@/lib/display-name";
 import { BIO_MAX, BioError } from "@/lib/bio";
@@ -29,7 +30,7 @@ import AnswerCount from "@/components/AnswerCount";
 
 /** Your own page: your name, and the requests you have posted. Only you see it. */
 export default function AccountView() {
-  const { user, displayName, bio, chooseBio, avatar, avatarChangedAt, chooseAvatar, chooseName, nameChangeOn, signOut, loading, emailVerified, resendVerification, refreshVerification } =
+  const { user, displayName, xp, bio, chooseBio, avatar, avatarChangedAt, chooseAvatar, chooseName, nameChangeOn, signOut, loading, emailVerified, resendVerification, refreshVerification } =
     useAuth();
 
   if (loading) return <p className="muted page-note">Loading…</p>;
@@ -53,6 +54,15 @@ export default function AccountView() {
         chooseName={chooseName}
         waitUntil={displayName ? nameChangeOn() : null}
       />
+      <section className="card" aria-labelledby="rank-heading">
+        <h2 className="card-title" id="rank-heading">
+          Your rank
+        </h2>
+        <RankProgress xp={xp} />
+        <p className="hint">
+          You earn XP by lighting fires and answering, and more when people upvote your answers or stoke your fires.
+        </p>
+      </section>
       <AvatarCard
         name={displayName ?? user.email ?? "You"}
         current={avatar}

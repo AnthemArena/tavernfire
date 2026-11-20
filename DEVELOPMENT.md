@@ -211,3 +211,11 @@ Members pick a portrait from the art packs on the account page. The pictures are
 ## Bios
 
 `users/{uid}.bio`: plain text, at most 280 characters, no web addresses (`validBio` in the rules; the same limits are in `src/lib/bio.ts` and a test keeps them in step). Written on the account page ("About you"), shown on the profile and under "Lit by" on the fire page. The fire page reads the lighter's profile when it opens, so the bio is always their current one; nothing is copied onto fires. Bios are not yet covered by moderation (reporting a profile is on the later list), which is why links are refused.
+
+## XP and ranks
+
+The points and ranks are in `src/lib/xp.ts` (5 XP for a fire, 5 for an answer, 10 for each upvote on your answers, 10 for each stoke on your fires; ranks at 0, 50, 150, 400 and 1000 XP). The icons are in `public/ranks`. A copy of the file lives in `functions/src/xp.ts`: after changing it run `npm run sync:functions` (a test fails if the copies differ).
+
+The `xpFromFires` and `xpFromAnswers` functions recount a member's XP from their visible posts whenever a post appears, goes away, is hidden or restored, or its stoke or upvote count changes, and save `xp` and `level` on `users/{uid}`. Because it recounts, hidden answers stop counting and running twice is harmless. The app can't write these two fields (rules test). To change the points later, edit the table, sync, deploy; XP then corrects itself as members' posts change (to correct everyone at once, a small script can recompute all members).
+
+Ranks show on the profile, the account page ("Your rank", with a progress bar) and the fire page. They are not on every card or answer byline yet: that would mean copying the level onto each post and updating it like avatars.

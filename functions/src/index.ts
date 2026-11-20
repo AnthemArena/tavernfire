@@ -8,6 +8,7 @@ import { recountUpvotes } from "./upvotes.ts";
 import { recomputeFireAnswers } from "./answers.ts";
 import { applyModeration, isModerationAction } from "./moderation.ts";
 import { avatarOf, syncAvatar } from "./avatars.ts";
+import { recomputeXp, xpMayChange } from "./xpCount.ts";
 import { recountSparks, sparksChanged, sparksOf } from "./sparks.ts";
 import { addTrend, recountStokes, STOKE_WEIGHT, UPVOTE_WEIGHT } from "./trending.ts";
 
@@ -100,6 +101,30 @@ export const propagateAvatar = onDocumentWritten(
     if (before === after) return;
     const changed = await syncAvatar(getFirestore(), event.params.uid, after);
     console.log("Avatar synced", event.params.uid, changed);
+  },
+);
+
+// Keep members' XP and level in step with their fires (stokes) and answers (upvotes).
+// The xp function recounts from the posts, so these can run any number of times.
+export const xpFromFires = onDocumentWritten(
+  { document: "requests/{requestId}", region: "europe-west2", maxInstances: 5 },
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    if (!xpMayChange(before, after, "requesterId", "stokeCount")) return;
+    const owners = new Set([before?.requesterId, after?.requesterId].filter((o): o is string => typeof o === "string"));
+    for (const uid of owners) await recomputeXp(getFirestore(), uid);
+  },
+);
+
+export const xpFromAnswers = onDocumentWritten(
+  { document: "entries/{entryId}", region: "europe-west2", maxInstances: 5 },
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    if (!xpMayChange(before, after, "authorId", "upvoteCount")) return;
+    const owners = new Set([before?.authorId, after?.authorId].filter((o): o is string => typeof o === "string"));
+    for (const uid of owners) await recomputeXp(getFirestore(), uid);
   },
 );
 

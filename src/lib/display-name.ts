@@ -13,9 +13,11 @@ export type Profile = {
   avatarChangedAt: Date | null;
   /** The member's "about me" text; empty when they have not written one. */
   bio: string;
+  /** Experience points, kept by a Cloud Function (never written by the app). */
+  xp: number;
 };
 
-export const EMPTY_PROFILE: Profile = { displayName: null, nameKey: null, nameChangedAt: null, avatar: null, avatarChangedAt: null, bio: "" };
+export const EMPTY_PROFILE: Profile = { displayName: null, nameKey: null, nameChangedAt: null, avatar: null, avatarChangedAt: null, bio: "", xp: 0 };
 
 export async function loadProfile(uid: string): Promise<Profile> {
   const snap = await getDoc(doc(getDb(), "users", uid));
@@ -28,6 +30,7 @@ export async function loadProfile(uid: string): Promise<Profile> {
     avatar: isAvatarId(d.avatar) ? d.avatar : null,
     avatarChangedAt: d.avatarChangedAt?.toDate?.() ?? null,
     bio: typeof d.bio === "string" ? d.bio : "",
+    xp: typeof d.xp === "number" && d.xp > 0 ? d.xp : 0,
   };
 }
 

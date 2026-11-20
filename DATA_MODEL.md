@@ -26,7 +26,7 @@ Require three distinct sparks. (Open decision: allow fewer than three?)
 ## Collections
 
 ### `users/{uid}` (public profile)
-- `displayName` (null until chosen), `nameKey`, `nameChangedAt`, `avatar` (a preset id, absent until chosen), `avatarChangedAt`, `bio` (text up to 280 characters, no links; absent until written), `createdAt`. Nothing is copied from the Google account (no name, no photo).
+- `displayName` (null until chosen), `nameKey`, `nameChangedAt`, `avatar` (a preset id, absent until chosen), `avatarChangedAt`, `xp` and `level` (written only by Cloud Functions), `bio` (text up to 280 characters, no links; absent until written), `createdAt`. Nothing is copied from the Google account (no name, no photo).
 - The name is chosen the first time someone posts a request: 3 to 20 characters (letters, numbers, spaces and `. _ ' -`), unique ignoring capitals, spaces and punctuation, reserved words refused, changeable once every 7 days. `requests.requesterName` must equal it (rules check).
 - `displayNames/{nameKey}`: `{ uid, displayName, createdAt }`, one per name; looked up one at a time by signed-in people, never listed. Claim order: create the lookup, update the profile, delete the old lookup. Known gap: unfinished claims can park a name; a Cloud Function replaces this later.
 - `bio` (optional)

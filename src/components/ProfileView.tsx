@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
+import { RankBadge } from "@/components/RankBadge";
 import { isAvatarId, type AvatarId } from "@/lib/avatars";
 import { collection, doc, getDoc, getDocs, limit, query, where } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
@@ -16,7 +17,7 @@ import AnswerCount from "@/components/AnswerCount";
 
 const LIST_LIMIT = 100;
 
-type Profile = { name: string; since: Date | null; avatar: AvatarId | null; bio: string };
+type Profile = { name: string; since: Date | null; avatar: AvatarId | null; bio: string; xp: number };
 type AnswerRow = { entry: EntryItem; request: RequestItem };
 type Loaded = { profile: Profile; fires: RequestItem[]; answers: AnswerRow[] };
 type State = { status: "loading" } | { status: "missing" } | { status: "error" } | ({ status: "ready" } & Loaded);
@@ -93,6 +94,7 @@ export default function ProfileView({ uid }: { uid: string }) {
               since: typeof created?.toDate === "function" ? created.toDate() : null,
               avatar: isAvatarId(data?.avatar) ? data.avatar : null,
               bio: typeof data?.bio === "string" ? data.bio : "",
+              xp: typeof data?.xp === "number" && data.xp > 0 ? data.xp : 0,
             },
             fires,
             answers,
@@ -142,6 +144,7 @@ export default function ProfileView({ uid }: { uid: string }) {
         <Avatar id={profile.avatar} name={profile.name} size="lg" eager />
         <div>
           <h1 className="profile-name">{profile.name}</h1>
+          <RankBadge xp={profile.xp} />
           {since && <p className="profile-since">Member since {since}</p>}
         </div>
         {profile.bio && <p className="profile-bio">{profile.bio}</p>}

@@ -1426,3 +1426,17 @@ describe("bios", () => {
     await assertSucceeds(getDoc(doc(visitor, "users", "alice")));
   });
 });
+
+describe("XP and level are only written by the server", () => {
+  test("a member cannot give themselves XP or a level", async () => {
+    const db = env.authenticatedContext("alice").firestore();
+    await assertFails(updateDoc(doc(db, "users", "alice"), { xp: 5000 }));
+    await assertFails(updateDoc(doc(db, "users", "alice"), { level: 5 }));
+    await assertFails(updateDoc(doc(db, "users", "alice"), { bio: "hi", xp: 5000 }));
+  });
+
+  test("a new profile cannot start with XP", async () => {
+    const db = env.authenticatedContext("eve5").firestore();
+    await assertFails(setDoc(doc(db, "users", "eve5"), { displayName: null, xp: 9999, createdAt: serverTimestamp() }));
+  });
+});
