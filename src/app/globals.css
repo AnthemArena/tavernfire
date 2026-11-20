@@ -1691,12 +1691,9 @@ a:hover {
 }
 .cloud-1 {
   font-size: 22px;
-  color: var(--ink);
 }
 .cloud-2 {
   font-size: 30px;
-  font-family: var(--font-display, inherit);
-  color: var(--accent);
 }
 
 /* Moderation queue */
@@ -1710,4 +1707,13 @@ a:hover {
 .moderation-reports {
   margin: 0 0 16px;
   padding-left: 20px;
+}
+
+/* Search boxes: hints look like hints, not like typed words */
+.input-spark::placeholder {
+  color: var(--muted);
+  opacity: 0.55;
+}
+.lit-by {
+  margin: 20px 0 8px;
 }

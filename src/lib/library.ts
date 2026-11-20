@@ -79,7 +79,7 @@ export function rankResults(results: LibraryResult[]): LibraryResult[] {
 
 /** The heading for a group of results, given how many sparks they share. */
 export function matchHeading(matched: number, searched: number): string {
-  if (matched >= searched) return searched === 1 ? "Fires with this spark" : "Exact matches";
+  if (matched >= searched) return searched === 1 ? "Fires with this spark" : "Fires with these sparks";
   if (matched === 2) return "Share two of your sparks";
   return "Share one of your sparks";
 }

@@ -24,7 +24,14 @@ export default function LibraryView() {
   const searched = parseSparks(params.get("s") ?? "");
   const searchedKey = searched.join(",");
 
-  const [boxes, setBoxes] = useState<string[]>(() => [0, 1, 2].map((i) => searched[i] ?? ""));
+  // What is in the three boxes. After a search (or a click on a spark in the cloud) the boxes show
+  // what was searched; typing replaces them for as long as the address stays the same.
+  const [typedBoxes, setTypedBoxes] = useState<{ key: string; boxes: string[] } | null>(null);
+  const boxes =
+    typedBoxes && typedBoxes.key === searchedKey
+      ? typedBoxes.boxes
+      : [0, 1, 2].map((i) => (searched[i] ? displayWord(searched[i]) : ""));
+  const setBoxes = (update: (cur: string[]) => string[]) => setTypedBoxes({ key: searchedKey, boxes: update(boxes) });
   const [state, setState] = useState<State>({ status: "idle" });
   const { focused, setFocused, suggestions, typed } = useSparkSuggestions(boxes);
 
@@ -61,7 +68,10 @@ export default function LibraryView() {
   function onSubmit(event: FormEvent) {
     event.preventDefault();
     const sparks = parseSparks(boxes);
-    if (sparks.length === 0) return;
+    if (sparks.length === 0) {
+      document.getElementById("library-spark-0")?.focus();
+      return;
+    }
     router.push(`/library?s=${encodeURIComponent(sparks.join(","))}`);
   }
 
@@ -88,11 +98,14 @@ export default function LibraryView() {
   return (
     <>
       <form onSubmit={onSubmit} noValidate className="library-search">
-        <div className="form-row">
+        <p className="label" id="library-sparks-label">
+          Sparks
+        </p>
+        <div className="form-row" role="group" aria-labelledby="library-sparks-label">
           {boxes.map((value, index) => (
             <div className="field field-spark" key={index}>
-              <label className="label" htmlFor={`library-spark-${index}`}>
-                {["Spark one", "Spark two", "Spark three"][index]}
+              <label className="visually-hidden" htmlFor={`library-spark-${index}`}>
+                Spark {index + 1}
               </label>
               <input
                 id={`library-spark-${index}`}
@@ -125,13 +138,15 @@ export default function LibraryView() {
             ))}
           </div>
         )}
-        <button type="submit" className="btn btn-primary" disabled={parseSparks(boxes).length === 0}>
-          Search the library
+        <button type="submit" className="btn btn-primary">
+          Search
         </button>
-        <p className="hint">Use one, two or three single words.</p>
+        <p className="hint">Search one, two or three sparks.</p>
       </form>
 
       {!searching && cloud.length > 0 && (
+        <>
+        <h2 className="library-heading">Popular sparks</h2>
         <nav className="spark-cloud" aria-label="Popular sparks">
           {[...cloud]
             .sort((a, b) => a.word.localeCompare(b.word, "en"))
@@ -146,6 +161,7 @@ export default function LibraryView() {
               </Link>
             ))}
         </nav>
+        </>
       )}
 
       {loading && (
@@ -165,8 +181,7 @@ export default function LibraryView() {
       )}
       {results && results.length === 0 && searching && (
         <p className="empty">
-          No fires for {searched.map(displayWord).join(", ")} yet. <Link href="/fires/new">Light one</Link> and
-          start the conversation.
+          No fires with those sparks yet. <Link href="/fires/new">Light one</Link>.
         </p>
       )}
 
@@ -193,6 +208,7 @@ export default function LibraryView() {
                     </div>
                     <div className="meta">
                       <span className="badge">{getCategory(fire.kind).label}</span>
+                      <span>Lit by {fire.requesterName}</span>
                       {fire.stokeCount > 0 && (
                         <span>
                           {fire.stokeCount} {fire.stokeCount === 1 ? "stoke" : "stokes"}

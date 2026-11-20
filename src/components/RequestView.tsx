@@ -14,7 +14,6 @@ import { useDocumentTitle } from "@/lib/use-document-title";
 import Answers from "@/components/Answers";
 import {
   describeAge,
-  kindLabel,
   toRequestItem,
   type RequestItem,
 } from "@/lib/requests";
@@ -139,7 +138,7 @@ export default function RequestView({ id }: { id: string }) {
       </div>
 
       <p className="request-ask">
-        Needed: {getCategory(r.kind).answer.needed} that fits all three sparks.
+        Needed: {getCategory(r.kind).answer.needed}.
       </p>
       {r.note && (
         <p className="request-lede">
@@ -147,11 +146,11 @@ export default function RequestView({ id }: { id: string }) {
         </p>
       )}
 
+      <p className="lit-by">
+        Lit by {r.requesterName}, {describeAge(r.createdAt, now)}
+      </p>
+
       <div className="meta">
-        <span className="badge">{kindLabel(r.kind)}</span>
-        <span>
-          Lit by {r.requesterName}, {describeAge(r.createdAt, now)}
-        </span>
         {isOwnFire ? (
           <span className="stoke-static">
             <Flame />

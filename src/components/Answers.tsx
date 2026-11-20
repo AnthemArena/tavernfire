@@ -177,8 +177,7 @@ export default function Answers({ request }: { request: RequestItem }) {
   } else if (isRequester) {
     action = (
       <p className="notice notice-plain">
-        This is your fire, so you can&apos;t answer it.
-        {list.length === 0 && " No answers yet."}
+        {list.length === 0 && "No answers yet. "}This is your fire, so you can&apos;t answer it.
       </p>
     );
   } else if (mine) {

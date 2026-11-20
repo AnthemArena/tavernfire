@@ -56,10 +56,10 @@ test("rankResults drops duplicates and fires matching nothing", () => {
 });
 
 test("headings", () => {
-  assert.equal(matchHeading(3, 3), "Exact matches");
+  assert.equal(matchHeading(3, 3), "Fires with these sparks");
   assert.equal(matchHeading(2, 3), "Share two of your sparks");
   assert.equal(matchHeading(1, 3), "Share one of your sparks");
-  assert.equal(matchHeading(2, 2), "Exact matches");
+  assert.equal(matchHeading(2, 2), "Fires with these sparks");
   assert.equal(matchHeading(1, 2), "Share one of your sparks");
   assert.equal(matchHeading(1, 1), "Fires with this spark");
 });
