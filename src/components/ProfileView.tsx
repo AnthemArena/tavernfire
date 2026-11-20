@@ -5,6 +5,8 @@ import Link from "next/link";
 import { collection, doc, getDoc, getDocs, limit, query, where } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useNow } from "@/lib/use-now";
+import { useAuth } from "@/lib/auth-context";
+import { useDocumentTitle } from "@/lib/use-document-title";
 import { describeAge, kindLabel, toRequestItem, type RequestItem } from "@/lib/requests";
 import { rankLabel, toEntryItem, type EntryItem } from "@/lib/entries";
 import PhaseLabel from "@/components/PhaseLabel";
@@ -20,8 +22,10 @@ type State = { status: "loading" } | { status: "missing" } | { status: "error" }
 /** Someone's public page: their name, their numbers, their fires and their answers. */
 export default function ProfileView({ uid }: { uid: string }) {
   const [state, setState] = useState<State>({ status: "loading" });
-  const [tab, setTab] = useState<"answers" | "fires">("answers");
+  const [tab, setTab] = useState<"answers" | "fires" | null>(null);
   const now = useNow();
+  const { user } = useAuth();
+  useDocumentTitle(state.status === "ready" ? state.profile.name : null);
 
   useEffect(() => {
     let cancelled = false;
@@ -118,6 +122,9 @@ export default function ProfileView({ uid }: { uid: string }) {
 
   const { profile, fires, answers } = state;
   const upvotes = answers.reduce((sum, a) => sum + a.entry.upvoteCount, 0);
+  const isMe = user?.uid === uid;
+  // Open on the tab that has something in it.
+  const shownTab = tab ?? (answers.length === 0 && fires.length > 0 ? "fires" : "answers");
   const since = profile.since
     ? profile.since.toLocaleDateString("en-GB", { month: "long", year: "numeric" })
     : null;
@@ -143,23 +150,31 @@ export default function ProfileView({ uid }: { uid: string }) {
         <dl className="profile-stats">
           <Stat label="Fires lit" value={fires.length} />
           <Stat label="Answers" value={answers.length} />
-          <Stat label="Upvotes received" value={upvotes} />
+          <Stat label="Upvotes" value={upvotes} />
         </dl>
       </aside>
 
       <section className="profile-content" aria-label="Fires and answers">
         <div className="tabs" role="group" aria-label="Profile sections">
-          <button type="button" className="tab" aria-pressed={tab === "answers"} onClick={() => setTab("answers")}>
+          <button type="button" className="tab" aria-pressed={shownTab === "answers"} onClick={() => setTab("answers")}>
             Answers
           </button>
-          <button type="button" className="tab" aria-pressed={tab === "fires"} onClick={() => setTab("fires")}>
+          <button type="button" className="tab" aria-pressed={shownTab === "fires"} onClick={() => setTab("fires")}>
             Fires
           </button>
         </div>
 
-        {tab === "answers" ? (
+        {shownTab === "answers" ? (
           answers.length === 0 ? (
-            <p className="empty">No answers yet.</p>
+            <p className="empty">
+              {isMe ? (
+                <>
+                  You haven&apos;t answered any fires yet. <Link href="/">Browse fires</Link>
+                </>
+              ) : (
+                `${profile.name} hasn't answered any fires yet.`
+              )}
+            </p>
           ) : (
             <ul className="request-list">
               {answers.map(({ entry, request }) => {
@@ -193,7 +208,15 @@ export default function ProfileView({ uid }: { uid: string }) {
             </ul>
           )
         ) : fires.length === 0 ? (
-          <p className="empty">No fires lit yet.</p>
+          <p className="empty">
+            {isMe ? (
+              <>
+                You haven&apos;t lit a fire yet. <Link href="/fires/new">Light one</Link>
+              </>
+            ) : (
+              `${profile.name} hasn't lit a fire yet.`
+            )}
+          </p>
         ) : (
           <ul className="request-list">
             {fires.map((r) => (

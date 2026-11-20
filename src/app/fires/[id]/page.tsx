@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import RequestView from "@/components/RequestView";
 
 export const metadata: Metadata = {
-  title: "Request – Tavernfire",
+  title: "Fire – Tavernfire",
 };
 
 export default function RequestPage(props: PageProps<"/fires/[id]">) {

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useDocumentTitle } from "@/lib/use-document-title";
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -70,6 +71,7 @@ export default function SignInForm() {
   }
 
   const isSignUp = mode === "signup";
+  useDocumentTitle(isSignUp ? "Create account" : "Sign in");
 
   return (
     <div className="card auth-card">

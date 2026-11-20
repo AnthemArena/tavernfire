@@ -76,10 +76,16 @@ function AvatarMenu() {
       </button>
       {open && (
         <div className="avatar-panel" id="avatar-panel">
-          <p className="avatar-name">{displayName ?? "No name yet"}</p>
+          {displayName ? (
+            <p className="avatar-name">{displayName}</p>
+          ) : (
+            <Link href="/account" className="avatar-item" onClick={() => setOpen(false)}>
+              Choose a display name
+            </Link>
+          )}
           {user && displayName && (
             <Link href={`/profile/${user.uid}`} className="avatar-item" onClick={() => setOpen(false)}>
-              View profile
+              Your profile
             </Link>
           )}
           <Link href="/account" className="avatar-item" onClick={() => setOpen(false)}>

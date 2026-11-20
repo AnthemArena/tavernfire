@@ -9,6 +9,7 @@ import { shownStokes, stokeId, type PendingStoke } from "@/lib/stokes";
 import VerifyEmailNotice from "@/components/VerifyEmailNotice";
 import { getDb } from "@/lib/firebase";
 import { useNow } from "@/lib/use-now";
+import { useDocumentTitle } from "@/lib/use-document-title";
 import PhaseLabel from "@/components/PhaseLabel";
 import Answers from "@/components/Answers";
 import {
@@ -40,6 +41,7 @@ export default function RequestView({ id }: { id: string }) {
   const [pending, setPending] = useState<PendingStoke | undefined>(undefined);
   const [needVerify, setNeedVerify] = useState(false);
   const [stokeError, setStokeError] = useState<string | null>(null);
+  useDocumentTitle(state.status === "ready" ? state.request.sparks.join(", ") : null);
 
   // Whether I have stoked this fire. Only I can read it.
   useEffect(() => {
@@ -125,7 +127,7 @@ export default function RequestView({ id }: { id: string }) {
 
       <p className="kicker">The three sparks</p>
       <h1 className="visually-hidden">
-        Request: {r.sparks.join(", ")}
+        Fire: {r.sparks.join(", ")}
       </h1>
       <div className="sparks sparks-large" aria-hidden="true">
         {r.sparks.map((s) => (
