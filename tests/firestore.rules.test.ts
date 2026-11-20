@@ -1183,6 +1183,16 @@ describe("stokes on fires", () => {
     await assertSucceeds(deleteDoc(doc(bob, "stokes", "r1_bob")));
   });
 
+  test("you can check your own stoke by id, whether or not it exists; others' stokes stay private", async () => {
+    await seedRequest("r1");
+    const bob = person("bob");
+    await assertSucceeds(getDoc(doc(bob, "stokes", "r1_bob"))); // not stoked yet: missing, but readable
+    await assertSucceeds(stoke(bob, "bob", "r1"));
+    await assertSucceeds(getDoc(doc(bob, "stokes", "r1_bob")));
+    await assertFails(getDoc(doc(person("carol"), "stokes", "r1_bob")));
+    await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), "stokes", "r1_bob")));
+  });
+
   test("you cannot stoke your own fire", async () => {
     await seedRequest("r1");
     await assertFails(stoke(person("seed-user"), "seed-user", "r1"));

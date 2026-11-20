@@ -404,7 +404,9 @@ service cloud.firestore {
     }
 
     match /stokes/{stokeId} {
-      allow read: if signedIn() && resource.data.voterId == request.auth.uid;
+      // The fire page reads your own stoke by its id; when you have not stoked, that
+      // document does not exist, so `resource` is null and must be allowed (it reveals nothing).
+      allow read: if signedIn() && (resource == null || resource.data.voterId == request.auth.uid);
       allow create: if signedIn() && validStoke(stokeId, request.resource.data);
       allow update: if false;
       allow delete: if signedIn() && resource.data.voterId == request.auth.uid;
