@@ -170,7 +170,7 @@ export default function PostRequestForm() {
             Sign in to light a fire. It takes a few seconds and you can use
             your Google account.
           </p>
-          <Link className="btn btn-primary btn-block" href="/signin">
+          <Link className="btn btn-primary btn-block" href="/signin?next=%2Ffires%2Fnew">
             Sign in to light a fire
           </Link>
         </>

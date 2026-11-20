@@ -1,5 +1,6 @@
 "use client";
 
+import { signInHref } from "@/lib/next-path";
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
@@ -37,7 +38,7 @@ function SignInButton() {
   const pathname = usePathname();
   if (pathname === "/signin") return null;
   return (
-    <Link className="btn btn-dark" href="/signin">
+    <Link className="btn btn-dark" href={signInHref(pathname)}>
       Sign in
     </Link>
   );

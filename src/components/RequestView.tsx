@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import { RankBadge } from "@/components/RankBadge";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { signInHref } from "@/lib/next-path";
 import { deleteDoc, doc, getDoc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import { useAuth } from "@/lib/auth-context";
 import { shownStokes, stokeId, type PendingStoke } from "@/lib/stokes";
@@ -37,6 +38,7 @@ export default function RequestView({ id }: { id: string }) {
   const [state, setState] = useState<State>({ status: "loading" });
   const now = useNow();
   const router = useRouter();
+  const pathname = usePathname();
   const { user, emailVerified } = useAuth();
   const uid = user?.uid ?? null;
   const [stoked, setStoked] = useState(false);
@@ -116,7 +118,7 @@ export default function RequestView({ id }: { id: string }) {
 
   async function toggleStoke() {
     if (!user) {
-      router.push("/signin");
+      router.push(signInHref(pathname));
       return;
     }
     if (!emailVerified) {

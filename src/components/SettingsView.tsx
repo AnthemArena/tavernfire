@@ -21,7 +21,7 @@ export default function SettingsView() {
       <div className="card">
         <h1 className="card-title">Settings</h1>
         <p className="card-lede">Sign in to see your settings and your fires.</p>
-        <Link className="btn btn-primary btn-block" href="/signin">
+        <Link className="btn btn-primary btn-block" href="/signin?next=%2Fsettings">
           Sign in
         </Link>
       </div>

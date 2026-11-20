@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { signInHref } from "@/lib/next-path";
 import {
   collection,
   deleteDoc,
@@ -37,6 +38,7 @@ const ANSWERS_ENABLED = process.env.NEXT_PUBLIC_ENABLE_ANSWERS !== "false";
 export default function Answers({ request }: { request: RequestItem }) {
   const { user, loading, emailVerified } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const now = useNow();
   const uid = user?.uid ?? null;
 
@@ -126,7 +128,7 @@ export default function Answers({ request }: { request: RequestItem }) {
 
   async function toggleUpvote(entry: EntryItem) {
     if (!user) {
-      router.push("/signin");
+      router.push(signInHref(pathname));
       return;
     }
     if (!emailVerified) {
@@ -169,9 +171,10 @@ export default function Answers({ request }: { request: RequestItem }) {
   } else if (!user) {
     action = (
       <p className="answers-prompt">
-        <Link className="btn btn-primary" href="/signin">
+        <Link className="btn btn-primary" href={signInHref(pathname)}>
           Sign in to answer
         </Link>
+        <span className="answers-prompt-note">You can also stoke fires and upvote answers once you are signed in.</span>
       </p>
     );
   } else if (isRequester) {

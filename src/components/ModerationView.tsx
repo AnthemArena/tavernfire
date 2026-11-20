@@ -101,7 +101,7 @@ export default function ModerationView() {
       <div className="card">
         <h1 className="card-title">Moderation</h1>
         <p className="card-lede">Sign in to continue.</p>
-        <Link className="btn btn-primary btn-block" href="/signin">
+        <Link className="btn btn-primary btn-block" href="/signin?next=%2Fmoderation">
           Sign in
         </Link>
       </div>

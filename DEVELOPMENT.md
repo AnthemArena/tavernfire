@@ -228,6 +228,13 @@ Ranks show on the profile, the settings page ("Your rank", with a progress bar) 
 - **Achievements:** the list is `src/lib/achievements.ts` (copied to `functions/src`; run `npm run sync:functions`). Once earned they are kept on the profile even if posts are later hidden. A new rank is announced as a level-up, not an achievement.
 - **Index:** notifications need the (recipientId, createdAt desc) index in `firestore.indexes.json`; deploy with the rules.
 
+## Signing in and coming back
+
+Every "Sign in" link carries the page the visitor was on as `?next=` (see `src/lib/next-path.ts`),
+so someone who taps Stoke or Upvote while signed out lands back on the same fire after signing in.
+Only a path on this site is accepted (one leading slash, never `//` or a full address), and anything
+else falls back to the home page. Toasts hold while the pointer or keyboard focus is on them.
+
 ## Settings and the one-off XP recount
 
 The settings page holds settings only (display name, rank, avatar, bio, email). Your fires and answers are on your public profile, which the page links to.

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { friendlyAuthError } from "@/lib/auth-errors";
 
-export default function SignInForm() {
+export default function SignInForm({ next = "/" }: { next?: string }) {
   const router = useRouter();
   const {
     user,
@@ -27,8 +27,8 @@ export default function SignInForm() {
 
   // Already signed in (or just finished): go back to the board.
   useEffect(() => {
-    if (!loading && user) router.replace("/");
-  }, [loading, user, router]);
+    if (!loading && user) router.replace(next);
+  }, [loading, user, router, next]);
 
   function onForgotPassword() {
     if (email.trim() === "") {

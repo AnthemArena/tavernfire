@@ -615,7 +615,7 @@ a:hover {
 }
 
 .how-note-title {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1457,7 +1457,7 @@ a:hover {
 }
 
 .profile-stat dt {
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
@@ -1921,7 +1921,7 @@ a:hover {
   gap: 2px;
 }
 .bell-time {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
 }
 .toast-icon {
@@ -1964,6 +1964,7 @@ a:hover {
   line-height: 1.4;
 }
 .toast-close {
+  position: relative;
   flex: none;
   width: 28px;
   height: 28px;
@@ -1974,6 +1975,11 @@ a:hover {
   font-size: 20px;
   line-height: 1;
   cursor: pointer;
+}
+.toast-close::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
 }
 .toast-close:hover {
   color: var(--ink);
@@ -2008,7 +2014,7 @@ a:hover {
   border: 1px solid var(--accent);
   border-radius: 999px;
   color: var(--accent);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -2039,9 +2045,15 @@ a:hover {
   padding: 10px;
 }
 .profile-stat dt {
-  font-size: 11px;
   letter-spacing: 0.04em;
 }
 .profile-stat dd {
   font-size: 24px;
+}
+
+.answers-prompt-note {
+  display: block;
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--muted);
 }
