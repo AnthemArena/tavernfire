@@ -83,7 +83,7 @@
       ]
     },
     {
-      "collectionGroup": "entries",
+      "collectionGroup": "requests",
       "queryScope": "COLLECTION",
       "fields": [
         {
@@ -95,13 +95,13 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "upvoteCount",
+          "fieldPath": "stokeCount",
           "order": "DESCENDING"
         }
       ]
     },
     {
-      "collectionGroup": "entries",
+      "collectionGroup": "requests",
       "queryScope": "COLLECTION",
       "fields": [
         {
@@ -113,13 +113,13 @@
           "arrayConfig": "CONTAINS"
         },
         {
-          "fieldPath": "upvoteCount",
+          "fieldPath": "stokeCount",
           "order": "DESCENDING"
         }
       ]
     },
     {
-      "collectionGroup": "entries",
+      "collectionGroup": "requests",
       "queryScope": "COLLECTION",
       "fields": [
         {
@@ -131,25 +131,7 @@
           "arrayConfig": "CONTAINS"
         },
         {
-          "fieldPath": "upvoteCount",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "entries",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "moderation",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "upvoteCount",
-          "order": "DESCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
+          "fieldPath": "stokeCount",
           "order": "DESCENDING"
         }
       ]

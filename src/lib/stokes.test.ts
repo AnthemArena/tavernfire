@@ -22,3 +22,17 @@ test("a request carries its stoke count, defaulting to zero", () => {
   assert.equal(toRequestItem("r", { ...base, stokeCount: 6 })?.stokeCount, 6);
   assert.equal(toRequestItem("r", { ...base, stokeCount: -2 })?.stokeCount, 0);
 });
+
+test("a request carries its top answer only when it is well formed", () => {
+  const base = {
+    sparks: ["a", "b", "c"],
+    kind: "npc",
+    createdAt: { toDate: () => new Date("2026-11-20T10:00:00Z") },
+  };
+  assert.equal(toRequestItem("r", base)?.topAnswer, null);
+  assert.deepEqual(toRequestItem("r", { ...base, topAnswer: { name: "Vhane", snippet: "A keeper." } })?.topAnswer, {
+    name: "Vhane",
+    snippet: "A keeper.",
+  });
+  assert.equal(toRequestItem("r", { ...base, topAnswer: { name: 3 } })?.topAnswer, null);
+});

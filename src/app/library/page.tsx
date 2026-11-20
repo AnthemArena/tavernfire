@@ -12,8 +12,8 @@ export default function LibraryPage() {
       <section className="page-intro">
         <h1 className="section-title">Library</h1>
         <p className="hero-lede">
-          Every answer ever written, filed under the sparks of its fire. Search one, two or three
-          sparks. Exact matches come first, then answers that share two sparks, then one.
+          Every fire, filed under its sparks. Search one, two or three sparks: exact matches come
+          first, then fires that share two, then one.
         </p>
       </section>
       <Suspense fallback={<p className="muted page-note">Loading…</p>}>

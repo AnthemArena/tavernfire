@@ -4,6 +4,7 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
 import { runLifecycle } from "./lifecycle.ts";
 import { recountUpvotes } from "./upvotes.ts";
+import { recomputeFireAnswers } from "./answers.ts";
 import { recountSparks, sparksChanged, sparksOf } from "./sparks.ts";
 import { addTrend, recountStokes, STOKE_WEIGHT, UPVOTE_WEIGHT } from "./trending.ts";
 
@@ -71,5 +72,17 @@ export const countSparks = onDocumentWritten(
     const after = sparksOf(event.data?.after.data());
     if (!sparksChanged(before, after)) return;
     await recountSparks(getFirestore(), [...before, ...after]);
+  },
+);
+
+// Whenever an answer is added, edited or its upvotes change, refresh its fire's answer
+// count and top answer (shown on Library cards).
+export const countAnswers = onDocumentWritten(
+  { document: "entries/{entryId}", region: "europe-west2", maxInstances: 5 },
+  async (event) => {
+    const data = event.data?.after.data() ?? event.data?.before.data();
+    const requestId = data?.requestId;
+    if (typeof requestId !== "string") return;
+    await recomputeFireAnswers(getFirestore(), requestId);
   },
 );

@@ -74,6 +74,7 @@ function newRequest(uid: string, overrides: Record<string, unknown> = {}) {
     status: "open",
     moderation: "ok",
     answerCount: 0,
+    stokeCount: 0,
     createdAt: serverTimestamp(),
     ...overrides,
   };

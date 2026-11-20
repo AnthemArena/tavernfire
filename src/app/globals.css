@@ -1668,3 +1668,33 @@ a:hover {
 .spark-hit {
   border-color: var(--accent);
 }
+
+/* The Library's spark cloud: popular sparks, larger when more fires use them */
+.spark-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px 18px;
+  margin: 8px 0 28px;
+  line-height: 1.2;
+}
+.cloud-spark {
+  color: var(--muted);
+  text-decoration: none;
+  padding: 4px 2px;
+}
+.cloud-spark:hover {
+  color: var(--accent);
+}
+.cloud-0 {
+  font-size: 16px;
+}
+.cloud-1 {
+  font-size: 22px;
+  color: var(--ink);
+}
+.cloud-2 {
+  font-size: 30px;
+  font-family: var(--font-display, inherit);
+  color: var(--accent);
+}

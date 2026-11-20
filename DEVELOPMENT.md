@@ -180,10 +180,10 @@ still show if a request has been revealed.
 - Fires lit before this function was deployed are not in the list until one of them is written to. For a quick start, light (or delete) a test fire per spark, or run a one-off recount over `requests` with `recountSparks`.
 - Deploy with `firebase deploy --only "firestore:rules,functions"`.
 
-## Library search
+## Library search (fires)
 
-- `/library?s=statue,time,glowing` searches answers by the sparks of the fire they answered (`src/lib/library.ts`, `src/components/LibraryView.tsx`). One to three sparks; exact matches first, then two shared, then one; most upvoted first within each group. Up to 30 answers per query.
-- It uses three new indexes on `entries` (`sparkKey`, `pairKeys`, `sparksNorm`, each with `moderation` and `upvoteCount`). Deploy them with `firebase deploy --only firestore:indexes`; they take a few minutes to build.
-- Not built yet: search by trait, filter by type, spark suggestions in the search box, paging past the first 30 results.
-
-- New answers are written with `upvoteCount: 0` (the rules require it). Firestore leaves out documents that lack a field you sort by, so answers without it would be missing from the Library. Answers written before this change have no `upvoteCount` and will not appear in the Library until they are deleted or given the field (they are test data). The Library with nothing searched shows the top answers (one more index: `moderation`, `upvoteCount`, `createdAt`).
+- `/library?s=statue,time,glowing` searches **fires** by spark (`src/lib/library.ts`, `src/components/LibraryView.tsx`). One to three sparks; fires with all of them first, then two shared, then one; most stoked first within each group. Up to 30 fires per query. With nothing searched it shows a cloud of the most used sparks (from the `sparks` list) and the most stoked fires.
+- Each result shows its answer count and best answer. Those come from fields on the fire, `answerCount` and `topAnswer`, kept by the `countAnswers` Cloud Function (it recomputes whenever an answer is written, including when upvotes change). The app never writes them.
+- New fires start with `stokeCount: 0` and new answers with `upvoteCount: 0` (the rules require both). Firestore leaves out documents that lack a field you sort by, so without these they would be missing from sorted queries. Fires and answers written before this change lack them: they are test data and will not show in the Library until deleted or backfilled.
+- Indexes: three on `requests` (`moderation`, one of `sparkKey` / `pairKeys` / `sparksNorm`, `stokeCount`). Deploy with `firebase deploy --only "firestore:rules,firestore:indexes,functions"`.
+- Not built yet: search by trait, filter by type or by unanswered, paging past the first 30 results.

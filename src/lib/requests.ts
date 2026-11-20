@@ -29,12 +29,20 @@ export type RequestItem = {
   answerCount: number;
   /** How many people have stoked it ("good fire"). Kept by a Cloud Function. */
   stokeCount: number;
+  /** The most upvoted answer so far, kept by a Cloud Function. Null when there are no answers. */
+  topAnswer: { name: string; snippet: string } | null;
   status: RequestStatus;
   /** People who picked favourites; set when the results are revealed. */
   ballotCount: number | null;
   /** When the request was created. A local estimate until the server confirms it. */
   createdAt: Date;
 };
+
+function toTopAnswer(raw: unknown): RequestItem["topAnswer"] {
+  if (typeof raw !== "object" || raw === null) return null;
+  const { name, snippet } = raw as { name?: unknown; snippet?: unknown };
+  return typeof name === "string" && typeof snippet === "string" ? { name, snippet } : null;
+}
 
 /**
  * Convert a Firestore document's data into a RequestItem.
@@ -73,6 +81,7 @@ export function toRequestItem(
         : "Someone",
     answerCount: typeof data.answerCount === "number" ? data.answerCount : 0,
     stokeCount: typeof data.stokeCount === "number" && data.stokeCount > 0 ? data.stokeCount : 0,
+    topAnswer: toTopAnswer(data.topAnswer),
     status:
       data.status === "voting" || data.status === "revealed" || data.status === "closed"
         ? data.status

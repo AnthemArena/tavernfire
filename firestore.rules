@@ -114,12 +114,12 @@ service cloud.firestore {
       return d.keys().hasAll([
           'sparks', 'sparksNorm', 'sparkKey', 'pairKeys', 'kind', 'note',
           'requesterId', 'requesterName', 'status', 'moderation',
-          'answerCount', 'createdAt'
+          'answerCount', 'stokeCount', 'createdAt'
         ])
         && d.keys().hasOnly([
           'sparks', 'sparksNorm', 'sparkKey', 'pairKeys', 'kind', 'note',
           'requesterId', 'requesterName', 'status', 'moderation',
-          'answerCount', 'createdAt'
+          'answerCount', 'stokeCount', 'createdAt'
         ])
         && d.requesterId == request.auth.uid
         && d.requesterName is string
@@ -143,6 +143,9 @@ service cloud.firestore {
         && d.status == 'open'
         && d.moderation == 'ok'
         && d.answerCount == 0
+        // Starts at 0 so every fire can be sorted by stokes (a missing field would hide it
+        // from sorted queries, like the Library's). Only countStokes changes it later.
+        && d.stokeCount == 0
         && d.createdAt == request.time;
     }
 

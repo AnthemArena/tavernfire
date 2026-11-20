@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { initializeApp, deleteApp, type App } from "firebase-admin/app";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
 import { recountUpvotes } from "../functions/src/upvotes.ts";
+import { recomputeFireAnswers } from "../functions/src/answers.ts";
 import { recountSparks } from "../functions/src/sparks.ts";
 import { addTrend, recountStokes } from "../functions/src/trending.ts";
 
@@ -101,4 +102,36 @@ test("the list of sparks follows the fires that use them", async () => {
   await recountSparks(db, ["time", "statue"]);
   assert.equal((await db.collection("sparks").doc("time").get()).exists, false);
   assert.equal((await db.collection("sparks").doc("statue").get()).get("count"), 1);
+});
+
+test("a fire's answer count and top answer follow its answers", async () => {
+  await db.collection("requests").doc("f1").set({ sparksNorm: ["a", "b", "c"], answerCount: 0 });
+  const answer = (id: string, name: string, upvoteCount: number, moderation = "ok") =>
+    db.collection("entries").doc(id).set({
+      requestId: "f1",
+      name,
+      concept: `About ${name}`,
+      upvoteCount,
+      moderation,
+      createdAt: new Date(2026, 10, 20, 9, upvoteCount),
+    });
+  await answer("fa1", "Quiet", 0);
+  await answer("fa2", "Loved", 4);
+  await answer("fa3", "Hidden favourite", 9, "hidden");
+
+  assert.equal(await recomputeFireAnswers(db, "f1"), 2);
+  assert.equal(await recomputeFireAnswers(db, "f1"), 2); // twice changes nothing
+  const fire = await db.collection("requests").doc("f1").get();
+  assert.equal(fire.get("answerCount"), 2);
+  assert.deepEqual(fire.get("topAnswer"), { name: "Loved", snippet: "About Loved" });
+
+  // With no visible answers left, the top answer goes away.
+  await db.collection("entries").doc("fa1").update({ moderation: "hidden" });
+  await db.collection("entries").doc("fa2").update({ moderation: "hidden" });
+  assert.equal(await recomputeFireAnswers(db, "f1"), 0);
+  const empty = await db.collection("requests").doc("f1").get();
+  assert.equal(empty.get("answerCount"), 0);
+  assert.equal(empty.get("topAnswer"), undefined);
+
+  assert.equal(await recomputeFireAnswers(db, "no-such-fire"), null);
 });

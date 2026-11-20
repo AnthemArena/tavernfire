@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { matchHeading, overlap, pairKeysOf, parseSparks, rankResults, type LibraryResult } from "./library.ts";
-import type { EntryItem } from "./entries.ts";
+import type { RequestItem } from "./requests.ts";
 
 test("parseSparks cleans, dedupes and caps at three", () => {
   assert.deepEqual(parseSparks("Statue, time ,glowing"), ["statue", "time", "glowing"]);
@@ -27,16 +27,16 @@ test("overlap counts searched sparks the fire has", () => {
   assert.equal(overlap(["a", "b", "c"], []), 0);
 });
 
-function result(id: string, matched: number, upvotes: number, ageDays = 0): LibraryResult {
-  const entry = {
+function result(id: string, matched: number, stokes: number, ageDays = 0): LibraryResult {
+  const fire = {
     id,
-    upvoteCount: upvotes,
+    stokeCount: stokes,
     createdAt: new Date(Date.UTC(2026, 10, 20) - ageDays * 86_400_000),
-  } as EntryItem;
-  return { entry, sparks: [], matched };
+  } as RequestItem;
+  return { fire, matched };
 }
 
-test("rankResults: more matching sparks first, then upvotes, then newest", () => {
+test("rankResults: more matching sparks first, then stokes, then newest", () => {
   const ranked = rankResults([
     result("one-spark-popular", 1, 50),
     result("exact-quiet", 3, 0, 5),
@@ -45,14 +45,14 @@ test("rankResults: more matching sparks first, then upvotes, then newest", () =>
     result("exact-popular", 3, 9),
   ]);
   assert.deepEqual(
-    ranked.map((r) => r.entry.id),
+    ranked.map((r) => r.fire.id),
     ["exact-popular", "exact-new", "exact-quiet", "two-sparks", "one-spark-popular"],
   );
 });
 
-test("rankResults drops duplicates and answers matching nothing", () => {
+test("rankResults drops duplicates and fires matching nothing", () => {
   const ranked = rankResults([result("a", 2, 1), result("a", 2, 1), result("b", 0, 99)]);
-  assert.deepEqual(ranked.map((r) => r.entry.id), ["a"]);
+  assert.deepEqual(ranked.map((r) => r.fire.id), ["a"]);
 });
 
 test("headings", () => {
@@ -61,5 +61,5 @@ test("headings", () => {
   assert.equal(matchHeading(1, 3), "Share one of your sparks");
   assert.equal(matchHeading(2, 2), "Exact matches");
   assert.equal(matchHeading(1, 2), "Share one of your sparks");
-  assert.equal(matchHeading(1, 1), "Answers for this spark");
+  assert.equal(matchHeading(1, 1), "Fires with this spark");
 });

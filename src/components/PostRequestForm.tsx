@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { SparkError, buildSparkFields } from "@/lib/sparks";
-import { displayWord, findSparks, fireCount, type SparkSuggestion } from "@/lib/spark-suggestions";
+import { displayWord, fireCount } from "@/lib/spark-suggestions";
+import { useSparkSuggestions } from "@/lib/use-spark-suggestions";
 import { NAME_CHANGE_DAYS, NAME_MAX, NameError } from "@/lib/names";
 import type { RequestKind } from "@/lib/requests";
 import {
@@ -41,9 +42,6 @@ export default function PostRequestForm() {
   // When the problem is with one spark box, which one, and a suggested fix.
   const [sparkProblem, setSparkProblem] = useState<{ index: number; message: string; fix: string | null } | null>(null);
   const sparkInputs = useRef<(HTMLInputElement | null)[]>([]);
-  // Sparks already in use that match the box being typed in. Suggestions are optional.
-  const [focusedSpark, setFocusedSpark] = useState<number | null>(null);
-  const [suggestions, setSuggestions] = useState<SparkSuggestion[]>([]);
   const [busy, setBusy] = useState(false);
   const [slow, setSlow] = useState(false);
   // The id of the request we just posted, once the server has confirmed it.
@@ -53,26 +51,13 @@ export default function PostRequestForm() {
   // flashes up just before a quick navigation.
   const [showPosted, setShowPosted] = useState(false);
 
-  const typedInFocused = focusedSpark === null ? "" : sparks[focusedSpark];
-  useEffect(() => {
-    if (focusedSpark === null) return;
-    let cancelled = false;
-    const timer = setTimeout(() => {
-      findSparks(getDb(), typedInFocused, sparks)
-        .then((found) => {
-          if (!cancelled) setSuggestions(found);
-        })
-        .catch(() => {
-          if (!cancelled) setSuggestions([]);
-        });
-    }, 200);
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-    // `sparks` is read for the words to leave out; typing in a box already changes typedInFocused.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusedSpark, typedInFocused]);
+  // Sparks already in use that match the box being typed in. Suggestions are optional.
+  const {
+    focused: focusedSpark,
+    setFocused: setFocusedSpark,
+    suggestions,
+    typed: typedInFocused,
+  } = useSparkSuggestions(sparks);
 
   function pickSuggestion(index: number, word: string) {
     setSpark(index, displayWord(word));
@@ -136,6 +121,7 @@ export default function PostRequestForm() {
         status: "open",
         moderation: "ok",
         answerCount: 0,
+        stokeCount: 0,
         createdAt: serverTimestamp(),
       });
       clearTimeout(slowTimer);

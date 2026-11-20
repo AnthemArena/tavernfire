@@ -5,18 +5,19 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getDb } from "@/lib/firebase";
 import { getCategory } from "@/lib/categories";
-import { displayWord } from "@/lib/spark-suggestions";
+import { cloudSize, displayWord, fireCount, popularSparks, type SparkSuggestion } from "@/lib/spark-suggestions";
+import { normaliseSpark } from "@/lib/sparks";
+import { useSparkSuggestions } from "@/lib/use-spark-suggestions";
 import { browseLibrary, matchHeading, parseSparks, searchLibrary, type LibraryResult } from "@/lib/library";
-import { findSparks, fireCount, type SparkSuggestion } from "@/lib/spark-suggestions";
 
 type State =
-  | { status: "idle" }
   | { status: "error"; key: string }
-  | { status: "ready"; key: string; results: LibraryResult[] };
+  | { status: "ready"; key: string; results: LibraryResult[] }
+  | { status: "idle" };
 
 const PLACEHOLDERS = ["Statue", "Time", "Glowing"];
 
-/** Search answers by spark. The searched sparks live in the address (?s=statue,time) so a search can be shared. */
+/** Search fires by spark. The searched sparks live in the address (?s=statue,time) so a search can be shared. */
 export default function LibraryView() {
   const router = useRouter();
   const params = useSearchParams();
@@ -25,14 +26,15 @@ export default function LibraryView() {
 
   const [boxes, setBoxes] = useState<string[]>(() => [0, 1, 2].map((i) => searched[i] ?? ""));
   const [state, setState] = useState<State>({ status: "idle" });
+  const { focused, setFocused, suggestions, typed } = useSparkSuggestions(boxes);
 
-  // With nothing searched, show the top answers and the most used sparks.
-  const [popular, setPopular] = useState<SparkSuggestion[]>([]);
+  // The most used sparks, shown as a cloud when nothing is searched.
+  const [cloud, setCloud] = useState<SparkSuggestion[]>([]);
   useEffect(() => {
     let cancelled = false;
-    findSparks(getDb(), "", [])
+    popularSparks(getDb())
       .then((found) => {
-        if (!cancelled) setPopular(found);
+        if (!cancelled) setCloud(found);
       })
       .catch(() => {});
     return () => {
@@ -63,11 +65,15 @@ export default function LibraryView() {
     router.push(`/library?s=${encodeURIComponent(sparks.join(","))}`);
   }
 
-  const typed = parseSparks(boxes);
+  function pick(index: number, word: string) {
+    setBoxes((cur) => cur.map((b, i) => (i === index ? displayWord(word) : b)));
+  }
+
   // Only show an outcome that belongs to the sparks now in the address (back and forward change them).
   const current = "key" in state && state.key === searchedKey ? state : null;
   const results = current?.status === "ready" ? current.results : null;
   const loading = current === null;
+  const searching = searched.length > 0;
 
   // Group the (already ranked) results by how many sparks they share. Browsing is one group.
   const groups: { matched: number; items: LibraryResult[] }[] = [];
@@ -76,6 +82,8 @@ export default function LibraryView() {
     if (last && last.matched === r.matched) last.items.push(r);
     else groups.push({ matched: r.matched, items: [r] });
   }
+
+  const biggest = cloud.reduce((max, s) => Math.max(max, s.count), 0);
 
   return (
     <>
@@ -95,86 +103,120 @@ export default function LibraryView() {
                 placeholder={PLACEHOLDERS[index]}
                 value={value}
                 onChange={(e) => setBoxes((cur) => cur.map((b, i) => (i === index ? e.target.value : b)))}
+                onFocus={() => setFocused(index)}
+                onBlur={() => setFocused((c) => (c === index ? null : c))}
               />
             </div>
           ))}
         </div>
-        <button type="submit" className="btn btn-primary" disabled={typed.length === 0}>
+        {focused !== null && suggestions.length > 0 && (
+          <div className="spark-suggestions" role="group" aria-label="Sparks already in use">
+            <span className="muted">{typed.trim() === "" ? "Popular sparks:" : "Already in use:"}</span>
+            {suggestions.map((s) => (
+              <button
+                type="button"
+                key={s.word}
+                className="spark-suggestion"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => pick(focused, s.word)}
+              >
+                {displayWord(s.word)} <span className="muted">· {fireCount(s.count)}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        <button type="submit" className="btn btn-primary" disabled={parseSparks(boxes).length === 0}>
           Search the library
         </button>
-        <p className="hint">Use one, two or three single words. Sparks are matched exactly, so check your spelling.</p>
+        <p className="hint">Use one, two or three single words.</p>
       </form>
 
-      {searched.length === 0 && popular.length > 0 && (
-        <div className="spark-suggestions" role="group" aria-label="Popular sparks">
-          <span className="muted">Popular sparks:</span>
-          {popular.slice(0, 8).map((s) => (
-            <Link key={s.word} className="spark-suggestion" href={`/library?s=${encodeURIComponent(s.word)}`}>
-              {displayWord(s.word)} <span className="muted">· {fireCount(s.count)}</span>
-            </Link>
-          ))}
-        </div>
+      {!searching && cloud.length > 0 && (
+        <nav className="spark-cloud" aria-label="Popular sparks">
+          {[...cloud]
+            .sort((a, b) => a.word.localeCompare(b.word, "en"))
+            .map((s) => (
+              <Link
+                key={s.word}
+                href={`/library?s=${encodeURIComponent(s.word)}`}
+                className={`cloud-spark cloud-${cloudSize(s.count, biggest)}`}
+                title={fireCount(s.count)}
+              >
+                {displayWord(s.word)}
+              </Link>
+            ))}
+        </nav>
       )}
+
       {loading && (
         <p className="muted page-note" role="status">
-          Searching…
+          {searching ? "Searching…" : "Loading…"}
         </p>
       )}
       {current?.status === "error" && (
         <p className="empty" role="alert">
-          Couldn&apos;t search right now. Please try again in a moment.
+          Couldn&apos;t load the library right now. Please try again in a moment.
         </p>
       )}
-      {results && results.length === 0 && searched.length === 0 && (
+      {results && results.length === 0 && !searching && (
         <p className="empty">
-          No answers yet. <Link href="/">Find a fire to answer</Link>.
+          No fires yet. <Link href="/fires/new">Light the first one</Link>.
         </p>
       )}
-      {results && results.length === 0 && searched.length > 0 && (
+      {results && results.length === 0 && searching && (
         <p className="empty">
-          No answers for {searched.map(displayWord).join(", ")} yet.{" "}
-          <Link href="/fires/new">Light a fire</Link> and be the first to get one.
+          No fires for {searched.map(displayWord).join(", ")} yet. <Link href="/fires/new">Light one</Link> and
+          start the conversation.
         </p>
       )}
 
-      {groups.map((group) => (
-        <section
-          key={group.matched}
-          className="library-group"
-          aria-label={searched.length === 0 ? "Top answers" : matchHeading(group.matched, searched.length)}
-        >
-          <h2 className="library-heading">
-            {searched.length === 0 ? "Top answers" : matchHeading(group.matched, searched.length)}
-          </h2>
-          <ul className="request-list">
-            {group.items.map(({ entry, sparks }) => (
-              <li key={entry.id}>
-                <Link href={`/fires/${entry.requestId}`} className="request-card">
-                  <div className="request-card-top">
-                    <div className="sparks">
-                      {sparks.map((s) => (
-                        <span className={searched.includes(s) ? "spark spark-hit" : "spark"} key={s}>
-                          {displayWord(s)}
-                        </span>
-                      ))}
+      {groups.map((group) => {
+        const heading = searching ? matchHeading(group.matched, searched.length) : "Most stoked fires";
+        return (
+          <section key={group.matched} className="library-group" aria-label={heading}>
+            <h2 className="library-heading">{heading}</h2>
+            <ul className="request-list">
+              {group.items.map(({ fire }) => (
+                <li key={fire.id}>
+                  <Link href={`/fires/${fire.id}`} className="request-card">
+                    <div className="request-card-top">
+                      <div className="sparks">
+                        {fire.sparks.map((s) => (
+                          <span
+                            className={searched.includes(normaliseSpark(s)) ? "spark spark-hit" : "spark"}
+                            key={s}
+                          >
+                            {s}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <p className="my-answer-name">{entry.name}</p>
-                  <p className="library-concept">{entry.concept}</p>
-                  <div className="meta">
-                    <span className="badge">{getCategory(entry.kind).label}</span>
-                    <span>
-                      {entry.upvoteCount} {entry.upvoteCount === 1 ? "upvote" : "upvotes"}
-                    </span>
-                    {entry.author && <span>by {entry.author.name}</span>}
-                    {entry.traits.length > 0 && <span className="muted">{entry.traits.join(", ")}</span>}
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
+                    <div className="meta">
+                      <span className="badge">{getCategory(fire.kind).label}</span>
+                      {fire.stokeCount > 0 && (
+                        <span>
+                          {fire.stokeCount} {fire.stokeCount === 1 ? "stoke" : "stokes"}
+                        </span>
+                      )}
+                      <span>
+                        {fire.answerCount === 0
+                          ? "No answers yet"
+                          : `${fire.answerCount} ${fire.answerCount === 1 ? "answer" : "answers"}`}
+                      </span>
+                    </div>
+                    {fire.topAnswer && (
+                      <>
+                        <p className="my-answer-name">{fire.topAnswer.name}</p>
+                        <p className="library-concept">{fire.topAnswer.snippet}</p>
+                      </>
+                    )}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })}
     </>
   );
 }

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { displayWord, fireCount, rankSuggestions } from "./spark-suggestions.ts";
+import { cloudSize, displayWord, fireCount, rankSuggestions } from "./spark-suggestions.ts";
 
 test("most-used first, then alphabetical, capped", () => {
   const found = [
@@ -35,4 +35,11 @@ test("labels", () => {
   assert.equal(displayWord(""), "");
   assert.equal(fireCount(1), "1 fire");
   assert.equal(fireCount(14), "14 fires");
+});
+
+test("cloud sizes follow how popular a spark is", () => {
+  assert.equal(cloudSize(10, 10), 2);
+  assert.equal(cloudSize(5, 10), 1);
+  assert.equal(cloudSize(1, 10), 0);
+  assert.equal(cloudSize(1, 1), 0); // everything used once: all the same size
 });

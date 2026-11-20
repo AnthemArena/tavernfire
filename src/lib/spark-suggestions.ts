@@ -73,3 +73,20 @@ export async function findSparks(
     alreadyChosen,
   );
 }
+
+/** The most used sparks, for the Library's spark cloud. */
+export async function popularSparks(db: Firestore, max = 40): Promise<SparkSuggestion[]> {
+  const snap = await getDocs(query(collection(db, "sparks"), orderBy("count", "desc"), limit(max)));
+  return rankSuggestions(
+    snap.docs.map((d) => ({ word: d.get("word"), count: d.get("count") })),
+    [],
+    max,
+  );
+}
+
+/** Size steps for the cloud: 0 (smallest) to 2 (largest), by how a spark's count compares with the most used. */
+export function cloudSize(count: number, biggest: number): 0 | 1 | 2 {
+  if (biggest <= 1) return 0;
+  const share = count / biggest;
+  return share >= 0.67 ? 2 : share >= 0.34 ? 1 : 0;
+}

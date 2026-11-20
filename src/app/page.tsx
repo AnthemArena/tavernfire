@@ -30,7 +30,7 @@ export default function Home() {
               <li>Light a fire: pick three sparks and say what you need.</li>
               <li>The community answers.</li>
               <li>Stoke the fires worth answering. Upvote the answers you like.</li>
-              <li>Every answer stays in the library, filed under its sparks.</li>
+              <li>Every fire stays in the library, filed under its sparks.</li>
             </ol>
           </div>
         </aside>
