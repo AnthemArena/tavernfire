@@ -62,6 +62,11 @@ service cloud.firestore {
       return a is string && a.matches('(demon|undead)-([1-9]|[1-4][0-9]|50)');
     }
 
+    // A bio: text, at most 280 characters (BIO_MAX in src/lib/bio.ts), no web addresses.
+    function validBio(b) {
+      return b is string && b.size() <= 280 && !b.matches('(?is).*(https?:|www[.]).*');
+    }
+
     // An avatar can be changed again an hour after the last change.
     function avatarFree(me) {
       return me.get('avatarChangedAt', null) == null
@@ -100,6 +105,11 @@ service cloud.firestore {
         && validAvatar(request.resource.data.avatar)
         && request.resource.data.avatarChangedAt == request.time
         && avatarFree(resource.data);
+
+      // The "about me" text: plain text, short, no web addresses. Empty clears it.
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['bio'])
+        && validBio(request.resource.data.bio);
 
       allow delete: if false;
     }

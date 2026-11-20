@@ -1384,3 +1384,45 @@ describe("avatars", () => {
     await assertFails(submitAnswer(carol, "carol", "r1", "e2", { entry: { authorAvatar: "undead-30" } }));
   });
 });
+
+describe("bios", () => {
+  test("someone can write their own bio, change it, and clear it", async () => {
+    const db = env.authenticatedContext("alice").firestore();
+    await assertSucceeds(updateDoc(doc(db, "users", "alice"), { bio: "I run a Friday table." }));
+    await assertSucceeds(updateDoc(doc(db, "users", "alice"), { bio: "Line one\nLine two" }));
+    await assertSucceeds(updateDoc(doc(db, "users", "alice"), { bio: "" }));
+  });
+
+  test("a bio can be as long as 280 characters, not longer", async () => {
+    const db = env.authenticatedContext("alice").firestore();
+    await assertSucceeds(updateDoc(doc(db, "users", "alice"), { bio: "a".repeat(280) }));
+    await assertFails(updateDoc(doc(db, "users", "alice"), { bio: "a".repeat(281) }));
+  });
+
+  test("a bio cannot hold a web address", async () => {
+    const db = env.authenticatedContext("alice").firestore();
+    await assertFails(updateDoc(doc(db, "users", "alice"), { bio: "Visit https://example.com" }));
+    await assertFails(updateDoc(doc(db, "users", "alice"), { bio: "my site: WWW.example.com" }));
+    await assertFails(updateDoc(doc(db, "users", "alice"), { bio: "line one\nhttp://example.com" }));
+  });
+
+  test("a bio must be text, and nobody writes someone else's", async () => {
+    const db = env.authenticatedContext("alice").firestore();
+    await assertFails(updateDoc(doc(db, "users", "alice"), { bio: 5 }));
+    await assertFails(updateDoc(doc(db, "users", "alice"), { bio: null }));
+    const bob = env.authenticatedContext("bob").firestore();
+    await assertFails(updateDoc(doc(bob, "users", "alice"), { bio: "hello" }));
+  });
+
+  test("a bio cannot ride along with other profile fields", async () => {
+    const db = env.authenticatedContext("alice").firestore();
+    await assertFails(updateDoc(doc(db, "users", "alice"), { bio: "hello", role: "moderator" }));
+  });
+
+  test("a bio is public to read", async () => {
+    const alice = env.authenticatedContext("alice").firestore();
+    await assertSucceeds(updateDoc(doc(alice, "users", "alice"), { bio: "hello" }));
+    const visitor = env.unauthenticatedContext().firestore();
+    await assertSucceeds(getDoc(doc(visitor, "users", "alice")));
+  });
+});

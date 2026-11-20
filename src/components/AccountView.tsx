@@ -19,6 +19,7 @@ import { useNow } from "@/lib/use-now";
 import Avatar from "@/components/Avatar";
 import { AVATARS, PACKS, nextAvatarChange, type AvatarId, type PackId } from "@/lib/avatars";
 import { AvatarError } from "@/lib/display-name";
+import { BIO_MAX, BioError } from "@/lib/bio";
 import { NAME_CHANGE_DAYS, NAME_MAX, NameError } from "@/lib/names";
 import { kindLabel, toRequestItem, type RequestItem } from "@/lib/requests";
 import { toEntryItem, type EntryItem } from "@/lib/entries";
@@ -28,7 +29,7 @@ import AnswerCount from "@/components/AnswerCount";
 
 /** Your own page: your name, and the requests you have posted. Only you see it. */
 export default function AccountView() {
-  const { user, displayName, avatar, avatarChangedAt, chooseAvatar, chooseName, nameChangeOn, signOut, loading, emailVerified, resendVerification, refreshVerification } =
+  const { user, displayName, bio, chooseBio, avatar, avatarChangedAt, chooseAvatar, chooseName, nameChangeOn, signOut, loading, emailVerified, resendVerification, refreshVerification } =
     useAuth();
 
   if (loading) return <p className="muted page-note">Loading…</p>;
@@ -58,6 +59,7 @@ export default function AccountView() {
         changedAt={avatarChangedAt}
         choose={chooseAvatar}
       />
+      <BioCard key={bio} bio={bio} save={chooseBio} />
       <EmailCard
         email={user.email}
         verified={emailVerified}
@@ -155,6 +157,76 @@ function AvatarCard({
       {saved && (
         <p className="notice notice-success" role="status">
           Avatar saved.
+        </p>
+      )}
+    </section>
+  );
+}
+
+function BioCard({ bio, save }: { bio: string; save: (bio: string) => Promise<void> }) {
+  const [value, setValue] = useState(bio);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  async function onSubmit(event: FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      await save(value);
+      setSaved(true);
+    } catch (err) {
+      setError(err instanceof BioError ? err.message : "Couldn't save that. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="card" aria-labelledby="bio-heading">
+      <h2 className="card-title" id="bio-heading">
+        About you
+      </h2>
+      <form onSubmit={onSubmit} noValidate>
+        <div className="field">
+          <label className="label" htmlFor="account-bio">
+            Bio{" "}
+            <span className="counter" aria-hidden="true">
+              {value.length} of {BIO_MAX} characters
+            </span>
+          </label>
+          <textarea
+            id="account-bio"
+            className={error ? "input textarea input-error" : "input textarea"}
+            rows={4}
+            maxLength={BIO_MAX}
+            placeholder="e.g. I run a Friday night table and collect odd NPCs."
+            value={value}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? "account-bio-error account-bio-hint" : "account-bio-hint"}
+            onChange={(e) => {
+              setValue(e.target.value);
+              setError(null);
+              setSaved(false);
+            }}
+          />
+          {error && (
+            <p className="error field-error" id="account-bio-error" role="alert">
+              {error}
+            </p>
+          )}
+          <p className="hint" id="account-bio-hint">
+            Shown on your profile and at the top of your fires. Plain text, no links.
+          </p>
+        </div>
+        <button type="submit" className="btn btn-primary" disabled={busy || value.trim() === bio}>
+          {busy ? "Saving…" : "Save bio"}
+        </button>
+      </form>
+      {saved && (
+        <p className="notice notice-success" role="status">
+          Bio saved.
         </p>
       )}
     </section>

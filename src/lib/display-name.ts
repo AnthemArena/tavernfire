@@ -1,6 +1,7 @@
 import { deleteDoc, doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 import { NameError, nameKey, nextNameChange, validateName } from "@/lib/names";
+import { BioError, validateBio } from "@/lib/bio";
 import { isAvatarId, nextAvatarChange, type AvatarId } from "@/lib/avatars";
 
 export type Profile = {
@@ -10,9 +11,11 @@ export type Profile = {
   /** The preset avatar the member chose, or null (the first letter of the name is shown). */
   avatar: AvatarId | null;
   avatarChangedAt: Date | null;
+  /** The member's "about me" text; empty when they have not written one. */
+  bio: string;
 };
 
-export const EMPTY_PROFILE: Profile = { displayName: null, nameKey: null, nameChangedAt: null, avatar: null, avatarChangedAt: null };
+export const EMPTY_PROFILE: Profile = { displayName: null, nameKey: null, nameChangedAt: null, avatar: null, avatarChangedAt: null, bio: "" };
 
 export async function loadProfile(uid: string): Promise<Profile> {
   const snap = await getDoc(doc(getDb(), "users", uid));
@@ -24,6 +27,7 @@ export async function loadProfile(uid: string): Promise<Profile> {
     nameChangedAt: d.nameChangedAt?.toDate?.() ?? null,
     avatar: isAvatarId(d.avatar) ? d.avatar : null,
     avatarChangedAt: d.avatarChangedAt?.toDate?.() ?? null,
+    bio: typeof d.bio === "string" ? d.bio : "",
   };
 }
 
@@ -93,4 +97,16 @@ export async function saveAvatar(uid: string, avatar: AvatarId, current: Profile
     throw new AvatarError("Couldn't save that avatar. Try again.");
   }
   return { ...current, avatar, avatarChangedAt: new Date() };
+}
+
+/** Save the "about me" text. Throws a BioError with a message to show. */
+export async function saveBio(uid: string, raw: string, current: Profile): Promise<Profile> {
+  const bio = validateBio(raw);
+  if (bio === current.bio) return current;
+  try {
+    await updateDoc(doc(getDb(), "users", uid), { bio });
+  } catch {
+    throw new BioError("Couldn't save that. Try again.");
+  }
+  return { ...current, bio };
 }

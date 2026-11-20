@@ -16,7 +16,7 @@ import AnswerCount from "@/components/AnswerCount";
 
 const LIST_LIMIT = 100;
 
-type Profile = { name: string; since: Date | null; avatar: AvatarId | null };
+type Profile = { name: string; since: Date | null; avatar: AvatarId | null; bio: string };
 type AnswerRow = { entry: EntryItem; request: RequestItem };
 type Loaded = { profile: Profile; fires: RequestItem[]; answers: AnswerRow[] };
 type State = { status: "loading" } | { status: "missing" } | { status: "error" } | ({ status: "ready" } & Loaded);
@@ -92,6 +92,7 @@ export default function ProfileView({ uid }: { uid: string }) {
               name,
               since: typeof created?.toDate === "function" ? created.toDate() : null,
               avatar: isAvatarId(data?.avatar) ? data.avatar : null,
+              bio: typeof data?.bio === "string" ? data.bio : "",
             },
             fires,
             answers,
@@ -143,6 +144,7 @@ export default function ProfileView({ uid }: { uid: string }) {
           <h1 className="profile-name">{profile.name}</h1>
           {since && <p className="profile-since">Member since {since}</p>}
         </div>
+        {profile.bio && <p className="profile-bio">{profile.bio}</p>}
         <dl className="profile-stats">
           <Stat label="Fires lit" value={fires.length} />
           <Stat label="Answers" value={answers.length} />

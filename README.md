@@ -43,6 +43,7 @@ If traits return, sparks rank above them in search, and the interface keeps the 
 - Answers with a consistent template, edit for 24 hours
 - Upvotes on answers, Stoke on fires, counted by Cloud Functions
 - Public profiles at `/profile/<id>` (avatar, name, member since, fires, answers, upvotes received)
+- A short bio (280 characters, plain text, no links) on the profile and at the top of the member's fires
 - Preset avatars (100 fantasy portraits in two packs, Demons and Undead, picked on the account page) shown beside names everywhere: small on cards, medium on the fire page and header, large on the profile
 - Account page (your fires and your answers)
 - Report answer, and a moderator review queue at `/moderation` (hide an answer or dismiss its reports)

@@ -23,7 +23,7 @@ import {
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { getDb, getFirebaseAuth } from "@/lib/firebase";
 import { nextNameChange } from "@/lib/names";
-import { EMPTY_PROFILE, claimName, loadProfile, saveAvatar, type Profile } from "@/lib/display-name";
+import { EMPTY_PROFILE, claimName, loadProfile, saveAvatar, saveBio, type Profile } from "@/lib/display-name";
 import type { AvatarId } from "@/lib/avatars";
 
 /**
@@ -58,6 +58,10 @@ type AuthContextValue = {
   avatarChangedAt: Date | null;
   /** Save a preset avatar. Throws an AvatarError with a message to show. */
   chooseAvatar: (avatar: AvatarId) => Promise<void>;
+  /** The person's "about me" text (empty if none). */
+  bio: string;
+  /** Save the "about me" text. Throws a BioError with a message to show. */
+  chooseBio: (bio: string) => Promise<void>;
   /** True until Firebase has told us whether someone is signed in. */
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
@@ -147,6 +151,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [user, profile],
   );
 
+  const chooseBio = useCallback(
+    async (bio: string) => {
+      if (!user) throw new Error("Not signed in");
+      setProfile(await saveBio(user.uid, bio, profile));
+    },
+    [user, profile],
+  );
+
   const sendPasswordReset = useCallback(async (email: string) => {
     await sendPasswordResetEmail(getFirebaseAuth(), email.trim());
   }, []);
@@ -167,6 +179,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       avatar: profile.avatar,
       avatarChangedAt: profile.avatarChangedAt,
       chooseAvatar,
+      bio: profile.bio,
+      chooseBio,
       loading,
       signInWithGoogle,
       signInWithEmail,
@@ -174,7 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sendPasswordReset,
       signOut,
     }),
-    [user, emailVerified, resendVerification, refreshVerification, profile.displayName, profile.nameChangedAt, profile.avatar, profile.avatarChangedAt, chooseName, chooseAvatar, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, sendPasswordReset, signOut],
+    [user, emailVerified, resendVerification, refreshVerification, profile.displayName, profile.nameChangedAt, profile.avatar, profile.avatarChangedAt, profile.bio, chooseName, chooseAvatar, chooseBio, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, sendPasswordReset, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

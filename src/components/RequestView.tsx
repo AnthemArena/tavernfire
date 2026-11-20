@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import { useRouter } from "next/navigation";
-import { deleteDoc, doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
+import { deleteDoc, doc, getDoc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import { useAuth } from "@/lib/auth-context";
 import { shownStokes, stokeId, type PendingStoke } from "@/lib/stokes";
 import VerifyEmailNotice from "@/components/VerifyEmailNotice";
@@ -42,7 +42,24 @@ export default function RequestView({ id }: { id: string }) {
   const [pending, setPending] = useState<PendingStoke | undefined>(undefined);
   const [needVerify, setNeedVerify] = useState(false);
   const [stokeError, setStokeError] = useState<string | null>(null);
+  const [lighterBio, setLighterBio] = useState("");
+  const lighterId = state.status === "ready" ? state.request.requesterId : "";
   useDocumentTitle(state.status === "ready" ? state.request.sparks.join(", ") : null);
+
+  // The lighter's bio lives on their profile, so it is always their current one.
+  useEffect(() => {
+    if (!lighterId) return;
+    let cancelled = false;
+    getDoc(doc(getDb(), "users", lighterId))
+      .then((snap) => {
+        const bio = snap.data()?.bio;
+        if (!cancelled) setLighterBio(typeof bio === "string" ? bio : "");
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [lighterId]);
 
   // Whether I have stoked this fire. Only I can read it.
   useEffect(() => {
@@ -159,6 +176,7 @@ export default function RequestView({ id }: { id: string }) {
           , {describeAge(r.createdAt, now)}
         </span>
       </p>
+      {lighterBio && <p className="lit-by-bio">{lighterBio}</p>}
 
       <div className="meta">
         {isOwnFire ? (

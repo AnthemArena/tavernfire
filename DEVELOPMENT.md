@@ -207,3 +207,7 @@ Members pick a portrait from the art packs on the account page. The pictures are
 - `Avatar` has three sizes: `sm` (cards and bylines), `md` (header, fire page), `lg` (profile and picker). With no avatar it shows the first letter of the name.
 - Uploaded pictures are a later step: they would be another kind of value in the same `avatar` field, with their own checks.
 - Deploy with `firebase deploy --only "firestore:rules,firestore:indexes,functions"` (the new function is `propagateAvatar`).
+
+## Bios
+
+`users/{uid}.bio`: plain text, at most 280 characters, no web addresses (`validBio` in the rules; the same limits are in `src/lib/bio.ts` and a test keeps them in step). Written on the account page ("About you"), shown on the profile and under "Lit by" on the fire page. The fire page reads the lighter's profile when it opens, so the bio is always their current one; nothing is copied onto fires. Bios are not yet covered by moderation (reporting a profile is on the later list), which is why links are refused.
