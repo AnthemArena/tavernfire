@@ -208,16 +208,6 @@ export default function EntryCard({
 
       <p className="entry-concept">{entry.concept}</p>
 
-      {entry.traits.length > 0 && (
-        <ul className="trait-list" aria-label="Traits">
-          {entry.traits.map((t) => (
-            <li className="trait" key={t}>
-              {t}
-            </li>
-          ))}
-        </ul>
-      )}
-
       <div className="entry-foot">
         <span className="entry-anon">
           {entry.author && !isMine && (

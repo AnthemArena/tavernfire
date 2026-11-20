@@ -11,11 +11,9 @@ import {
   ENTRY_NAME_MAX,
   answerMarkerPath,
   buildEntryFields,
-  cleanTrait,
   type EntryItem,
 } from "@/lib/entries";
 import type { RequestItem } from "@/lib/requests";
-import TraitInput from "@/components/TraitInput";
 import { getCategory } from "@/lib/categories";
 
 function Counter({ used, max }: { used: number; max: number }) {
@@ -59,8 +57,8 @@ export default function AnswerForm({
 
   const [name, setName] = useState(editing?.name ?? "");
   const [concept, setConcept] = useState(editing?.concept ?? "");
-  const [traits, setTraits] = useState<string[]>(editing?.traits ?? []);
-  const [traitDraft, setTraitDraft] = useState("");
+  // Traits are not shown or asked for at launch. Keep an edited answer's own traits as they were.
+  const keptTraits = editing?.traits ?? [];
   const [error, setError] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | null>(null);
   const [conceptError, setConceptError] = useState<string | null>(null);
@@ -100,13 +98,9 @@ export default function AnswerForm({
       return;
     }
 
-    // Include a trait that was typed but not yet confirmed with Enter.
-    const pending = cleanTrait(traitDraft);
-    const allTraits = pending ? [...traits, pending] : traits;
-
     let fields;
     try {
-      fields = buildEntryFields({ name, concept, traits: allTraits });
+      fields = buildEntryFields({ name, concept, traits: keptTraits });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Check your answer and try again.");
       return;
@@ -133,8 +127,6 @@ export default function AnswerForm({
         await updateDoc(doc(getDb(), "entries", editing.id), {
           name: fields.name,
           concept: fields.concept,
-          traits: fields.traits,
-          traitsNorm: fields.traitsNorm,
           editedAt: serverTimestamp(),
         });
         onSaved?.();
@@ -275,21 +267,6 @@ export default function AnswerForm({
       </div>
 
       {copy.help && <p className="hint">{copy.help}</p>}
-
-      <TraitInput
-        label={copy.tagsLabel}
-        placeholder={copy.tagsPlaceholder}
-        traits={traits}
-        onChange={(t) => {
-          setTraits(t);
-          setRefused(false);
-        }}
-        draft={traitDraft}
-        onDraftChange={(d) => {
-          setTraitDraft(d);
-          setRefused(false);
-        }}
-      />
 
       {!editing &&
         (needsAuthorName ? (

@@ -10,8 +10,8 @@ Someone lights a fire: three sparks and what they need. The community answers wi
 
 - **Spark:** a single word that starts an idea (for example *Statue*, *Time*, *Glowing*). A fire has three sparks.
 - **Fire:** a request. Three sparks plus the type of thing needed (NPC, location, item or creature to start), with an optional note about the table or session. Fires stay open.
-- **Answer:** one person's response to a fire: a name, a description, and up to five optional traits. Shown under the author's name.
-- **Traits:** the author-chosen descriptors on an answer (for example *Ancient, Patient, Guardian*). Not the same thing as sparks.
+- **Answer:** one person's response to a fire: a name and a description. Shown under the author's name.
+- **Traits (hidden at launch):** author-chosen descriptors on an answer (for example *Ancient, Patient, Guardian*). They are not asked for or shown for now, because they have no job yet and compete with sparks. The data model keeps the optional fields, and the code (`TraitInput`, `buildEntryFields`) is still there, so they can return once there are enough answers to need a way to find them by tone.
 - **Stoke:** a vote on the fire itself ("good fire", a question worth answering).
 - **Upvote:** a vote on an answer ("good answer").
 - **Duel:** a planned second mode: anonymous, timed head-to-head competitions (see below).
@@ -30,9 +30,9 @@ There is deliberately no contest, deadline or reveal for ordinary fires: the sit
 
 - **Fires page:** Trending, Top and New, with a filter by type.
 - **Library:** search fires by spark at `/library`. Search one, two or all three sparks; exact matches rank first, then fires that share two, then one, most stoked first. Each result shows its answer count and best answer. With nothing searched it shows a cloud of the most used sparks and the most stoked fires.
-- **By trait (planned):** author-chosen, capped at about five per answer, with suggestions drawn from existing traits to avoid near-duplicates (Ancient, Old, Aged).
+- **By trait (on hold, see Traits above):** author-chosen, capped at about five per answer, with suggestions drawn from existing traits to avoid near-duplicates (Ancient, Old, Aged).
 
-Sparks rank above traits in search, and the interface keeps the two visibly separate.
+If traits return, sparks rank above them in search, and the interface keeps the two visibly separate.
 
 ## What is built and what is next
 
@@ -47,7 +47,7 @@ Sparks rank above traits in search, and the interface keeps the two visibly sepa
 - Report answer (reports are stored; moderator tools are not built yet)
 
 **Next**
-- Library: search by spark (built); search by trait (not yet)
+- Library: search fires by spark (built); search by trait (on hold)
 - Before launch: clear test data, connect the domain and set the email action URL, create moderator tools and a moderator role, terms and privacy pages
 
 **Later**
