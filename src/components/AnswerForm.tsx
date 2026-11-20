@@ -179,6 +179,7 @@ export default function AnswerForm({
         moderation: "ok",
         authorId: user.uid,
         authorName: postAs,
+        upvoteCount: 0,
         createdAt: serverTimestamp(),
       });
       onSubmitted?.();

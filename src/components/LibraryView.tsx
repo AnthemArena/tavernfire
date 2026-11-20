@@ -6,7 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getDb } from "@/lib/firebase";
 import { getCategory } from "@/lib/categories";
 import { displayWord } from "@/lib/spark-suggestions";
-import { matchHeading, parseSparks, searchLibrary, type LibraryResult } from "@/lib/library";
+import { browseLibrary, matchHeading, parseSparks, searchLibrary, type LibraryResult } from "@/lib/library";
+import { findSparks, fireCount, type SparkSuggestion } from "@/lib/spark-suggestions";
 
 type State =
   | { status: "idle" }
@@ -25,11 +26,24 @@ export default function LibraryView() {
   const [boxes, setBoxes] = useState<string[]>(() => [0, 1, 2].map((i) => searched[i] ?? ""));
   const [state, setState] = useState<State>({ status: "idle" });
 
+  // With nothing searched, show the top answers and the most used sparks.
+  const [popular, setPopular] = useState<SparkSuggestion[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    findSparks(getDb(), "", [])
+      .then((found) => {
+        if (!cancelled) setPopular(found);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   useEffect(() => {
     const sparks = searchedKey === "" ? [] : searchedKey.split(",");
-    if (sparks.length === 0) return;
     let cancelled = false;
-    searchLibrary(getDb(), sparks)
+    (sparks.length === 0 ? browseLibrary(getDb()) : searchLibrary(getDb(), sparks))
       .then((results) => {
         if (!cancelled) setState({ status: "ready", key: searchedKey, results });
       })
@@ -51,11 +65,11 @@ export default function LibraryView() {
 
   const typed = parseSparks(boxes);
   // Only show an outcome that belongs to the sparks now in the address (back and forward change them).
-  const current = searched.length > 0 && "key" in state && state.key === searchedKey ? state : null;
+  const current = "key" in state && state.key === searchedKey ? state : null;
   const results = current?.status === "ready" ? current.results : null;
-  const loading = searched.length > 0 && current === null;
+  const loading = current === null;
 
-  // Group the (already ranked) results by how many sparks they share.
+  // Group the (already ranked) results by how many sparks they share. Browsing is one group.
   const groups: { matched: number; items: LibraryResult[] }[] = [];
   for (const r of results ?? []) {
     const last = groups[groups.length - 1];
@@ -91,11 +105,15 @@ export default function LibraryView() {
         <p className="hint">Use one, two or three single words. Sparks are matched exactly, so check your spelling.</p>
       </form>
 
-      {searched.length === 0 && (
-        <p className="empty">
-          Type a spark or two to search. Nothing to try yet? Look through the <Link href="/">fires</Link> for
-          ideas.
-        </p>
+      {searched.length === 0 && popular.length > 0 && (
+        <div className="spark-suggestions" role="group" aria-label="Popular sparks">
+          <span className="muted">Popular sparks:</span>
+          {popular.slice(0, 8).map((s) => (
+            <Link key={s.word} className="spark-suggestion" href={`/library?s=${encodeURIComponent(s.word)}`}>
+              {displayWord(s.word)} <span className="muted">· {fireCount(s.count)}</span>
+            </Link>
+          ))}
+        </div>
       )}
       {loading && (
         <p className="muted page-note" role="status">
@@ -107,7 +125,12 @@ export default function LibraryView() {
           Couldn&apos;t search right now. Please try again in a moment.
         </p>
       )}
-      {results && results.length === 0 && (
+      {results && results.length === 0 && searched.length === 0 && (
+        <p className="empty">
+          No answers yet. <Link href="/">Find a fire to answer</Link>.
+        </p>
+      )}
+      {results && results.length === 0 && searched.length > 0 && (
         <p className="empty">
           No answers for {searched.map(displayWord).join(", ")} yet.{" "}
           <Link href="/fires/new">Light a fire</Link> and be the first to get one.
@@ -115,8 +138,14 @@ export default function LibraryView() {
       )}
 
       {groups.map((group) => (
-        <section key={group.matched} className="library-group" aria-label={matchHeading(group.matched, searched.length)}>
-          <h2 className="library-heading">{matchHeading(group.matched, searched.length)}</h2>
+        <section
+          key={group.matched}
+          className="library-group"
+          aria-label={searched.length === 0 ? "Top answers" : matchHeading(group.matched, searched.length)}
+        >
+          <h2 className="library-heading">
+            {searched.length === 0 ? "Top answers" : matchHeading(group.matched, searched.length)}
+          </h2>
           <ul className="request-list">
             {group.items.map(({ entry, sparks }) => (
               <li key={entry.id}>

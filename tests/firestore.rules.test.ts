@@ -405,6 +405,7 @@ function newEntryData(requestId: string, overrides: Record<string, unknown> = {}
     // Answers are not anonymous: the entry carries its author's id and chosen name.
     authorId: "bob",
     authorName: "Marrow",
+    upvoteCount: 0,
     createdAt: serverTimestamp(),
     ...overrides,
   };
@@ -500,6 +501,19 @@ describe("answers: submitting", () => {
       setDoc(doc(db, "entries", "e1"), newEntryData("r1", entrySparkFields(["Dragon", "Cave", "Cold"]))),
     );
     // The correct entry still goes through.
+    await assertSucceeds(setDoc(doc(db, "entries", "e1"), newEntryData("r1")));
+  });
+
+  test("a new answer must start with an upvote count of 0", async () => {
+    await seedRequest("r1");
+    const db = env.authenticatedContext("bob").firestore();
+    await assertSucceeds(
+      setDoc(doc(db, ...answerMarkerPath("r1", "bob")), lockData("bob", "r1", "e1")),
+    );
+    await assertFails(setDoc(doc(db, "entries", "e1"), newEntryData("r1", { upvoteCount: 5 })));
+    const { upvoteCount: _unused, ...without } = newEntryData("r1");
+    void _unused;
+    await assertFails(setDoc(doc(db, "entries", "e1"), without));
     await assertSucceeds(setDoc(doc(db, "entries", "e1"), newEntryData("r1")));
   });
 

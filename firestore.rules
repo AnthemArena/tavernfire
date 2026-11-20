@@ -282,13 +282,16 @@ service cloud.firestore {
       return d.keys().hasOnly([
           'requestId', 'kind', 'name', 'concept', 'traits', 'traitsNorm',
           'sparksNorm', 'sparkKey', 'pairKeys', 'moderation', 'createdAt',
-          'authorId', 'authorName'
+          'authorId', 'authorName', 'upvoteCount'
         ])
         && d.keys().hasAll([
           'requestId', 'kind', 'name', 'concept', 'traits', 'traitsNorm',
           'sparksNorm', 'sparkKey', 'pairKeys', 'moderation', 'createdAt',
-          'authorId', 'authorName'
+          'authorId', 'authorName', 'upvoteCount'
         ])
+        // Starts at 0 so every answer can be sorted by upvotes (a missing field would
+        // hide it from sorted queries). Only the countUpvotes function changes it later.
+        && d.upvoteCount == 0
         && d.authorId == request.auth.uid
         && d.authorName == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.displayName
         && d.requestId is string

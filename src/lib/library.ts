@@ -85,6 +85,29 @@ export function matchHeading(matched: number, searched: number): string {
   return "Share one of your sparks";
 }
 
+/** The most upvoted answers overall, newest first among ties. Shown when nothing is searched yet. */
+export async function browseLibrary(db: Firestore): Promise<LibraryResult[]> {
+  const snap = await getDocs(
+    query(
+      collection(db, "entries"),
+      where("moderation", "==", "ok"),
+      orderBy("upvoteCount", "desc"),
+      orderBy("createdAt", "desc"),
+      limit(RESULTS_PER_QUERY),
+    ),
+  );
+  const out: LibraryResult[] = [];
+  for (const d of snap.docs) {
+    const entry = toEntryItem(d.id, d.data());
+    if (!entry) continue;
+    const sparks = Array.isArray(d.data().sparksNorm)
+      ? (d.data().sparksNorm as unknown[]).filter((s): s is string => typeof s === "string")
+      : [];
+    out.push({ entry, sparks, matched: 0 });
+  }
+  return out;
+}
+
 /** Search the library. Needs the indexes in firestore.indexes.json. */
 export async function searchLibrary(db: Firestore, searched: string[]): Promise<LibraryResult[]> {
   if (searched.length === 0) return [];

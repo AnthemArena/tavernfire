@@ -185,3 +185,5 @@ still show if a request has been revealed.
 - `/library?s=statue,time,glowing` searches answers by the sparks of the fire they answered (`src/lib/library.ts`, `src/components/LibraryView.tsx`). One to three sparks; exact matches first, then two shared, then one; most upvoted first within each group. Up to 30 answers per query.
 - It uses three new indexes on `entries` (`sparkKey`, `pairKeys`, `sparksNorm`, each with `moderation` and `upvoteCount`). Deploy them with `firebase deploy --only firestore:indexes`; they take a few minutes to build.
 - Not built yet: search by trait, filter by type, spark suggestions in the search box, paging past the first 30 results.
+
+- New answers are written with `upvoteCount: 0` (the rules require it). Firestore leaves out documents that lack a field you sort by, so answers without it would be missing from the Library. Answers written before this change have no `upvoteCount` and will not appear in the Library until they are deleted or given the field (they are test data). The Library with nothing searched shows the top answers (one more index: `moderation`, `upvoteCount`, `createdAt`).
