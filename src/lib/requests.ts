@@ -27,6 +27,8 @@ export type RequestItem = {
   requesterId: string;
   requesterName: string;
   answerCount: number;
+  /** How many people have stoked it ("good fire"). Kept by a Cloud Function. */
+  stokeCount: number;
   status: RequestStatus;
   /** People who picked favourites; set when the results are revealed. */
   ballotCount: number | null;
@@ -70,6 +72,7 @@ export function toRequestItem(
         ? data.requesterName
         : "Someone",
     answerCount: typeof data.answerCount === "number" ? data.answerCount : 0,
+    stokeCount: typeof data.stokeCount === "number" && data.stokeCount > 0 ? data.stokeCount : 0,
     status:
       data.status === "voting" || data.status === "revealed" || data.status === "closed"
         ? data.status

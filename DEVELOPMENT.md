@@ -96,6 +96,13 @@ used by ordinary fires.
   entry; the app only adds the person's own change while that catches up. The first deploy of
   a Firestore-triggered function can fail once while Google finishes setting up Eventarc
   permissions; wait a few minutes and run the deploy again.
+- **Stoke and the Fires tabs:** a vote on the fire itself at `stokes/{requestId}_{uid}` (same
+  rules as upvotes; you cannot stoke your own fire). `countStokes` stores `stokeCount` on the
+  request. Trending uses one stored number, `trendRank` (= ln(score) + time/tau, half-life 3
+  days, stoke weight 2, upvote weight 1), written by the same functions; see
+  `functions/src/trending.ts`. The board's Trending, Top and New tabs each run one query and
+  need the two new indexes in `firestore.indexes.json` (they take a few minutes to build after
+  `firebase deploy --only "firestore,functions"`; until then those tabs show an error).
 - The 3-day answer window is gone from the rules. The 24-hour edit window (from the answer's
   own `createdAt`) and the 5-day ballot rule (kept for duels) remain, and a test keeps them in step.
 

@@ -1551,3 +1551,48 @@ a:hover {
     width: 48px;
   }
 }
+
+/* Stoke: a vote on the fire itself */
+.stoke-btn {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 99px;
+  border: 1px solid var(--accent);
+  background: none;
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 600 15px var(--font-sans);
+  cursor: pointer;
+}
+
+.stoke-btn:hover {
+  background: var(--tint-accent);
+}
+
+.stoke-btn-on {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.stoke-btn-on:hover {
+  background: var(--accent-hover);
+}
+
+.stoke-count {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.stoke-btn-on .stoke-count {
+  color: var(--on-accent);
+}
+
+.stoke-static {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  font-weight: 600;
+}

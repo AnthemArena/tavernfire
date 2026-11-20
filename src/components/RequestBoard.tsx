@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   collection,
@@ -23,37 +23,81 @@ import {
 } from "@/lib/requests";
 
 type Filter = "all" | RequestKind;
+type Sort = "trending" | "top" | "new";
+
+const SORTS: { value: Sort; label: string }[] = [
+  { value: "trending", label: "Trending" },
+  { value: "top", label: "Top" },
+  { value: "new", label: "New" },
+];
+
+const HEADINGS: Record<Sort, string> = {
+  trending: "Trending fires",
+  top: "Top fires",
+  new: "New fires",
+};
+
+const EMPTY: Record<Sort, string> = {
+  trending: "Nothing is trending yet. Stoke a fire or upvote an answer to get things moving.",
+  top: "No fire has been stoked yet.",
+  new: "Nothing is burning yet. Be the first to light a fire.",
+};
+
+/** One query per tab, so only the tab being looked at is read. */
+function boardQuery(sort: Sort) {
+  const requests = collection(getDb(), "requests");
+  switch (sort) {
+    case "trending":
+      return query(requests, where("moderation", "==", "ok"), orderBy("trendRank", "desc"), limit(30));
+    case "top":
+      return query(
+        requests,
+        where("moderation", "==", "ok"),
+        orderBy("stokeCount", "desc"),
+        orderBy("createdAt", "desc"),
+        limit(30),
+      );
+    case "new":
+      return query(
+        requests,
+        where("moderation", "==", "ok"),
+        // Every status, so the existing index (moderation, status, createdAt) serves this.
+        where("status", "in", ["open", "voting", "revealed", "closed"]),
+        orderBy("createdAt", "desc"),
+        limit(30),
+      );
+  }
+}
 
 
 
 export default function RequestBoard() {
-  const [items, setItems] = useState<RequestItem[] | null>(null);
+  const [sort, setSort] = useState<Sort>("trending");
+  // Which tab the list belongs to, so switching tabs shows "Loading" instead of the old list.
+  const [loaded, setLoaded] = useState<{ sort: Sort; items: RequestItem[] } | null>(null);
+  const items = loaded && loaded.sort === sort ? loaded.items : null;
+  // Until someone picks a tab, an empty Trending falls back to New.
+  const chosen = useRef(false);
   const [failed, setFailed] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
   const now = useNow();
 
   useEffect(() => {
-    const q = query(
-      collection(getDb(), "requests"),
-      where("moderation", "==", "ok"),
-      // Every status, so the existing index (moderation, status, createdAt) still
-      // serves this. Fires stay open now; Top and Trending will add their own indexes.
-      where("status", "in", ["open", "voting", "revealed", "closed"]),
-      orderBy("createdAt", "desc"),
-      limit(30),
-    );
     return onSnapshot(
-      q,
+      boardQuery(sort),
       (snapshot) => {
-        setItems(
-          snapshot.docs
-            .map((d) =>
-              // "estimate" fills in createdAt for a request we just posted,
-              // before the server has confirmed the time.
-              toRequestItem(d.id, d.data({ serverTimestamps: "estimate" })),
-            )
-            .filter((item): item is RequestItem => item !== null),
-        );
+        const list = snapshot.docs
+          .map((d) =>
+            // "estimate" fills in createdAt for a request we just posted,
+            // before the server has confirmed the time.
+            toRequestItem(d.id, d.data({ serverTimestamps: "estimate" })),
+          )
+          .filter((item): item is RequestItem => item !== null);
+        if (sort === "trending" && list.length === 0 && !chosen.current) {
+          setSort("new");
+          return;
+        }
+        setLoaded({ sort, items: list });
         setFailed(false);
       },
       (err) => {
@@ -61,7 +105,7 @@ export default function RequestBoard() {
         setFailed(true);
       },
     );
-  }, []);
+  }, [sort]);
 
   // Only offer types that have open requests right now (an empty filter makes the
   // board look dead), and only once there are enough types to be worth filtering.
@@ -84,8 +128,25 @@ export default function RequestBoard() {
     <section aria-labelledby="open-requests">
       <div className="board-head">
         <h2 id="open-requests" className="section-title">
-          New fires
+          {HEADINGS[sort]}
         </h2>
+        <div className="tabs" role="group" aria-label="Sort fires">
+          {SORTS.map((s) => (
+            <button
+              key={s.value}
+              type="button"
+              className="tab"
+              aria-pressed={sort === s.value}
+              onClick={() => {
+                chosen.current = true;
+                setFailed(false);
+                setSort(s.value);
+              }}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
         {items === null && (
           // Holds the filter's place while requests load, so the list does not
           // jump down when the filter appears with the first cards.
@@ -138,7 +199,7 @@ export default function RequestBoard() {
       ) : visible.length === 0 ? (
         <p className="empty">
           {items.length === 0
-            ? "Nothing is burning yet. Be the first to light a fire."
+            ? EMPTY[sort]
             : "No fires of that type right now."}
         </p>
       ) : (
@@ -171,6 +232,14 @@ function RequestCard({ request: r, now }: { request: RequestItem; now: Date }) {
       <div className="meta">
         <span className="badge">{kindLabel(r.kind)}</span>
         <PhaseLabel request={r} now={now} />
+        {r.stokeCount > 0 && (
+          <span className="stoke-static">
+            <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+              <path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 1-5 3-7 0 3 1 4 2 4-1-3-1-6 1-9z" />
+            </svg>
+            {r.stokeCount} {r.stokeCount === 1 ? "stoke" : "stokes"}
+          </span>
+        )}
         <AnswerCount requestId={r.id} />
         <span className="meta-poster">Posted by {r.requesterName}</span>
       </div>

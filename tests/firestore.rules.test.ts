@@ -1137,6 +1137,81 @@ describe("upvotes on answers", () => {
   });
 });
 
+describe("stokes on fires", () => {
+  const person = (uid: string, verified = true) =>
+    env.authenticatedContext(uid, { email_verified: verified }).firestore();
+
+  const stokeData = (uid: string, requestId: string, overrides: Record<string, unknown> = {}) => ({
+    requestId,
+    voterId: uid,
+    createdAt: serverTimestamp(),
+    ...overrides,
+  });
+
+  const stoke = (db: Db, uid: string, requestId: string, overrides: Record<string, unknown> = {}) =>
+    setDoc(doc(db, "stokes", `${requestId}_${uid}`), stokeData(uid, requestId, overrides));
+
+  test("a verified person can stoke someone else's fire, and take it back", async () => {
+    await seedRequest("r1");
+    const bob = person("bob");
+    await assertSucceeds(stoke(bob, "bob", "r1"));
+    await assertSucceeds(deleteDoc(doc(bob, "stokes", "r1_bob")));
+  });
+
+  test("you cannot stoke your own fire", async () => {
+    await seedRequest("r1");
+    await assertFails(stoke(person("seed-user"), "seed-user", "r1"));
+  });
+
+  test("one stoke per person per fire", async () => {
+    await seedRequest("r1");
+    const bob = person("bob");
+    await assertSucceeds(stoke(bob, "bob", "r1"));
+    await assertFails(stoke(bob, "bob", "r1"));
+  });
+
+  test("an unverified email or a signed-out visitor cannot stoke", async () => {
+    await seedRequest("r1");
+    await assertFails(stoke(person("bob", false), "bob", "r1"));
+    await assertFails(stoke(env.unauthenticatedContext().firestore(), "bob", "r1"));
+  });
+
+  test("the stoke must be your own, under the right id, with the server time and no extras", async () => {
+    await seedRequest("r1");
+    const bob = person("bob");
+    await assertFails(stoke(bob, "bob", "r1", { voterId: "alice" }));
+    await assertFails(setDoc(doc(bob, "stokes", "r1_alice"), stokeData("alice", "r1")));
+    await assertFails(setDoc(doc(bob, "stokes", "whatever"), stokeData("bob", "r1")));
+    await assertFails(stoke(bob, "bob", "r1", { createdAt: new Date() }));
+    await assertFails(stoke(bob, "bob", "r1", { weight: 10 }));
+  });
+
+  test("not on a hidden or missing fire", async () => {
+    await seedRequest("hidden", { moderation: "hidden" });
+    const bob = person("bob");
+    await assertFails(stoke(bob, "bob", "hidden"));
+    await assertFails(stoke(bob, "bob", "nope"));
+  });
+
+  test("a stoke cannot be edited, and only its owner can remove it or read it", async () => {
+    await seedRequest("r1");
+    await assertSucceeds(stoke(person("bob"), "bob", "r1"));
+    await assertFails(updateDoc(doc(person("bob"), "stokes", "r1_bob"), { requestId: "r2" }));
+    await assertFails(deleteDoc(doc(person("alice"), "stokes", "r1_bob")));
+    await assertSucceeds(getDoc(doc(person("bob"), "stokes", "r1_bob")));
+    await assertFails(getDoc(doc(person("alice"), "stokes", "r1_bob")));
+  });
+
+  test("the stoke total and trend rank cannot be written from the app", async () => {
+    await seedRequest("r1");
+    await assertFails(updateDoc(doc(person("seed-user"), "requests", "r1"), { stokeCount: 99 }));
+    await assertFails(updateDoc(doc(person("bob"), "requests", "r1"), { trendRank: 9999 }));
+    await assertFails(
+      addDoc(collection(person("alice"), "requests"), newRequest("alice", { stokeCount: 5 })),
+    );
+  });
+});
+
 describe("everything else is locked", () => {
   test("unknown collections are refused", async () => {
     const db = env.authenticatedContext("alice").firestore();

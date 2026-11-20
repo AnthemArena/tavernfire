@@ -379,5 +379,29 @@ service cloud.firestore {
       allow update: if false;
       allow delete: if signedIn() && resource.data.voterId == request.auth.uid;
     }
+
+    // Stokes on fires ("good fire"). Same shape as upvotes: one document per person per
+    // fire, id requestId_uid, created and deleted only by the person, verified email,
+    // and you cannot stoke your own fire. The total (stokeCount) and the trending rank
+    // on the request are kept by Cloud Functions, never the app.
+    function validStoke(stokeId, d) {
+      let rq = get(/databases/$(database)/documents/requests/$(d.requestId)).data;
+      return d.keys().hasOnly(['requestId', 'voterId', 'createdAt'])
+        && d.keys().hasAll(['requestId', 'voterId', 'createdAt'])
+        && d.voterId == request.auth.uid
+        && d.requestId is string
+        && stokeId == d.requestId + '_' + request.auth.uid
+        && d.createdAt == request.time
+        && request.auth.token.email_verified == true
+        && rq.moderation == 'ok'
+        && rq.requesterId != request.auth.uid;
+    }
+
+    match /stokes/{stokeId} {
+      allow read: if signedIn() && resource.data.voterId == request.auth.uid;
+      allow create: if signedIn() && validStoke(stokeId, request.resource.data);
+      allow update: if false;
+      allow delete: if signedIn() && resource.data.voterId == request.auth.uid;
+    }
   }
 }
