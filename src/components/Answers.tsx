@@ -174,7 +174,7 @@ export default function Answers({ request }: { request: RequestItem }) {
         <Link className="btn btn-primary" href={signInHref(pathname)}>
           Sign in to answer
         </Link>
-        <span className="answers-prompt-note">You can also stoke fires and upvote answers once you are signed in.</span>
+        <span className="answers-prompt-note">Sign in also lets you stoke fires and upvote answers.</span>
       </p>
     );
   } else if (isRequester) {
@@ -234,18 +234,13 @@ export default function Answers({ request }: { request: RequestItem }) {
         <h2 id="answers-title" className="section-title">
           Answers
         </h2>
-        {entries !== null && entries.length > 0 && (
-          <p className="muted answers-count" role="status">
-            {entries.length} {entries.length === 1 ? "answer" : "answers"}
-          </p>
-        )}
       </div>
       {entries !== null && entries.length > 1 && (
-        <div className="tabs" role="group" aria-label="Sort answers">
-          <button type="button" className="tab" aria-pressed={sort === "top"} onClick={() => setSort("top")}>
-            Top
+        <div className="sort-tabs answers-sort" role="group" aria-label="Sort answers">
+          <button type="button" className="sort-tab" aria-pressed={sort === "top"} onClick={() => setSort("top")}>
+            Most upvoted
           </button>
-          <button type="button" className="tab" aria-pressed={sort === "newest"} onClick={() => setSort("newest")}>
+          <button type="button" className="sort-tab" aria-pressed={sort === "newest"} onClick={() => setSort("newest")}>
             Newest
           </button>
         </div>

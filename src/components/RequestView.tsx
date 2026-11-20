@@ -94,9 +94,14 @@ export default function RequestView({ id }: { id: string }) {
 
   if (state.status === "loading") {
     return (
-      <p className="muted page-note" role="status">
-        Loading…
-      </p>
+      <div className="request-page" role="status" aria-label="Loading fire">
+        <div className="sparks sparks-large" aria-hidden="true">
+          <span className="spark-ghost" />
+          <span className="spark-ghost" />
+          <span className="spark-ghost" />
+        </div>
+        <span className="visually-hidden">Loading…</span>
+      </div>
     );
   }
 
@@ -153,7 +158,7 @@ export default function RequestView({ id }: { id: string }) {
       </h1>
       <div className="sparks sparks-large" aria-hidden="true">
         {r.sparks.map((s) => (
-          <span className="spark spark-large" key={s}>
+          <span className={s.length > 16 ? "spark spark-large spark-long" : "spark spark-large"} key={s}>
             {s}
           </span>
         ))}
@@ -183,7 +188,8 @@ export default function RequestView({ id }: { id: string }) {
               <RankBadge xp={lighterXp} size={18} iconOnly />
             </>
           )}
-          , {describeAge(r.createdAt, now)}
+          {" · "}
+          {describeAge(r.createdAt, now)}
         </span>
       </p>
 
@@ -200,7 +206,8 @@ export default function RequestView({ id }: { id: string }) {
             type="button"
             className={stoked ? "stoke-btn stoke-btn-on" : "stoke-btn"}
             aria-pressed={stoked}
-            title="A good fire: a question worth answering."
+            title="A good fire is a question worth answering."
+            aria-describedby="stoke-help"
             aria-label={`Stoke this fire, ${stokes} ${stokes === 1 ? "stoke" : "stokes"}`}
             onClick={() => void toggleStoke()}
           >
@@ -210,6 +217,11 @@ export default function RequestView({ id }: { id: string }) {
           </button>
         )}
       </div>
+      {!isOwnFire && (
+        <p className="stoke-help" id="stoke-help">
+          A good fire is a question worth answering.
+        </p>
+      )}
       {needVerify && !emailVerified && <VerifyEmailNotice action="stoke fires" />}
       {stokeError && (
         <p className="error" role="alert">

@@ -2183,3 +2183,50 @@ a:hover {
     display: none;
   }
 }
+
+/* Fire page polish */
+.form-task {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.form-task .spark {
+  font-size: 16px;
+  padding: 4px 12px;
+}
+.stoke-help {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.spark-large.spark-long {
+  font-size: clamp(24px, 5vw, 36px);
+}
+.spark-ghost {
+  display: inline-block;
+  width: 150px;
+  height: 64px;
+  border-radius: 12px;
+  background: var(--surface-2, rgba(128, 128, 128, 0.18));
+  animation: ghost-pulse 1.4s ease-in-out infinite;
+}
+@keyframes ghost-pulse {
+  50% { opacity: 0.55; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spark-ghost { animation: none; }
+}
+.answers-sort {
+  margin-bottom: 8px;
+}
+.request-page .meta {
+  margin-top: 0;
+}
+.request-page .answers {
+  margin-top: 48px;
+}

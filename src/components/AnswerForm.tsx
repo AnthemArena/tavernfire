@@ -208,14 +208,20 @@ export default function AnswerForm({
   return (
     <form className="card answer-form" onSubmit={onSubmit} noValidate>
       <h3 className="card-title">{editing ? "Edit your answer" : "Write your answer"}</h3>
-      {!editing && (
-        <p className="card-lede">
-          Write it yourself; AI-written answers aren&apos;t allowed. Your display name is shown with
-          your answer. <Link href="/rules">Read the rules</Link>.
+      {!editing && request && (
+        <p className="form-task">
+          Fit all three sparks:{" "}
+          {request.sparks.map((s) => (
+            <span className="spark spark-small" key={s}>
+              {s}
+            </span>
+          ))}
         </p>
       )}
-      {!editing && request && (
-        <p className="hint">Your answer should fit all three sparks: {request.sparks.join(", ")}.</p>
+      {!editing && (
+        <p className="card-lede">
+          Write it yourself. AI-written answers aren&apos;t allowed. <Link href="/rules">Read the rules</Link>.
+        </p>
       )}
 
       <div className="field">
