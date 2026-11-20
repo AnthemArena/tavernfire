@@ -101,6 +101,9 @@ export default function EmailActionView() {
           <Link href="/" className="btn btn-primary btn-block">
             Browse fires
           </Link>
+          <Link href="/fires/new" className="btn btn-outline btn-block">
+            Light a fire
+          </Link>
         </>
       )}
 

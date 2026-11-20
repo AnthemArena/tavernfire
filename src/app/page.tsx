@@ -10,8 +10,7 @@ export default function Home() {
           <h1>Three sparks in. Something for your table out.</h1>
           <p className="hero-lede">
             A spark is a single word that starts an idea. Light a fire with
-            three of them, say what you need, and the community answers. The best
-            answers rise, and every one is written by a person.
+            three of them, say what you need, and the community answers.
           </p>
           <Link className="btn btn-primary hero-cta" href="/fires/new">
             Light a fire
@@ -29,7 +28,7 @@ export default function Home() {
             <p className="how-note-title">How a fire works</p>
             <ol>
               <li>Light a fire: pick three sparks and say what you need.</li>
-              <li>Anyone can answer, any time, under their own name.</li>
+              <li>The community answers.</li>
               <li>Stoke the fires worth answering. Upvote the answers you like.</li>
               <li>Every answer stays in the library, filed under its sparks.</li>
             </ol>

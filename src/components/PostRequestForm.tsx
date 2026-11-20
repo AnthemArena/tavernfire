@@ -167,7 +167,7 @@ export default function PostRequestForm() {
       ) : !user ? (
         <>
           <div className="example-sparks">
-            <p className="example-label">Example request</p>
+            <p className="example-label">Example fire</p>
             <div className="sparks">
               {["Statue", "Time", "Glowing"].map((word) => (
                 <span className="spark" key={word}>
@@ -266,7 +266,7 @@ export default function PostRequestForm() {
           )}
           <p className="hint">
             Broad words invite surprises. Narrow words get you closer to what
-            you need.
+            you need. Check your spelling: sparks are matched exactly.
           </p>
 
           {isCompactPicker(LAUNCHED_CATEGORIES.length) ? (
@@ -395,7 +395,7 @@ export default function PostRequestForm() {
               {(() => {
                 const on = nameChangeOn();
                 return on ? (
-                  `You can change it again on ${on.toLocaleDateString(undefined, { day: "numeric", month: "long" })}.`
+                  `You can change your display name again on ${on.toLocaleDateString(undefined, { day: "numeric", month: "long" })}.`
                 ) : (
                   <button type="button" className="link-button" onClick={() => setChangingName(true)}>
                     Change
@@ -422,9 +422,6 @@ export default function PostRequestForm() {
           <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
             {busy ? "Lighting…" : "Light the fire"}
           </button>
-          <p className="hint">
-            Fires stay open. Write your own work; no AI-generated answers.
-          </p>
         </form>
       )}
     </div>

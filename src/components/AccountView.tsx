@@ -92,27 +92,27 @@ function NameCard({
   return (
     <section className="card" aria-labelledby="name-heading">
       <h2 className="card-title" id="name-heading">
-        Your name
+        Display name
       </h2>
       <p className="account-name">
-        {displayName ? <strong>{displayName}</strong> : <span className="muted">No name yet</span>}
+        {displayName ? <strong>{displayName}</strong> : <span className="muted">You haven&apos;t chosen a display name yet.</span>}
       </p>
       <p className="hint">
         {displayName
           ? "Shown next to your fires and on your answers."
-          : "You'll be asked for one when you post your first request. You can also pick it here."}
+          : "You'll be asked for one when you light your first fire or write your first answer. You can also choose it here."}
       </p>
 
       {waitUntil ? (
         <p className="hint">
-          You can change it again on{" "}
+          You can change your display name again on{" "}
           {waitUntil.toLocaleDateString(undefined, { day: "numeric", month: "long" })}.
         </p>
       ) : (
         <form onSubmit={onSubmit} noValidate>
           <div className="field">
             <label className="label" htmlFor="account-name">
-              {displayName ? "New name" : "Choose a name"}
+              {displayName ? "New display name" : "Choose a display name"}
             </label>
             <input
               id="account-name"
@@ -139,18 +139,17 @@ function NameCard({
               </p>
             )}
             <p className="hint" id="account-name-hint">
-              Pick something that isn&apos;t your real name.
-              {displayName && ` Changing it starts a new ${NAME_CHANGE_DAYS}-day wait.`}
-            </p>
+              Pick a name that isn&apos;t your real name. You can change it once every {NAME_CHANGE_DAYS} days.
+                          </p>
           </div>
           <button type="submit" className="btn btn-primary" disabled={busy || value.trim() === ""}>
-            {busy ? "Saving…" : displayName ? "Change name" : "Save name"}
+            {busy ? "Saving…" : displayName ? "Change display name" : "Save display name"}
           </button>
         </form>
       )}
       {saved && (
         <p className="notice notice-success" role="status">
-          Name saved.
+          Display name saved.
         </p>
       )}
     </section>
@@ -189,11 +188,11 @@ function MyRequests({ uid }: { uid: string }) {
   return (
     <section aria-labelledby="my-requests">
       <h2 className="section-title" id="my-requests">
-        Your requests
+        Your fires
       </h2>
       {failed ? (
         <p className="empty" role="alert">
-          Couldn&apos;t load your requests right now. Please try again in a moment.
+          Couldn&apos;t load your fires right now. Please try again in a moment.
         </p>
       ) : items === null ? (
         <p className="empty" role="status">
@@ -336,7 +335,7 @@ function MyAnswers({ uid }: { uid: string }) {
         </ul>
       )}
       <p className="hint account-note">
-        Only you can see this list. Your answers also appear on your public profile.
+        Only you can see this page. Your fires and answers are also shown on your public profile.
       </p>
     </section>
   );

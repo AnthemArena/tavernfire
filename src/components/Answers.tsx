@@ -178,7 +178,7 @@ export default function Answers({ request }: { request: RequestItem }) {
     action = (
       <p className="notice notice-plain">
         This is your fire, so you can&apos;t answer it.
-        {list.length === 0 && " No answers yet, but anyone else can answer it."}
+        {list.length === 0 && " No answers yet."}
       </p>
     );
   } else if (mine) {

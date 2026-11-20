@@ -80,7 +80,7 @@ export const CATEGORIES = [
     label: "Location",
     fullLabel: "Location",
     filterLabel: "Locations",
-    description: "A place: what it is like, and what happens there.",
+    description: "A place: what it looks like, how it feels, and what happens there.",
     launched: true,
     group: "Places and worlds",
     answer: {
