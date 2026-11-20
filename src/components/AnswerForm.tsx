@@ -314,11 +314,7 @@ export default function AnswerForm({
               you can change it once every {NAME_CHANGE_DAYS} days.
             </p>
           </div>
-        ) : (
-          <p className="hint">
-            Your name, <strong>{displayName}</strong>, is shown on your answer.
-          </p>
-        ))}
+        ) : null)}
 
       {error && (
         <p className="error" role="alert">
