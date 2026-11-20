@@ -38,6 +38,7 @@
   --tab-bg: #3a2e12;
   --tab-fg: #e6c35c;
   --tab-border: #d4af37;
+  --warn-text: #e8b4a0;
 
   --font-serif: var(--font-fraunces), Georgia, serif;
   --font-sans: var(--font-inter), system-ui, sans-serif;
@@ -79,6 +80,7 @@
   --tab-bg: #211d18;
   --tab-fg: #f4eee1;
   --tab-border: #211d18;
+  --warn-text: #8a3b1f;
 }
 
 *,
@@ -488,8 +490,37 @@ a:hover {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 4px 12px;
   margin-bottom: 20px;
+}
+
+/* Sort is plain underlined text; the type filter stays as pills, so the two never look alike.
+   Sort always sits left and the filter right, whichever tab is open. */
+.sort-tabs {
+  display: flex;
+  gap: 24px;
+}
+.sort-tab {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.sort-tab:hover {
+  color: var(--ink);
+}
+.sort-tab[aria-pressed="true"] {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
+.board-head > :last-child:not(.sort-tabs) {
+  margin-left: auto;
 }
 
 .section-title {
@@ -546,11 +577,6 @@ a:hover {
 }
 
 .request-card-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
   margin-bottom: 14px;
 }
 
@@ -559,6 +585,11 @@ a:hover {
   line-height: 1.45;
   color: var(--body);
   margin: 0 0 14px;
+  /* Two lines on the board; the fire page shows the whole note. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .sparks {
@@ -1593,8 +1624,61 @@ a:hover {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--accent);
+  color: var(--ink);
   font-weight: 600;
+}
+/* Only the flame is gold: a number you cannot click should not look like the selected tab. */
+.stoke-static svg {
+  color: var(--accent);
+}
+
+/* The counts at the right end of a card's last row. */
+.card-counts {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-left: auto;
+}
+
+/* Cards while the list loads: same size as a real card, so nothing jumps. */
+.request-card-skeleton {
+  pointer-events: none;
+}
+.skeleton-sparks {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.skeleton-sparks span {
+  width: 96px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--chip);
+}
+.skeleton-meta {
+  width: 60%;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--chip);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .request-card-skeleton {
+    animation: skeleton-pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes skeleton-pulse {
+    50% {
+      opacity: 0.55;
+    }
+  }
+}
+
+/* Empty list: the words, and a way forward when the board is bare. */
+.empty p {
+  margin: 0 0 12px;
+}
+.empty p:last-child {
+  margin-bottom: 0;
 }
 
 /* Rules, terms and privacy pages */
@@ -1864,7 +1948,7 @@ a:hover {
   box-sizing: border-box;
   border-radius: 9px;
   background: var(--accent);
-  color: #131211;
+  color: var(--on-accent);
   font: 700 11px/18px var(--font-sans, inherit);
   text-align: center;
 }
@@ -2029,8 +2113,8 @@ a:hover {
   border-color: var(--accent);
 }
 .badge-warn {
-  color: #e8b4a0;
-  border-color: #e8b4a0;
+  color: var(--warn-text);
+  border-color: var(--warn-text);
 }
 .avatar-grid {
   max-height: 300px;
@@ -2056,4 +2140,34 @@ a:hover {
   margin-top: 8px;
   font-size: 14px;
   color: var(--muted);
+}
+
+/* "How a fire works": beside the list on wide screens; on narrower ones the side box would
+   land after up to 30 cards, so a folded copy sits above the list instead. */
+.how-note-fold {
+  display: none;
+  margin-bottom: 20px;
+  padding: 0 20px;
+}
+.how-note-fold summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+.how-note-fold ol {
+  padding-bottom: 16px;
+}
+@media (max-width: 940px) {
+  .how-note-fold {
+    display: block;
+  }
+  .board-side {
+    display: none;
+  }
 }

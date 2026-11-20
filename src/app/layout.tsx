@@ -22,7 +22,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Tavernfire",
   description:
-    "Post three sparks, get something for your table. A community library of NPCs and locations written by people.",
+    "Light a fire with three sparks and get something for your table. A library of NPCs, locations, items and creatures written by people.",
 };
 
 // Runs before the page paints so the saved theme never flashes the wrong colours.

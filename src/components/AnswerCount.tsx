@@ -30,8 +30,13 @@ export default function AnswerCount({ requestId, own = false }: { requestId: str
     };
   }, [requestId]);
 
-  if (count === null) return <span className="muted">Answers…</span>;
-  // On your own fire "be the first" would be an invitation you cannot accept.
+  // Nothing until the count is known, so the row does not change shape when it arrives.
+  if (count === null) return null;
+  return <AnswerCountLabel count={count} own={own} />;
+}
+
+/** The words for a known answer count. On your own fire "be the first" would be an invitation you cannot accept. */
+export function AnswerCountLabel({ count, own = false }: { count: number; own?: boolean }) {
   if (count === 0) return <span>{own ? "No answers yet." : "No answers yet. Be the first."}</span>;
   return (
     <span>
