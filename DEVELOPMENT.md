@@ -179,3 +179,9 @@ still show if a request has been revealed.
 - The Light a fire form reads it to suggest existing sparks while you type (`src/lib/spark-suggestions.ts`). Suggestions are optional; people can still type any word.
 - Fires lit before this function was deployed are not in the list until one of them is written to. For a quick start, light (or delete) a test fire per spark, or run a one-off recount over `requests` with `recountSparks`.
 - Deploy with `firebase deploy --only "firestore:rules,functions"`.
+
+## Library search
+
+- `/library?s=statue,time,glowing` searches answers by the sparks of the fire they answered (`src/lib/library.ts`, `src/components/LibraryView.tsx`). One to three sparks; exact matches first, then two shared, then one; most upvoted first within each group. Up to 30 answers per query.
+- It uses three new indexes on `entries` (`sparkKey`, `pairKeys`, `sparksNorm`, each with `moderation` and `upvoteCount`). Deploy them with `firebase deploy --only firestore:indexes`; they take a few minutes to build.
+- Not built yet: search by trait, filter by type, spark suggestions in the search box, paging past the first 30 results.

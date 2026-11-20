@@ -1645,3 +1645,26 @@ a:hover {
   margin: 12px 0 0;
   font-size: 18px;
 }
+
+/* Library */
+.library-search {
+  margin-bottom: 24px;
+}
+.library-group {
+  margin-top: 28px;
+}
+.library-heading {
+  font-size: 18px;
+  margin: 0 0 12px;
+}
+.library-concept {
+  margin: 4px 0 8px;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.spark-hit {
+  border-color: var(--accent);
+}

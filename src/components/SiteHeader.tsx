@@ -10,6 +10,7 @@ function MainNav() {
   const pathname = usePathname();
   const onRequests =
     pathname === "/" || pathname.startsWith("/fires");
+  const onLibrary = pathname.startsWith("/library");
   return (
     <nav className="nav" aria-label="Main">
       <Link
@@ -18,6 +19,13 @@ function MainNav() {
         aria-current={onRequests ? "page" : undefined}
       >
         Fires
+      </Link>
+      <Link
+        href="/library"
+        className={onLibrary ? "nav-current" : undefined}
+        aria-current={onLibrary ? "page" : undefined}
+      >
+        Library
       </Link>
     </nav>
   );

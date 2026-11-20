@@ -29,7 +29,7 @@ There is deliberately no contest, deadline or reveal for ordinary fires: the sit
 ## Discovery
 
 - **Fires page:** Trending, Top and New, with a filter by type.
-- **Library (planned):** search by spark. Search one, two or all three sparks; exact matches rank first, then close matches that share two of three. Ranked by upvotes.
+- **Library:** search by spark at `/library`. Search one, two or all three sparks; exact matches rank first, then close matches that share two of three. Ranked by upvotes.
 - **By trait (planned):** author-chosen, capped at about five per answer, with suggestions drawn from existing traits to avoid near-duplicates (Ancient, Old, Aged).
 
 Sparks rank above traits in search, and the interface keeps the two visibly separate.
@@ -47,7 +47,7 @@ Sparks rank above traits in search, and the interface keeps the two visibly sepa
 - Report answer (reports are stored; moderator tools are not built yet)
 
 **Next**
-- Library: search by spark and by trait
+- Library: search by spark (built); search by trait (not yet)
 - Before launch: clear test data, connect the domain and set the email action URL, create moderator tools and a moderator role, terms and privacy pages
 
 **Later**

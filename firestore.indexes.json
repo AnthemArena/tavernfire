@@ -81,6 +81,60 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "entries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "moderation",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "sparkKey",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "upvoteCount",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "entries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "moderation",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "pairKeys",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "upvoteCount",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "entries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "moderation",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "sparksNorm",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "upvoteCount",
+          "order": "DESCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": [
