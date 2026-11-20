@@ -1749,7 +1749,7 @@ a:hover {
 
 .avatar-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
   gap: 10px;
   margin: 12px 0 16px;
 }
@@ -1764,8 +1764,8 @@ a:hover {
   cursor: pointer;
 }
 .avatar-choice .avatar {
-  width: 64px;
-  height: 64px;
+  width: 52px;
+  height: 52px;
   margin: 0;
 }
 .avatar-choice:hover {
@@ -1790,8 +1790,8 @@ a:hover {
   box-shadow: 0 0 0 1.5px var(--accent);
 }
 .avatar-choice .avatar-img {
-  width: 64px;
-  height: 64px;
+  width: 52px;
+  height: 52px;
 }
 
 .profile-bio {

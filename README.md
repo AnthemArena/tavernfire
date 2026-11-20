@@ -4,7 +4,7 @@ A community site where tabletop RPG players and game masters swap ideas, started
 
 ## The idea in one line
 
-Someone lights a fire: three sparks and what they need. The community answers with something made by a person, the best answers rise, and every answer stays in a library anyone can search.
+Someone lights a fire: three sparks and what they need. The community answers with something made by a person, the best answers rise, and every fire stays in a library anyone can search, filed under its sparks.
 
 ## Vocabulary
 
