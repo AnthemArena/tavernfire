@@ -146,6 +146,7 @@ export default function AnswerForm({
 
     if (!request) return;
     const entryId = resumeEntryId ?? doc(collection(getDb(), "entries")).id;
+    let step = "";
     try {
       const db = getDb();
 
@@ -153,6 +154,7 @@ export default function AnswerForm({
       // answering this request with this entry id" (it stops a second answer).
       // Then the public entry, which carries the author's id and name. Security
       // rules check each against what already exists.
+      step = "the private answer marker";
       if (!resumeEntryId) {
         await setDoc(doc(db, ...answerMarkerPath(request.id, user.uid)), {
           authorId: user.uid,
@@ -161,6 +163,7 @@ export default function AnswerForm({
           createdAt: serverTimestamp(),
         });
       }
+      step = "the public entry";
       await setDoc(doc(db, "entries", entryId), {
         requestId: request.id,
         kind: request.kind,
@@ -175,10 +178,11 @@ export default function AnswerForm({
         upvoteCount: 0,
         createdAt: serverTimestamp(),
       });
+      step = "";
       onSubmitted?.();
       // The live listener on the page now shows the new entry as "Your entry".
     } catch (err) {
-      console.error("Could not submit answer", err);
+      console.error(`Could not submit answer (refused at ${step || "an unknown step"})`, err);
       // If a different entry of mine already holds the private marker, this is
       // a second answer (for example from another tab). Retrying would always
       // fail, so hand over to the page instead of offering "try again".
