@@ -136,9 +136,15 @@ a:hover {
 }
 
 .container.narrow {
-  max-width: 520px;
   padding-top: 56px;
   padding-bottom: 64px;
+}
+
+/* One left edge for every page: the same 1120px frame as the header and
+   the Fires board. Form-style pages keep a narrow column inside it, left
+   aligned, rather than a narrow frame centred on its own. */
+.container.narrow > * {
+  max-width: 520px;
 }
 
 .visually-hidden {
@@ -2327,7 +2333,7 @@ a:hover {
 }
 
 /* Library: wider than the form pages, one search box beside its button */
-.container.library-page {
+.container.library-page > * {
   max-width: 720px;
 }
 .library-search-row {
