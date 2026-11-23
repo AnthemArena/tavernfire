@@ -1,7 +1,23 @@
 "use client";
 
+import { useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
+
+// Remembers that this browser belongs to a member, so a returning member sees the short hero at once
+// instead of the example card flashing up while the sign-in check finishes.
+const MEMBER_KEY = "tavernfire-member";
+function subscribeMemberHint(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  return () => window.removeEventListener("storage", onChange);
+}
+function readMemberHint() {
+  try {
+    return window.localStorage.getItem(MEMBER_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
 
 /**
  * The top of the front page. Members see the short version, so the board is
@@ -11,7 +27,19 @@ import { useAuth } from "@/lib/auth-context";
  */
 export default function HomeHero() {
   const { user, loading } = useAuth();
-  const member = !loading && user !== null;
+  const hint = useSyncExternalStore(subscribeMemberHint, readMemberHint, () => false);
+  // Until the sign-in check finishes, go by what this browser remembered.
+  const member = loading ? hint : user !== null;
+
+  useEffect(() => {
+    if (loading) return;
+    try {
+      if (user) window.localStorage.setItem(MEMBER_KEY, "1");
+      else window.localStorage.removeItem(MEMBER_KEY);
+    } catch {
+      // Storage can be blocked; the page still works, it just may flash once.
+    }
+  }, [user, loading]);
 
   return (
     <section className="hero">
