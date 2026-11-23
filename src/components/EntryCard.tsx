@@ -242,7 +242,7 @@ export default function EntryCard({
             </button>
           ) : (
             <span className="entry-anon">
-              {`Answers are locked ${ENTRY_EDIT_WINDOW_HOURS} hours after posting.`}
+              {`Editing closed. Answers lock ${ENTRY_EDIT_WINDOW_HOURS} hours after posting.`}
             </span>
           ))}
 
