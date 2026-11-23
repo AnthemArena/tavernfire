@@ -1503,9 +1503,8 @@ a:hover {
 }
 
 .profile-stat dt {
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 14px;
+  white-space: nowrap;
   color: var(--muted);
 }
 
@@ -1792,6 +1791,13 @@ a:hover {
   font-family: var(--font-sans);
   text-decoration: none;
   overflow-wrap: anywhere;
+}
+.cloud-count {
+  font-family: var(--font-sans, inherit);
+  font-size: 0.6em;
+  font-weight: 500;
+  color: var(--muted);
+  margin-left: 2px;
 }
 .cloud-spark:hover {
   color: var(--accent);
@@ -2158,17 +2164,30 @@ a:hover {
   padding-right: 4px;
 }
 .profile-stats {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 .profile-stat {
-  padding: 10px;
-}
-.profile-stat dt {
-  letter-spacing: 0.04em;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 12px 14px;
 }
 .profile-stat dd {
-  font-size: 24px;
+  margin: 0;
+  line-height: 1;
+  font-size: 26px;
+}
+.achievements-label {
+  margin: 0 0 6px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.profile-edit {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .answers-prompt-note {
@@ -2512,6 +2531,10 @@ a:hover {
 .answer-feed-author a {
   color: inherit;
   text-decoration: none;
+}
+.answer-feed-age {
+  font-weight: 400;
+  color: var(--muted);
 }
 .answer-feed-votes {
   color: var(--muted);

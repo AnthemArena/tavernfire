@@ -271,12 +271,12 @@ export default function Answers({ request }: { request: RequestItem }) {
       ) : (
         <>
           {entries.length === 0 && showingForm && !isRequester && (
-            <p className="answers-first">No answers yet. Yours could be the first.</p>
+            <p className="answers-first">No answers yet. Be the first.</p>
           )}
           {action}
           {entries.length === 0 && !showingForm && !isRequester && (
             <p className="empty">
-              No answers yet. Be the first to answer.
+              No answers yet. Be the first.
             </p>
           )}
           {needVerify && !emailVerified && <VerifyEmailNotice action="upvote answers" />}

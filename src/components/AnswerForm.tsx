@@ -337,8 +337,8 @@ export default function AnswerForm({
               ? "Saving…"
               : "Save changes"
             : busy
-              ? "Submitting…"
-              : "Submit answer"}
+              ? "Posting…"
+              : "Post answer"}
         </button>
         {onCancel && (
           <button type="button" className="btn btn-outline" onClick={onCancel} disabled={busy}>

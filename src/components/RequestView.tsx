@@ -149,7 +149,7 @@ export default function RequestView({ id }: { id: string }) {
   return (
     <article className="request-page">
       <Link href="/" className="back-link">
-        ← Fires
+        ← Back to Fires
       </Link>
 
       <p className="kicker">The three sparks for <span className="kicker-type">{getCategory(r.kind).answer.needed}</span></p>

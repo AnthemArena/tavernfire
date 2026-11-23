@@ -143,6 +143,7 @@ export default function AnswersFeed() {
                     <span className="answer-feed-author">
                       <Avatar id={e.author.avatar} name={e.author.name} size="sm" />
                       <Link href={`/profile/${e.author.id}`}>{e.author.name}</Link>
+                      {e.createdAt && <span className="answer-feed-age">, {describeAge(e.createdAt, now)}</span>}
                     </span>
                   )}
                   <span className="answer-feed-votes" aria-label={`${e.upvoteCount} upvotes`}>

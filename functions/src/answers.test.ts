@@ -30,3 +30,9 @@ test("the top answer carries its author, or null when there is none", () => {
   assert.equal(pickTop([{ name: "A", concept: "x", upvoteCount: 1, createdMs: 1, authorName: "LightReign" }])?.author, "LightReign");
   assert.equal(pickTop([{ name: "A", concept: "x", upvoteCount: 1, createdMs: 1 }])?.author, null);
 });
+
+test("a cut snippet never has punctuation before the ellipsis", () => {
+  const cut = snippetOf("A long note about testing. And then it goes on and on past the limit", 26);
+  assert.ok(cut.endsWith("…"));
+  assert.ok(!/[.,;:!?]…$/.test(cut));
+});

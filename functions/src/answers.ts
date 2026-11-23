@@ -17,7 +17,8 @@ export function snippetOf(text: string, max = SNIPPET_MAX): string {
   if (flat.length <= max) return flat;
   const cut = flat.slice(0, max);
   const lastSpace = cut.lastIndexOf(" ");
-  return `${(lastSpace > max / 2 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`;
+  // No full stop or comma before the ellipsis: "testing.…" reads as a typo.
+  return `${(lastSpace > max / 2 ? cut.slice(0, lastSpace) : cut).trimEnd().replace(/[.,;:!?\-]+$/, "")}…`;
 }
 
 type AnswerRow = { name: unknown; concept: unknown; upvoteCount: unknown; createdMs: number; authorName?: unknown };

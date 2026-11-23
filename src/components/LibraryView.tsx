@@ -11,17 +11,20 @@ import { cloudSize, displayWord, fireCount, popularSparks, type SparkSuggestion 
 import { SPARK_MAX_LENGTH, normaliseSpark } from "@/lib/sparks";
 import { useSparkSuggestions } from "@/lib/use-spark-suggestions";
 import { matchHeading, parseSparks, searchLibrary, type LibraryResult } from "@/lib/library";
+import { useNow } from "@/lib/use-now";
+import { describeAge } from "@/lib/requests";
 
 type State =
   | { status: "error"; key: string }
   | { status: "ready"; key: string; results: LibraryResult[] }
   | { status: "idle" };
 
-const PLACEHOLDERS = ["Statue", "Time", "Glowing"];
+const PLACEHOLDER = "Type a spark";
 
 /** Search fires by spark. The searched sparks live in the address (?s=statue,time) so a search can be shared. */
 export default function LibraryView() {
   const router = useRouter();
+  const now = useNow();
   const params = useSearchParams();
   // One spark at a time: an older link with several sparks searches the first.
   const searched = parseSparks(params.get("s") ?? "").slice(0, 1);
@@ -128,7 +131,7 @@ export default function LibraryView() {
                 type="text"
                 maxLength={SPARK_MAX_LENGTH}
                 autoComplete="off"
-                placeholder={PLACEHOLDERS[index]}
+                placeholder={PLACEHOLDER}
                 value={value}
                 onChange={(e) => setBoxes((cur) => cur.map((b, i) => (i === index ? e.target.value : b)))}
                 onFocus={() => setFocused(index)}
@@ -156,13 +159,19 @@ export default function LibraryView() {
             ))}
           </div>
         )}
-        <p className="hint">One word, like Statue or Lantern.</p>
+        {/\s/.test(boxes[0]?.trim() ?? "") ? (
+          <p className="hint" role="status">
+            Sparks are single words. Search one at a time.
+          </p>
+        ) : (
+          <p className="hint">One word, like Statue or Lantern.</p>
+        )}
       </form>
 
       {!searching && cloud.length > 0 && (
         <>
-        <h2 className="library-heading library-heading-quiet">Popular sparks</h2>
-        <p className="hint cloud-hint">Tap a spark to search it.</p>
+        <h2 className="library-heading">Popular sparks</h2>
+        <p className="hint cloud-hint">Pick a spark to see its fires.</p>
         <nav className="spark-cloud" aria-label="Popular sparks">
           {[...cloud]
             .sort((a, b) => a.word.localeCompare(b.word, "en"))
@@ -173,7 +182,7 @@ export default function LibraryView() {
                 className={`cloud-spark cloud-${cloudSize(s.count, biggest)}`}
                 title={fireCount(s.count)}
               >
-                {displayWord(s.word)}
+                {displayWord(s.word)} <span className="cloud-count">{s.count}</span>
               </Link>
             ))}
         </nav>
@@ -197,15 +206,18 @@ export default function LibraryView() {
       )}
       {results && results.length === 0 && searching && (
         <div className="empty">
-          <p className="empty-line">No fires with those sparks yet.</p>
-          <Link href={`/fires/new?s=${encodeURIComponent(searched.join(","))}`} className="btn btn-dark">
+          <p className="empty-line">No fires use {displayWord(searched[0])} yet.</p>
+          <Link href={`/fires/new?s=${encodeURIComponent(searched.join(","))}`} className="btn btn-primary">
             Light a fire with this spark
           </Link>
         </div>
       )}
 
       {groups.map((group) => {
-        const heading = matchHeading(group.matched, searched.length);
+        const heading =
+          searched.length === 1
+            ? `${group.items.length} ${group.items.length === 1 ? "fire" : "fires"} with the spark ${displayWord(searched[0])}`
+            : matchHeading(group.matched, searched.length);
         return (
           <section key={group.matched} className="library-group" aria-label={heading}>
             <h2 className="library-heading">{heading}</h2>
@@ -229,7 +241,7 @@ export default function LibraryView() {
                       <span className="badge">{getCategory(fire.kind).label}</span>
                       <span className="by-line">
                         <Avatar id={fire.requesterAvatar} name={fire.requesterName} size="sm" />
-                        Lit by {fire.requesterName}
+                        Lit by {fire.requesterName}, {describeAge(fire.createdAt, now)}
                       </span>
                       <span className="card-counts">
                         {fire.stokeCount > 0 && (

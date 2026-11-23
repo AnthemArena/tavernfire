@@ -312,7 +312,10 @@ export default function PostRequestForm() {
 
           <div className="field">
             <label className="label" htmlFor="note">
-              Anything the table should know (optional)
+              Anything the table should know (optional){" "}
+              <span className="counter" aria-hidden="true">
+                {note.length} of {NOTE_MAX} characters
+              </span>
             </label>
             <textarea
               id="note"
@@ -381,16 +384,11 @@ export default function PostRequestForm() {
           ) : (
             <p className="hint posting-as">
               Posting as <strong>{displayName}</strong>.{" "}
-              {(() => {
-                const on = nameChangeOn();
-                return on ? (
-                  `You can change your display name again on ${on.toLocaleDateString(undefined, { day: "numeric", month: "long" })}.`
-                ) : (
-                  <button type="button" className="link-button" onClick={() => setChangingName(true)}>
-                    Change
-                  </button>
-                );
-              })()}
+              {nameChangeOn() === null && (
+                <button type="button" className="link-button" onClick={() => setChangingName(true)}>
+                  Change
+                </button>
+              )}
             </p>
           )}
 

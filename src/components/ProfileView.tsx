@@ -135,6 +135,7 @@ export default function ProfileView({ uid }: { uid: string }) {
 
   const { profile, fires, answers } = state;
   const upvotes = answers.reduce((sum, a) => sum + a.entry.upvoteCount, 0);
+  const stokes = fires.reduce((sum, f) => sum + f.stokeCount, 0);
   const isMe = user?.uid === uid;
   // Open on the tab that has something in it.
   const shownTab = tab ?? (answers.length === 0 && fires.length > 0 ? "fires" : "answers");
@@ -150,9 +151,16 @@ export default function ProfileView({ uid }: { uid: string }) {
           <h1 className="profile-name">{profile.name}</h1>
           {isMe ? <RankProgress xp={profile.xp} /> : <RankBadge xp={profile.xp} />}
           {since && <p className="profile-since">Member since {since}</p>}
+          {isMe && (
+            <Link className="profile-edit" href="/settings">
+              Edit profile
+            </Link>
+          )}
         </div>
         {profile.bio && <p className="profile-bio">{profile.bio}</p>}
         {profile.achievements.some((id) => achievementById(id)) && (
+          <div>
+          <p className="achievements-label">Achievements</p>
           <ul className="achievement-list" aria-label="Achievements">
             {profile.achievements.map((id) => {
               const a = achievementById(id);
@@ -163,11 +171,11 @@ export default function ProfileView({ uid }: { uid: string }) {
               ) : null;
             })}
           </ul>
+          </div>
         )}
         <dl className="profile-stats">
-          <Stat label="Fires lit" value={fires.length} />
-          <Stat label="Answers" value={answers.length} />
-          <Stat label="Upvotes" value={upvotes} />
+          <Stat label="Upvotes received" value={upvotes} />
+          <Stat label="Stokes received" value={stokes} />
         </dl>
       </aside>
 
@@ -214,7 +222,7 @@ export default function ProfileView({ uid }: { uid: string }) {
                         <span>
                           {entry.upvoteCount} {entry.upvoteCount === 1 ? "upvote" : "upvotes"}
                         </span>
-                        {entry.createdAt && <span>Posted {describeAge(entry.createdAt, now)}</span>}
+                        {entry.createdAt && <span>Answered {describeAge(entry.createdAt, now)}</span>}
                         {r?.favourite && <span className="badge badge-favourite">Community favourite</span>}
                         {r?.rank != null && <span className="badge badge-rank">{rankLabel(r.rank, r.tied)}</span>}
                       </div>

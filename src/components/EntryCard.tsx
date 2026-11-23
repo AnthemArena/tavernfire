@@ -6,6 +6,7 @@ import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
+import { describeAge } from "@/lib/requests";
 import {
   describeEditTimeLeft,
   ENTRY_EDIT_WINDOW_HOURS,
@@ -215,6 +216,7 @@ export default function EntryCard({
             <span className="by-line">
               <Avatar id={entry.author.avatar} name={entry.author.name} size="sm" />
               by <Link href={`/profile/${entry.author.id}`}>&nbsp;{entry.author.name}</Link>
+              {entry.createdAt && <>, {describeAge(entry.createdAt, now)}</>}
             </span>
           )}
           {entry.edited && (

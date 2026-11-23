@@ -64,8 +64,7 @@ export function RankProgress({ xp }: { xp: number }) {
         <div className="rank-bar-fill" style={{ width: `${Math.round(p.fraction * 100)}%` }} />
       </div>
       <p className="hint">
-        {xp} XP
-        {p.next ? ` · ${p.toNext} to ${p.next.name}` : " · the highest rank"}
+        {xp} XP{p.next ? `, ${p.toNext} more to ${p.next.name}` : ", the highest rank"}
       </p>
     </div>
   );
