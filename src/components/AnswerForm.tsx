@@ -210,7 +210,7 @@ export default function AnswerForm({
       <h3 className="card-title">{editing ? "Edit your answer" : "Write your answer"}</h3>
       {!editing && request && (
         <p className="form-task">
-          Fit all three sparks:{" "}
+          Bring all three sparks into your idea:{" "}
           {request.sparks.map((s) => (
             <span className="spark spark-small" key={s}>
               {s}
