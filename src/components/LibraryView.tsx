@@ -252,17 +252,6 @@ export default function LibraryView() {
           </section>
         );
       })}
-
-      {((results && results.length > 0) || (!searching && cloud.length > 0)) && (
-        <div className="library-foot">
-          <Link
-            href={searching ? `/fires/new?s=${encodeURIComponent(searched.join(","))}` : "/fires/new"}
-            className="btn btn-dark"
-          >
-            Light a fire
-          </Link>
-        </div>
-      )}
     </>
   );
 }
