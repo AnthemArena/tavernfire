@@ -2322,3 +2322,41 @@ a:hover {
 .library-search-row .btn {
   min-height: 48px;
 }
+
+/* Clickable sparks (the Library cloud and the suggestions) share the spark chip's look: serif, dark chip, gold edge. */
+.cloud-spark,
+.spark-suggestion {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  background: var(--chip);
+  border: 1px solid var(--spark-border);
+  border-radius: 8px;
+  color: var(--ink);
+}
+.cloud-spark:hover,
+.spark-suggestion:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.cloud-spark:focus-visible,
+.spark-suggestion:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.spark-suggestion {
+  min-height: 40px;
+  padding: 4px 14px;
+}
+.spark-suggestion .muted {
+  font-family: var(--font-sans);
+  font-weight: 400;
+}
+.cloud-0 {
+  font-size: 17px;
+}
+.cloud-1 {
+  font-size: 20px;
+}
+.cloud-2 {
+  font-size: 24px;
+}
