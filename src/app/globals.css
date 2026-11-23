@@ -2550,3 +2550,42 @@ a:hover {
   outline: 2px solid var(--gold, #d4a72c);
   outline-offset: 2px;
 }
+
+/* Spark chips that open the Library */
+a.spark-link {
+  color: inherit;
+  text-decoration: none;
+}
+a.spark-link:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+a.spark-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.answer-feed-sparks-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.answer-feed-sparks-row .spark {
+  font-size: 15px;
+  padding: 3px 10px;
+}
+.answer-feed-card {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 16px;
+}
+.answer-feed-concept {
+  max-width: 65ch;
+}
+.answer-feed-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

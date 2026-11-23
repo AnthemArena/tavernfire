@@ -16,6 +16,7 @@ import {
   type ReportReason,
 } from "@/lib/entries";
 import AnswerForm from "@/components/AnswerForm";
+import UpArrow from "@/components/UpArrow";
 
 function ReportForm({ entryId, onClose }: { entryId: string; onClose: () => void }) {
   const { user } = useAuth();
@@ -107,14 +108,6 @@ function ReportForm({ entryId, onClose }: { entryId: string; onClose: () => void
   );
 }
 
-function UpArrow() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
-      <path d="M12 4l8 10h-5v6H9v-6H4z" />
-    </svg>
-  );
-}
-
 export default function EntryCard({
   entry,
   isMine,
@@ -193,7 +186,8 @@ export default function EntryCard({
           <span
             className="vote-static"
             role="img"
-            aria-label={`${upvote.count} ${upvote.count === 1 ? "upvote" : "upvotes"}`}
+            title={isMine ? "You can't upvote your own answer" : undefined}
+            aria-label={`${upvote.count} ${upvote.count === 1 ? "upvote" : "upvotes"}${isMine ? ". You can't upvote your own answer" : ""}`}
           >
             <UpArrow />
             <span>{upvote.count}</span>

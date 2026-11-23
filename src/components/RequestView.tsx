@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import { RankBadge } from "@/components/RankBadge";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { signInHref } from "@/lib/next-path";
+import { normaliseSpark } from "@/lib/sparks";
 import { deleteDoc, doc, getDoc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import { useAuth } from "@/lib/auth-context";
 import { shownStokes, stokeId, type PendingStoke } from "@/lib/stokes";
@@ -37,13 +38,13 @@ function Flame() {
 export default function RequestView({ id }: { id: string }) {
   const [state, setState] = useState<State>({ status: "loading" });
   const now = useNow();
-  const router = useRouter();
   const pathname = usePathname();
   const { user, emailVerified } = useAuth();
   const uid = user?.uid ?? null;
   const [stoked, setStoked] = useState(false);
   const [pending, setPending] = useState<PendingStoke | undefined>(undefined);
   const [needVerify, setNeedVerify] = useState(false);
+  const [stokeSignIn, setStokeSignIn] = useState(false);
   const [stokeError, setStokeError] = useState<string | null>(null);
   const [lighterXp, setLighterXp] = useState(0);
   const lighterId = state.status === "ready" ? state.request.requesterId : "";
@@ -123,7 +124,7 @@ export default function RequestView({ id }: { id: string }) {
 
   async function toggleStoke() {
     if (!user) {
-      router.push(signInHref(pathname));
+      setStokeSignIn(true);
       return;
     }
     if (!emailVerified) {
@@ -156,11 +157,16 @@ export default function RequestView({ id }: { id: string }) {
       <h1 className="visually-hidden">
         Fire: {r.sparks.join(", ")}
       </h1>
-      <div className="sparks sparks-large" aria-hidden="true">
+      <div className="sparks sparks-large">
         {r.sparks.map((s) => (
-          <span className={s.length > 16 ? "spark spark-large spark-long" : "spark spark-large"} key={s}>
+          <Link
+            className={s.length > 16 ? "spark spark-large spark-long spark-link" : "spark spark-large spark-link"}
+            href={`/library?s=${encodeURIComponent(normaliseSpark(s))}`}
+            title={`See fires with the spark ${s}`}
+            key={s}
+          >
             {s}
-          </span>
+          </Link>
         ))}
       </div>
 
@@ -216,6 +222,11 @@ export default function RequestView({ id }: { id: string }) {
       {!isOwnFire && (
         <p className="stoke-help" id="stoke-help">
           A good fire is a question worth answering.
+        </p>
+      )}
+      {stokeSignIn && !user && (
+        <p className="notice notice-plain" role="status">
+          <Link href={signInHref(pathname)}>Sign in</Link> to stoke fires.
         </p>
       )}
       {needVerify && !emailVerified && <VerifyEmailNotice action="stoke fires" />}

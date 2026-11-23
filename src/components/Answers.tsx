@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { signInHref } from "@/lib/next-path";
 import {
   collection,
@@ -37,7 +37,6 @@ const ANSWERS_ENABLED = process.env.NEXT_PUBLIC_ENABLE_ANSWERS !== "false";
 /** The answers to a fire. Fires stay open, so anyone signed in can answer at any time. */
 export default function Answers({ request }: { request: RequestItem }) {
   const { user, loading, emailVerified } = useAuth();
-  const router = useRouter();
   const pathname = usePathname();
   const now = useNow();
   const uid = user?.uid ?? null;
@@ -57,6 +56,7 @@ export default function Answers({ request }: { request: RequestItem }) {
   const [myUpvotes, setMyUpvotes] = useState<Set<string>>(new Set());
   const [pending, setPending] = useState<Record<string, PendingUpvote>>({});
   const [needVerify, setNeedVerify] = useState(false);
+  const [upvoteSignIn, setUpvoteSignIn] = useState(false);
   const [upvoteError, setUpvoteError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -141,7 +141,7 @@ export default function Answers({ request }: { request: RequestItem }) {
 
   async function toggleUpvote(entry: EntryItem) {
     if (!user) {
-      router.push(signInHref(pathname));
+      setUpvoteSignIn(true);
       return;
     }
     if (!emailVerified) {
@@ -277,6 +277,11 @@ export default function Answers({ request }: { request: RequestItem }) {
           {entries.length === 0 && !showingForm && !isRequester && (
             <p className="empty">
               No answers yet. Be the first.
+            </p>
+          )}
+          {upvoteSignIn && !user && (
+            <p className="notice notice-plain" role="status">
+              <Link href={signInHref(pathname)}>Sign in</Link> to upvote answers.
             </p>
           )}
           {needVerify && !emailVerified && <VerifyEmailNotice action="upvote answers" />}
