@@ -2426,3 +2426,11 @@ a:hover {
 .hero-example .sparks + .hint {
   margin-bottom: 14px;
 }
+.hero-featured-name {
+  margin: 16px 0 4px;
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}

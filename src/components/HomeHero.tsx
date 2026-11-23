@@ -25,7 +25,7 @@ function readMemberHint() {
 /**
  * The top of the front page. Members see the short version, so the board is
  * right there. Someone who is not signed in also gets a taste of the idea:
- * a fire waiting for an answer (or an example, if there is none), then a way in. The signed-out
+ * a showcase fire (or an example, if there is none), then a way in. The signed-out
  * version is what the server sends, so it is also what link previews and search engines see.
  */
 export default function HomeHero() {
@@ -68,20 +68,21 @@ export default function HomeHero() {
           )}
         </div>
 
-        {!member && <HeroPanel />}
+        <HeroPanel member={member} />
       </div>
     </section>
   );
 }
 
-/** How many of the newest unanswered fires to pick from. */
+/** How many of the trending fires to pick from. */
 const FEATURE_POOL = 10;
 
 /**
- * The panel beside the headline for visitors. It features one real fire that has no answers yet,
- * the same one all day (it changes at midnight UTC). With no such fire, it shows an example instead.
+ * The panel beside the headline: a showcase of one fire and its top answer, from the fires that are
+ * trending and already have an answer. The same fire all day (it changes at midnight UTC). With none to show,
+ * a visitor sees an example of three sparks, and a member sees nothing extra.
  */
-function HeroPanel() {
+function HeroPanel({ member }: { member: boolean }) {
   const [state, setState] = useState<{ fire: RequestItem; now: Date } | "none" | null>(null);
 
   useEffect(() => {
@@ -90,8 +91,7 @@ function HeroPanel() {
       query(
         collection(getDb(), "requests"),
         where("moderation", "==", "ok"),
-        where("answerCount", "==", 0),
-        orderBy("createdAt", "desc"),
+        orderBy("trendRank", "desc"),
         limit(FEATURE_POOL),
       ),
     )
@@ -99,7 +99,7 @@ function HeroPanel() {
         if (cancelled) return;
         const fires = snapshot.docs
           .map((d) => toRequestItem(d.id, d.data({ serverTimestamps: "estimate" })))
-          .filter((f): f is RequestItem => f !== null);
+          .filter((f): f is RequestItem => f !== null && f.topAnswer !== null);
         if (fires.length === 0) {
           setState("none");
           return;
@@ -119,11 +119,12 @@ function HeroPanel() {
   // Holds the space while the fire loads, so the page below does not jump.
   if (state === null) return <div className="hero-example hero-example-wait" aria-hidden="true" />;
 
-  if (state !== "none") {
+  const top = state !== "none" ? state.fire.topAnswer : null;
+  if (state !== "none" && top) {
     const { fire, now } = state;
     return (
-      <div className="card hero-example" role="group" aria-label="A fire waiting for an answer">
-        <p className="kicker">A fire waiting for an answer</p>
+      <div className="card hero-example" role="group" aria-label="A fire from the community">
+        <p className="kicker">From the community</p>
         <div className="sparks hero-example-sparks">
           {fire.sparks.map((s) => (
             <span className="spark" key={s}>
@@ -131,16 +132,19 @@ function HeroPanel() {
             </span>
           ))}
         </div>
-        {fire.note && <p className="hero-featured-note">{fire.note}</p>}
+        <p className="hero-featured-name">{top.name}</p>
+        {top.snippet && <p className="hero-featured-note">{top.snippet}</p>}
         <p className="hint">
           {kindLabel(fire.kind)} · Lit by {fire.requesterName}, {describeAge(fire.createdAt, now)}
         </p>
-        <Link className="btn btn-primary" href={`/fires/${fire.id}`}>
-          Answer this fire
+        <Link className="btn btn-outline" href={`/fires/${fire.id}`}>
+          See this fire
         </Link>
       </div>
     );
   }
+
+  if (member) return null;
 
   return (
     <div className="card hero-example" role="group" aria-label="An example of three sparks">
