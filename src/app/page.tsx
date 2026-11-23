@@ -5,7 +5,7 @@ import RequestBoard from "@/components/RequestBoard";
 function HowSteps() {
   return (
     <ol>
-      <li>Light a fire: pick three sparks and say what you need.</li>
+      <li>Light a fire: choose what you need (an NPC, place, item or creature) and pick three sparks.</li>
       <li>The community answers.</li>
       <li>Stoke the fires worth answering. Upvote the answers you like.</li>
       <li>Every fire stays in the library, filed under its sparks.</li>

@@ -573,7 +573,12 @@ a:hover {
 
 .request-card:hover {
   color: var(--ink);
-  border-color: var(--input-border);
+  border-color: var(--accent);
+}
+.request-card:focus-visible {
+  border-color: var(--accent);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .request-card-top {
