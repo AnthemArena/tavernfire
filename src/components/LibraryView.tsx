@@ -10,7 +10,7 @@ import { getCategory } from "@/lib/categories";
 import { cloudSize, displayWord, fireCount, popularSparks, type SparkSuggestion } from "@/lib/spark-suggestions";
 import { normaliseSpark } from "@/lib/sparks";
 import { useSparkSuggestions } from "@/lib/use-spark-suggestions";
-import { browseLibrary, matchHeading, parseSparks, searchLibrary, type LibraryResult } from "@/lib/library";
+import { matchHeading, parseSparks, searchLibrary, type LibraryResult } from "@/lib/library";
 
 type State =
   | { status: "error"; key: string }
@@ -40,22 +40,30 @@ export default function LibraryView() {
 
   // The most used sparks, shown as a cloud when nothing is searched.
   const [cloud, setCloud] = useState<SparkSuggestion[]>([]);
+  const [cloudLoaded, setCloudLoaded] = useState(false);
   useEffect(() => {
     let cancelled = false;
     popularSparks(getDb())
       .then((found) => {
-        if (!cancelled) setCloud(found);
+        if (!cancelled) {
+          setCloud(found);
+          setCloudLoaded(true);
+        }
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!cancelled) setCloudLoaded(true);
+      });
     return () => {
       cancelled = true;
     };
   }, []);
 
   useEffect(() => {
-    const sparks = searchedKey === "" ? [] : searchedKey.split(",");
+    // Nothing searched means nothing to load: the page shows the search box and the popular sparks.
+    if (searchedKey === "") return;
+    const sparks = searchedKey.split(",");
     let cancelled = false;
-    (sparks.length === 0 ? browseLibrary(getDb()) : searchLibrary(getDb(), sparks))
+    searchLibrary(getDb(), sparks)
       .then((results) => {
         if (!cancelled) setState({ status: "ready", key: searchedKey, results });
       })
@@ -83,10 +91,10 @@ export default function LibraryView() {
   }
 
   // Only show an outcome that belongs to the sparks now in the address (back and forward change them).
-  const current = "key" in state && state.key === searchedKey ? state : null;
-  const results = current?.status === "ready" ? current.results : null;
-  const loading = current === null;
   const searching = searched.length > 0;
+  const current = "key" in state && state.key === searchedKey ? state : null;
+  const results = searching && current?.status === "ready" ? current.results : null;
+  const loading = searching && current === null;
 
   // Group the (already ranked) results by how many sparks they share. Browsing is one group.
   const groups: { matched: number; items: LibraryResult[] }[] = [];
@@ -168,19 +176,19 @@ export default function LibraryView() {
         </>
       )}
 
+      {!searching && cloudLoaded && cloud.length === 0 && (
+        <p className="empty">
+          No sparks yet. <Link href="/fires/new">Light the first fire</Link>.
+        </p>
+      )}
       {loading && (
         <p className="muted page-note" role="status">
-          {searching ? "Searching…" : "Loading…"}
+          Searching…
         </p>
       )}
       {current?.status === "error" && (
         <p className="empty" role="alert">
           Couldn&apos;t load the library right now. Please try again in a moment.
-        </p>
-      )}
-      {results && results.length === 0 && !searching && (
-        <p className="empty">
-          No fires yet. <Link href="/fires/new">Light the first one</Link>.
         </p>
       )}
       {results && results.length === 0 && searching && (
@@ -193,7 +201,7 @@ export default function LibraryView() {
       )}
 
       {groups.map((group) => {
-        const heading = searching ? matchHeading(group.matched, searched.length) : "Most stoked fires";
+        const heading = matchHeading(group.matched, searched.length);
         return (
           <section key={group.matched} className="library-group" aria-label={heading}>
             <h2 className="library-heading">{heading}</h2>
@@ -245,11 +253,8 @@ export default function LibraryView() {
         );
       })}
 
-      {results && results.length > 0 && (
+      {((results && results.length > 0) || (!searching && cloud.length > 0)) && (
         <div className="library-foot">
-          {searching && groups[0] && groups[0].matched < searched.length && (
-            <p className="muted">Nothing with all of those sparks? Light a fire with them.</p>
-          )}
           <Link
             href={searching ? `/fires/new?s=${encodeURIComponent(searched.join(","))}` : "/fires/new"}
             className="btn btn-dark"
