@@ -34,19 +34,21 @@ export function toNotification(id: string, data: Record<string, unknown>, myId: 
     read: data.read === true,
   };
   const fireLink = typeof data.requestId === "string" && data.requestId ? `/fires/${data.requestId}` : "/";
+  // Newer upvote and answer notifications know which answer, so the link opens it.
+  const answerLink = fireLink !== "/" && typeof data.entryId === "string" && data.entryId ? `${fireLink}#entry-${data.entryId}` : fireLink;
   switch (type) {
     case "stoke":
       return { ...base, text: `Your fire${fire} was stoked.`, href: fireLink };
     case "upvote": {
       const name = str(data.entryName);
-      return { ...base, text: name ? `Your answer "${name}" was upvoted.` : "Your answer was upvoted.", href: fireLink };
+      return { ...base, text: name ? `Your answer "${name}" was upvoted.` : "Your answer was upvoted.", href: answerLink };
     }
     case "answer":
-      return { ...base, text: `${str(data.actorName) || "Someone"} answered your fire${fire}.`, href: fireLink };
+      return { ...base, text: `${str(data.actorName) || "Someone"} answered your fire${fire}.`, href: answerLink };
     case "achievement": {
       const a = achievementById(str(data.achievement));
       if (!a) return null;
-      return { ...base, text: `Achievement unlocked: ${a.name}.`, href: `/profile/${myId}` };
+      return { ...base, text: `Achievement unlocked: "${a.name}"`, href: `/profile/${myId}` };
     }
     default: {
       const level = typeof data.level === "number" ? data.level : 1;

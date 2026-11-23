@@ -14,7 +14,7 @@ test("each kind reads naturally and links to the right place", () => {
   const ans = toNotification("3", { type: "answer", requestId: "r1", sparks: "A, B, C", actorName: "Marrow" }, "me");
   assert.equal(ans?.text, 'Marrow answered your fire "A, B, C".');
   const ach = toNotification("4", { type: "achievement", achievement: "first_fire" }, "me");
-  assert.equal(ach?.text, "Achievement unlocked: First fire.");
+  assert.equal(ach?.text, 'Achievement unlocked: "First fire"');
   assert.equal(ach?.href, "/profile/me");
   assert.equal(toNotification("5", { type: "levelup", level: 2 }, "me")?.text, "You reached Flamebearer.");
 });
@@ -57,4 +57,11 @@ test("different kinds get their own toasts, and only the newest few stay", () =>
   toasts = addToast(toasts, item("d", "levelup"), 4);
   assert.equal(toasts.length, MAX_TOASTS);
   assert.deepEqual(toasts.map((t) => t.key), ["b", "c", "d"]);
+});
+
+test("answer and upvote notifications open the answer when they know which one", () => {
+  assert.equal(toNotification("1", { type: "answer", requestId: "r1", entryId: "e9", actorName: "Marrow" }, "me")?.href, "/fires/r1#entry-e9");
+  assert.equal(toNotification("2", { type: "upvote", requestId: "r1", entryId: "e9", entryName: "Vhane" }, "me")?.href, "/fires/r1#entry-e9");
+  // Older notifications have no entry id and still open the fire.
+  assert.equal(toNotification("3", { type: "answer", requestId: "r1", actorName: "Marrow" }, "me")?.href, "/fires/r1");
 });

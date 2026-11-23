@@ -17,6 +17,8 @@ export type NotificationData = {
   requestId?: string;
   /** What to call the fire: its sparks, e.g. "Statue, Time, Glowing". */
   sparks?: string;
+  /** The answer, for upvote and answer, so the link can open it on the fire page. */
+  entryId?: string;
   /** The answer's name, for upvote. */
   entryName?: string;
   /** Who answered, for answer. Stokes and upvotes are anonymous on purpose. */
@@ -71,6 +73,7 @@ export async function notifyUpvote(db: Firestore, upvoteId: string, entryId: str
     recipientId: author,
     type: "upvote",
     requestId,
+    entryId,
     entryName: typeof answer.get("name") === "string" ? (answer.get("name") as string) : "",
   });
 }
@@ -86,6 +89,7 @@ export async function notifyAnswer(db: Firestore, entryId: string, answer: Recor
     recipientId: owner,
     type: "answer",
     requestId,
+    entryId,
     sparks: sparksText(fire.get("sparks")),
     actorName: typeof answer.authorName === "string" ? answer.authorName : "Someone",
   });

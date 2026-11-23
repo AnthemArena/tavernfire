@@ -4,15 +4,15 @@ import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import Avatar from "@/components/Avatar";
-import { RankProgress } from "@/components/RankBadge";
+import ThemeToggle from "@/components/ThemeToggle";
 import { AVATARS, PACKS, describeWhen, nextAvatarChange, type AvatarId, type PackId } from "@/lib/avatars";
 import { AvatarError } from "@/lib/display-name";
 import { BIO_MAX, BioError } from "@/lib/bio";
 import { NAME_CHANGE_DAYS, NAME_MAX, NameError } from "@/lib/names";
 
-/** Your settings: display name, rank, avatar, bio and email. Only you see it. */
+/** Your settings: display name, avatar, bio, email and appearance. Only you see it. */
 export default function SettingsView() {
-  const { user, displayName, xp, bio, chooseBio, avatar, avatarChangedAt, chooseAvatar, chooseName, nameChangeOn, signOut, loading, emailVerified, resendVerification, refreshVerification } =
+  const { user, displayName, bio, chooseBio, avatar, avatarChangedAt, chooseAvatar, chooseName, nameChangeOn, signOut, loading, emailVerified, resendVerification, refreshVerification } =
     useAuth();
 
   if (loading) return <p className="muted page-note">Loading…</p>;
@@ -31,23 +31,11 @@ export default function SettingsView() {
   return (
     <div className="account">
       <h1 className="page-title">Settings</h1>
-      <p className="hint">
-        Your fires and answers are on <Link href={`/profile/${user.uid}`}>your profile</Link>.
-      </p>
       <NameCard
         displayName={displayName}
         chooseName={chooseName}
         waitUntil={displayName ? nameChangeOn() : null}
       />
-      <section className="card" aria-labelledby="rank-heading">
-        <h2 className="card-title" id="rank-heading">
-          Your rank
-        </h2>
-        <RankProgress xp={xp} />
-        <p className="hint">
-          Lighting fires and answering earns XP. Upvotes and stokes earn more.
-        </p>
-      </section>
       <AvatarCard
         name={displayName ?? user.email ?? "You"}
         current={avatar}
@@ -62,6 +50,12 @@ export default function SettingsView() {
         resend={resendVerification}
         refresh={refreshVerification}
       />
+      <section className="card" aria-labelledby="appearance-heading">
+        <h2 className="card-title" id="appearance-heading">
+          Appearance
+        </h2>
+        <ThemeToggle />
+      </section>
       <button type="button" className="btn btn-outline account-signout" onClick={() => signOut()}>
         Sign out
       </button>

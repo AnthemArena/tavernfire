@@ -113,6 +113,27 @@ export default function LibraryView() {
 
   const biggest = cloud.reduce((max, s) => Math.max(max, s.count), 0);
 
+  const cloudBlock = cloud.length > 0 ? (
+        <>
+        <h2 className="library-heading">Popular sparks</h2>
+        <p className="hint cloud-hint">Pick a spark to see its fires.</p>
+        <nav className="spark-cloud" aria-label="Popular sparks">
+          {[...cloud]
+            .sort((a, b) => a.word.localeCompare(b.word, "en"))
+            .map((s) => (
+              <Link
+                key={s.word}
+                href={`/library?s=${encodeURIComponent(s.word)}`}
+                className={`cloud-spark cloud-${cloudSize(s.count, biggest)}`}
+                title={fireCount(s.count)}
+              >
+                {displayWord(s.word)} <span className="cloud-count">{s.count}</span>
+              </Link>
+            ))}
+        </nav>
+        </>
+  ) : null;
+
   return (
     <>
       <form onSubmit={onSubmit} noValidate className="library-search">
@@ -168,26 +189,7 @@ export default function LibraryView() {
         )}
       </form>
 
-      {!searching && cloud.length > 0 && (
-        <>
-        <h2 className="library-heading">Popular sparks</h2>
-        <p className="hint cloud-hint">Pick a spark to see its fires.</p>
-        <nav className="spark-cloud" aria-label="Popular sparks">
-          {[...cloud]
-            .sort((a, b) => a.word.localeCompare(b.word, "en"))
-            .map((s) => (
-              <Link
-                key={s.word}
-                href={`/library?s=${encodeURIComponent(s.word)}`}
-                className={`cloud-spark cloud-${cloudSize(s.count, biggest)}`}
-                title={fireCount(s.count)}
-              >
-                {displayWord(s.word)} <span className="cloud-count">{s.count}</span>
-              </Link>
-            ))}
-        </nav>
-        </>
-      )}
+      {!searching && cloudBlock}
 
       {!searching && cloudLoaded && cloud.length === 0 && (
         <p className="empty">
@@ -268,6 +270,8 @@ export default function LibraryView() {
           </section>
         );
       })}
+
+      {searching && !loading && cloudBlock}
     </>
   );
 }

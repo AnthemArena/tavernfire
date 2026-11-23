@@ -150,6 +150,7 @@ export default function ProfileView({ uid }: { uid: string }) {
         <div>
           <h1 className="profile-name">{profile.name}</h1>
           {isMe ? <RankProgress xp={profile.xp} /> : <RankBadge xp={profile.xp} />}
+          {isMe && <p className="hint profile-xp-note">Lighting fires and answering earns XP. Upvotes and stokes earn more.</p>}
           {since && <p className="profile-since">Member since {since}</p>}
           {isMe && (
             <Link className="profile-edit" href="/settings">
