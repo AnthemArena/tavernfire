@@ -24,16 +24,14 @@ export type Rank = {
   name: string;
   /** XP needed to reach this level. */
   minXp: number;
-  /** Picture number in public/ranks (from the rank icon pack). */
-  icon: number;
 };
 
 export const RANKS: readonly Rank[] = [
-  { level: 1, name: "Cinderling", minXp: 0, icon: 1 },
-  { level: 2, name: "Flamebearer", minXp: 50, icon: 4 },
-  { level: 3, name: "Pyromancer", minXp: 150, icon: 5 },
-  { level: 4, name: "Blazewalker", minXp: 400, icon: 7 },
-  { level: 5, name: "Phoenix Ascendant", minXp: 1000, icon: 24 },
+  { level: 1, name: "Cinderling", minXp: 0 },
+  { level: 2, name: "Flamebearer", minXp: 50 },
+  { level: 3, name: "Pyromancer", minXp: 150 },
+  { level: 4, name: "Blazewalker", minXp: 400 },
+  { level: 5, name: "Phoenix Ascendant", minXp: 1000 },
 ];
 
 /** The rank someone with this much XP holds. */

@@ -215,7 +215,7 @@ Members pick a portrait from the art packs on the settings page. The pictures ar
 
 ## XP and ranks
 
-The points and ranks are in `src/lib/xp.ts` (5 XP for a fire, 5 for an answer, 10 for each upvote on your answers, 10 for each stoke on your fires; ranks at 0, 50, 150, 400 and 1000 XP). The icons are in `public/ranks`. A copy of the file lives in `functions/src/xp.ts`: after changing it run `npm run sync:functions` (a test fails if the copies differ).
+The points and ranks are in `src/lib/xp.ts` (5 XP for a fire, 5 for an answer, 10 for each upvote on your answers, 10 for each stoke on your fires; ranks at 0, 50, 150, 400 and 1000 XP). The rank icons are small line drawings in `src/components/RankBadge.tsx` (a diamond, one to three chevrons, a star). A copy of the file lives in `functions/src/xp.ts`: after changing it run `npm run sync:functions` (a test fails if the copies differ).
 
 The `xpFromFires` and `xpFromAnswers` functions recount a member's XP from their visible posts whenever a post appears, goes away, is hidden or restored, or its stoke or upvote count changes, and save `xp` and `level` on `users/{uid}`. Because it recounts, hidden answers stop counting and running twice is harmless. The app can't write these two fields (rules test). To change the points later, edit the table, sync, deploy; XP then corrects itself as members' posts change (to correct everyone at once, a small script can recompute all members).
 

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { RANKS, XP_FOR, rankFor, rankProgress, xpFor } from "./xp.ts";
 
 test("XP: posting earns a little, being upvoted or stoked earns the most", () => {
@@ -36,10 +36,6 @@ test("progress to the next rank", () => {
   const top = rankProgress(5000);
   assert.equal(top.next, null);
   assert.equal(top.fraction, 1);
-});
-
-test("every rank has a picture file", () => {
-  for (const r of RANKS) assert.ok(existsSync(new URL(`../../public/ranks/${r.icon}.webp`, import.meta.url)), `rank icon ${r.icon}`);
 });
 
 test("the copy in functions is identical to src/lib/xp.ts", () => {

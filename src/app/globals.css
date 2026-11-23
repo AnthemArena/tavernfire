@@ -1923,7 +1923,7 @@ a:hover {
   font-weight: 600;
   font-size: 14px;
 }
-.rank-badge img {
+.rank-badge svg {
   flex: none;
 }
 .rank-progress {
