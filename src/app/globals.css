@@ -2411,3 +2411,18 @@ a:hover {
 .hero-example .hint {
   margin: 0;
 }
+.hero-example-wait {
+  min-height: 220px;
+}
+.hero-featured-note {
+  margin: 14px 0 6px;
+  color: var(--body);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.hero-example .hero-featured-note + .hint,
+.hero-example .sparks + .hint {
+  margin-bottom: 14px;
+}

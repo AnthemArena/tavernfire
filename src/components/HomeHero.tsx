@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { collection, getDocs, limit, orderBy, query, where } from "firebase/firestore";
+import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
+import { describeAge, kindLabel, toRequestItem, type RequestItem } from "@/lib/requests";
 
 // Remembers that this browser belongs to a member, so a returning member sees the short hero at once
 // instead of the example card flashing up while the sign-in check finishes.
@@ -22,8 +25,8 @@ function readMemberHint() {
 /**
  * The top of the front page. Members see the short version, so the board is
  * right there. Someone who is not signed in also gets a taste of the idea:
- * three example sparks and a question, then a way in. The signed-out version is
- * what the server sends, so it is also what link previews and search engines see.
+ * a fire waiting for an answer (or an example, if there is none), then a way in. The signed-out
+ * version is what the server sends, so it is also what link previews and search engines see.
  */
 export default function HomeHero() {
   const { user, loading } = useAuth();
@@ -65,19 +68,90 @@ export default function HomeHero() {
           )}
         </div>
 
-        {!member && (
-          <div className="card hero-example" role="group" aria-label="An example of three sparks">
-            <p className="kicker">A little creative challenge</p>
-            <div className="sparks hero-example-sparks">
-              <span className="spark">Ancient</span>
-              <span className="spark">Glowing</span>
-              <span className="spark">Forgotten</span>
-            </div>
-            <p className="hero-example-question">What would you make from these?</p>
-            <p className="hint">An NPC, a place, an item or a creature. Light a fire with your own three, or answer someone else&apos;s.</p>
-          </div>
-        )}
+        {!member && <HeroPanel />}
       </div>
     </section>
+  );
+}
+
+/** How many of the newest unanswered fires to pick from. */
+const FEATURE_POOL = 10;
+
+/**
+ * The panel beside the headline for visitors. It features one real fire that has no answers yet,
+ * the same one all day (it changes at midnight UTC). With no such fire, it shows an example instead.
+ */
+function HeroPanel() {
+  const [state, setState] = useState<{ fire: RequestItem; now: Date } | "none" | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getDocs(
+      query(
+        collection(getDb(), "requests"),
+        where("moderation", "==", "ok"),
+        where("answerCount", "==", 0),
+        orderBy("createdAt", "desc"),
+        limit(FEATURE_POOL),
+      ),
+    )
+      .then((snapshot) => {
+        if (cancelled) return;
+        const fires = snapshot.docs
+          .map((d) => toRequestItem(d.id, d.data({ serverTimestamps: "estimate" })))
+          .filter((f): f is RequestItem => f !== null);
+        if (fires.length === 0) {
+          setState("none");
+          return;
+        }
+        const now = new Date();
+        const day = Math.floor(now.getTime() / 86_400_000);
+        setState({ fire: fires[day % fires.length], now });
+      })
+      .catch(() => {
+        if (!cancelled) setState("none");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Holds the space while the fire loads, so the page below does not jump.
+  if (state === null) return <div className="hero-example hero-example-wait" aria-hidden="true" />;
+
+  if (state !== "none") {
+    const { fire, now } = state;
+    return (
+      <div className="card hero-example" role="group" aria-label="A fire waiting for an answer">
+        <p className="kicker">A fire waiting for an answer</p>
+        <div className="sparks hero-example-sparks">
+          {fire.sparks.map((s) => (
+            <span className="spark" key={s}>
+              {s}
+            </span>
+          ))}
+        </div>
+        {fire.note && <p className="hero-featured-note">{fire.note}</p>}
+        <p className="hint">
+          {kindLabel(fire.kind)} · Lit by {fire.requesterName}, {describeAge(fire.createdAt, now)}
+        </p>
+        <Link className="btn btn-primary" href={`/fires/${fire.id}`}>
+          Answer this fire
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card hero-example" role="group" aria-label="An example of three sparks">
+      <p className="kicker">A little creative challenge</p>
+      <div className="sparks hero-example-sparks">
+        <span className="spark">Ancient</span>
+        <span className="spark">Glowing</span>
+        <span className="spark">Forgotten</span>
+      </div>
+      <p className="hero-example-question">What would you make from these?</p>
+      <p className="hint">An NPC, a place, an item or a creature. Light a fire with your own three, or answer someone else&apos;s.</p>
+    </div>
   );
 }
