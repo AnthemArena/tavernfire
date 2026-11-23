@@ -2278,6 +2278,17 @@ a:hover {
   font-size: 13px;
   color: var(--muted);
 }
+.top-answer-snippet {
+  margin: 6px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.top-answer-snippet.lines-2 { -webkit-line-clamp: 2; line-clamp: 2; }
+.top-answer-snippet.lines-1 { -webkit-line-clamp: 1; line-clamp: 1; }
 .library-foot {
   margin: 32px 0 0;
   display: flex;

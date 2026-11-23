@@ -248,7 +248,7 @@ export default function LibraryView() {
                         </span>
                       </span>
                     </div>
-                    {fire.topAnswer && <TopAnswer name={fire.topAnswer.name} />}
+                    {fire.topAnswer && <TopAnswer name={fire.topAnswer.name} snippet={fire.topAnswer.snippet} lines={1} />}
                   </Link>
                 </li>
               ))}

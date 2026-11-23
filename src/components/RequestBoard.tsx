@@ -294,7 +294,7 @@ function RequestCard({ request: r, now }: { request: RequestItem; now: Date }) {
           <AnswerCountLabel count={r.answerCount} own={r.requesterId === user?.uid} />
         </span>
       </div>
-      {r.topAnswer && <TopAnswer name={r.topAnswer.name} />}
+      {r.topAnswer && <TopAnswer name={r.topAnswer.name} snippet={r.topAnswer.snippet} />}
     </Link>
   );
 }
