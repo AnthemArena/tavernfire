@@ -106,7 +106,7 @@ export default function LibraryView() {
           {boxes.map((value, index) => (
             <div className="field field-spark" key={index}>
               <label className="visually-hidden" htmlFor={`library-spark-${index}`}>
-                Spark {index + 1}
+                Spark {index + 1} of 3
               </label>
               <input
                 id={`library-spark-${index}`}
@@ -147,7 +147,8 @@ export default function LibraryView() {
 
       {!searching && cloud.length > 0 && (
         <>
-        <h2 className="library-heading">Popular sparks</h2>
+        <h2 className="library-heading library-heading-quiet">Popular sparks</h2>
+        <p className="hint cloud-hint">Tap a spark to search it.</p>
         <nav className="spark-cloud" aria-label="Popular sparks">
           {[...cloud]
             .sort((a, b) => a.word.localeCompare(b.word, "en"))
@@ -181,10 +182,12 @@ export default function LibraryView() {
         </p>
       )}
       {results && results.length === 0 && searching && (
-        <p className="empty">
-          No fires with those sparks yet.{" "}
-          <Link href={`/fires/new?s=${encodeURIComponent(searched.join(","))}`}>Light one</Link>.
-        </p>
+        <div className="empty">
+          <p className="empty-line">No fires with those sparks yet.</p>
+          <Link href={`/fires/new?s=${encodeURIComponent(searched.join(","))}`} className="btn btn-dark">
+            Light a fire with these sparks
+          </Link>
+        </div>
       )}
 
       {groups.map((group) => {
@@ -214,22 +217,29 @@ export default function LibraryView() {
                         <Avatar id={fire.requesterAvatar} name={fire.requesterName} size="sm" />
                         Lit by {fire.requesterName}
                       </span>
-                      {fire.stokeCount > 0 && (
+                      <span className="card-counts">
+                        {fire.stokeCount > 0 && (
+                          <span>
+                            <strong>{fire.stokeCount}</strong> {fire.stokeCount === 1 ? "stoke" : "stokes"}
+                          </span>
+                        )}
                         <span>
-                          {fire.stokeCount} {fire.stokeCount === 1 ? "stoke" : "stokes"}
+                          {fire.answerCount === 0 ? (
+                            "No answers yet"
+                          ) : (
+                            <>
+                              <strong>{fire.answerCount}</strong> {fire.answerCount === 1 ? "answer" : "answers"}
+                            </>
+                          )}
                         </span>
-                      )}
-                      <span>
-                        {fire.answerCount === 0
-                          ? "No answers yet"
-                          : `${fire.answerCount} ${fire.answerCount === 1 ? "answer" : "answers"}`}
                       </span>
                     </div>
                     {fire.topAnswer && (
-                      <>
+                      <div className="top-answer">
+                        <p className="top-answer-label">Top answer</p>
                         <p className="my-answer-name">{fire.topAnswer.name}</p>
                         <p className="library-concept">{fire.topAnswer.snippet}</p>
-                      </>
+                      </div>
                     )}
                   </Link>
                 </li>
@@ -238,6 +248,20 @@ export default function LibraryView() {
           </section>
         );
       })}
+
+      {results && results.length > 0 && (
+        <div className="library-foot">
+          {searching && groups[0] && groups[0].matched < searched.length && (
+            <p className="muted">Nothing with all of those sparks? Light a fire with them.</p>
+          )}
+          <Link
+            href={searching ? `/fires/new?s=${encodeURIComponent(searched.join(","))}` : "/fires/new"}
+            className="btn btn-dark"
+          >
+            Light a fire
+          </Link>
+        </div>
+      )}
     </>
   );
 }
