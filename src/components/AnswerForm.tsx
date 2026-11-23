@@ -220,7 +220,7 @@ export default function AnswerForm({
       )}
       {!editing && (
         <p className="card-lede">
-          Write it yourself. Tavernfire is for answers written by people. <Link href="/rules">Read the rules</Link>.
+          Make it your own. Tavernfire is for answers written by people. <Link href="/rules">Read the rules</Link>.
         </p>
       )}
 
