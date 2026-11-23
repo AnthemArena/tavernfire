@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
-import { RankBadge } from "@/components/RankBadge";
+import { RankBadge, RankProgress } from "@/components/RankBadge";
 import { isAvatarId, type AvatarId } from "@/lib/avatars";
 import { achievementById } from "@/lib/achievements";
 import { collection, doc, getDoc, getDocs, limit, query, where } from "firebase/firestore";
@@ -148,7 +148,7 @@ export default function ProfileView({ uid }: { uid: string }) {
         <Avatar id={profile.avatar} name={profile.name} size="lg" eager />
         <div>
           <h1 className="profile-name">{profile.name}</h1>
-          <RankBadge xp={profile.xp} />
+          {isMe ? <RankProgress xp={profile.xp} /> : <RankBadge xp={profile.xp} />}
           {since && <p className="profile-since">Member since {since}</p>}
         </div>
         {profile.bio && <p className="profile-bio">{profile.bio}</p>}

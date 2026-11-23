@@ -1830,6 +1830,7 @@ a:hover {
 }
 .lit-by .rank-badge {
   margin-left: 2px;
+  vertical-align: middle;
 }
 
 /* Avatars: sit inline beside a name */
