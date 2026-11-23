@@ -245,8 +245,10 @@ export default function AnswersFeed() {
                     {e.author && (
                       <span className="answer-feed-author">
                         <Avatar id={e.author.avatar} name={e.author.name} size="sm" />
-                        <Link href={`/profile/${e.author.id}`}>{e.author.name}</Link>
-                        {e.createdAt && <span className="answer-feed-age">, {describeAge(e.createdAt, now)}</span>}
+                        <span>
+                          Answered by <Link href={`/profile/${e.author.id}`}>{e.author.name}</Link>
+                          {e.createdAt && <span className="answer-feed-age">, {describeAge(e.createdAt, now)}</span>}
+                        </span>
                       </span>
                     )}
                     <Link className="answer-feed-link" href={`/fires/${e.requestId}#entry-${e.id}`}>
@@ -254,7 +256,10 @@ export default function AnswersFeed() {
                     </Link>
                   </div>
                   <p className="hint">
-                    Fire lit by {fire.requesterName}, {describeAge(fire.createdAt, now)}
+                    Lit by {fire.requesterName}
+                    {/* The fire's age only when it says something the answer's age does not. */}
+                    {describeAge(fire.createdAt, now) !== (e.createdAt ? describeAge(e.createdAt, now) : null) &&
+                      `, ${describeAge(fire.createdAt, now)}`}
                   </p>
                 </div>
               </li>

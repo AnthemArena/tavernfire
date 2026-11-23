@@ -8,13 +8,13 @@ const item = (id: string, type: NotificationItem["type"], text = "t"): Notificat
 
 test("each kind reads naturally and links to the right place", () => {
   const stoke = toNotification("1", { type: "stoke", requestId: "r1", sparks: "Statue, Time, Glowing" }, "me");
-  assert.equal(stoke?.text, 'Your fire "Statue, Time, Glowing" was stoked.');
+  assert.equal(stoke?.text, 'Your fire Statue, Time, Glowing was stoked.');
   assert.equal(stoke?.href, "/fires/r1");
-  assert.equal(toNotification("2", { type: "upvote", requestId: "r1", entryName: "Vhane" }, "me")?.text, 'Your answer "Vhane" was upvoted.');
+  assert.equal(toNotification("2", { type: "upvote", requestId: "r1", entryName: "Vhane" }, "me")?.text, 'Your answer “Vhane” was upvoted.');
   const ans = toNotification("3", { type: "answer", requestId: "r1", sparks: "A, B, C", actorName: "Marrow" }, "me");
-  assert.equal(ans?.text, 'Marrow answered your fire "A, B, C".');
+  assert.equal(ans?.text, 'Marrow answered your fire A, B, C.');
   const ach = toNotification("4", { type: "achievement", achievement: "first_fire" }, "me");
-  assert.equal(ach?.text, 'Achievement unlocked: "First fire"');
+  assert.equal(ach?.text, 'Achievement unlocked: “First fire”');
   assert.equal(ach?.href, "/profile/me");
   assert.equal(toNotification("5", { type: "levelup", level: 2 }, "me")?.text, "You reached Flamebearer.");
 });
@@ -38,8 +38,8 @@ test("read state and time come through", () => {
 
 test("a burst of upvotes becomes one toast with a count", () => {
   let toasts: Toast[] = [];
-  toasts = addToast(toasts, item("a", "upvote", 'Your answer "X" was upvoted.'), 1000);
-  assert.equal(toasts[0].text, 'Your answer "X" was upvoted.');
+  toasts = addToast(toasts, item("a", "upvote", 'Your answer “X” was upvoted.'), 1000);
+  assert.equal(toasts[0].text, 'Your answer “X” was upvoted.');
   toasts = addToast(toasts, item("b", "upvote"), 2000);
   toasts = addToast(toasts, item("c", "upvote"), 3000);
   assert.equal(toasts.length, 1);

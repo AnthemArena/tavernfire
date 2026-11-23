@@ -25,7 +25,8 @@ export function toNotification(id: string, data: Record<string, unknown>, myId: 
   const type = data.type;
   if (typeof type !== "string" || !TYPES.includes(type)) return null;
   const sparks = str(data.sparks);
-  const fire = sparks ? ` "${sparks}"` : "";
+  // The sparks read as plain words; only names of answers and achievements are quoted.
+  const fire = sparks ? ` ${sparks}` : "";
   const created = data.createdAt as { toDate?: () => Date } | null | undefined;
   const base = {
     id,
@@ -41,14 +42,14 @@ export function toNotification(id: string, data: Record<string, unknown>, myId: 
       return { ...base, text: `Your fire${fire} was stoked.`, href: fireLink };
     case "upvote": {
       const name = str(data.entryName);
-      return { ...base, text: name ? `Your answer "${name}" was upvoted.` : "Your answer was upvoted.", href: answerLink };
+      return { ...base, text: name ? `Your answer “${name}” was upvoted.` : "Your answer was upvoted.", href: answerLink };
     }
     case "answer":
       return { ...base, text: `${str(data.actorName) || "Someone"} answered your fire${fire}.`, href: answerLink };
     case "achievement": {
       const a = achievementById(str(data.achievement));
       if (!a) return null;
-      return { ...base, text: `Achievement unlocked: "${a.name}"`, href: `/profile/${myId}` };
+      return { ...base, text: `Achievement unlocked: “${a.name}”`, href: `/profile/${myId}` };
     }
     default: {
       const level = typeof data.level === "number" ? data.level : 1;

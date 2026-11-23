@@ -115,7 +115,7 @@ export default function LibraryView() {
 
   const cloudBlock = cloud.length > 0 ? (
         <>
-        <h2 className="library-heading">Popular sparks</h2>
+        <h2 className={searching ? "library-heading cloud-after-results" : "library-heading"}>Popular sparks</h2>
         <p className="hint cloud-hint">Pick a spark to see its fires.</p>
         <nav className="spark-cloud" aria-label="Popular sparks">
           {[...cloud]

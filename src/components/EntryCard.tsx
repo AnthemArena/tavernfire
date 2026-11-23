@@ -209,8 +209,10 @@ export default function EntryCard({
           {entry.author && !isMine && (
             <span className="by-line">
               <Avatar id={entry.author.avatar} name={entry.author.name} size="sm" />
-              by <Link href={`/profile/${entry.author.id}`}>&nbsp;{entry.author.name}</Link>
-              {entry.createdAt && <>, {describeAge(entry.createdAt, now)}</>}
+              <span>
+                Answered by <Link href={`/profile/${entry.author.id}`}>{entry.author.name}</Link>
+                {entry.createdAt && <>, {describeAge(entry.createdAt, now)}</>}
+              </span>
             </span>
           )}
           {entry.edited && (
