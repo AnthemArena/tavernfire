@@ -126,7 +126,8 @@ a:hover {
 
 ::placeholder {
   color: var(--muted);
-  opacity: 1;
+  font-style: italic;
+  opacity: 0.8;
 }
 
 .container {
@@ -444,7 +445,9 @@ a:hover {
   margin: 8px 0 16px;
 }
 
-.input-error {
+.input-error,
+.input-error:focus,
+.input-error:focus-visible {
   border-color: var(--error);
   box-shadow: 0 0 0 1px var(--error);
 }
@@ -1823,9 +1826,22 @@ a:hover {
 }
 
 /* Suggestions of sparks already in use, under the three spark boxes */
+.spark-existing {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  background: var(--chip);
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink);
+}
 .spark-existing a {
   color: var(--accent);
   font-weight: 600;
+}
+.spark-suggestions-slot {
+  min-height: 56px;
 }
 .spark-suggestions {
   display: flex;
@@ -2771,4 +2787,14 @@ a.spark-link:focus-visible {
 
 .maintenance-title {
   margin-top: 48px;
+}
+
+/* iOS zooms the page when a field under 16px is focused. */
+@media (max-width: 640px) {
+  .input,
+  .input-spark,
+  select.input,
+  textarea.input {
+    font-size: 16px;
+  }
 }

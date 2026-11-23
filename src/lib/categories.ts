@@ -62,7 +62,7 @@ export const CATEGORIES = [
     label: "NPC",
     fullLabel: "Non-player character (NPC)",
     filterLabel: "NPCs",
-    description: "A character the GM plays: who they are, how they look, what they want.",
+    description: "A character the GM plays.",
     launched: true,
     group: "Characters",
     answer: {
@@ -80,7 +80,7 @@ export const CATEGORIES = [
     label: "Location",
     fullLabel: "Location",
     filterLabel: "Locations",
-    description: "A place: what it looks like, how it feels, and what happens there.",
+    description: "A place and what happens there.",
     launched: true,
     group: "Places and worlds",
     answer: {
@@ -99,7 +99,7 @@ export const CATEGORIES = [
     label: "Item",
     fullLabel: "Item",
     filterLabel: "Items",
-    description: "An object: what it is, what it looks like, and what makes it special.",
+    description: "An object and what makes it special.",
     launched: true,
     group: "Things",
     notePlaceholder: "Who carries it, what level, what it should feel like",
@@ -118,8 +118,7 @@ export const CATEGORIES = [
     label: "Creature",
     fullLabel: "Creature",
     filterLabel: "Creatures",
-    description:
-      "A monster or animal: how it looks, how it behaves, and what it wants. If it talks and schemes, ask for an NPC.",
+    description: "A monster or animal. If it talks and schemes, ask for an NPC.",
     launched: true,
     group: "Characters",
     notePlaceholder: "Where it lives, how dangerous it should be, party level",

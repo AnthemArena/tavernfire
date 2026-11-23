@@ -230,32 +230,37 @@ function LightAFireForm() {
               </div>
             ))}
           </div>
-          {focusedSpark !== null && suggestions.length > 0 && (
-            <div className="spark-suggestions" role="group" aria-label="Sparks already in use">
-              <span className="muted">
-                {typedInFocused.trim() === "" ? "Popular sparks:" : "Already in use:"}
-              </span>
-              {suggestions.map((s) => (
-                <button
-                  type="button"
-                  key={s.word}
-                  className="spark-suggestion"
-                  // Keep the cursor in the box so it does not close the list before the click lands.
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => pickSuggestion(focusedSpark, s.word)}
-                >
-                  {displayWord(s.word)} <span className="muted">· {fireCount(s.count)}</span>
-                </button>
-              ))}
-            </div>
-          )}
+          {/* The row keeps its height whether or not suggestions show, so the form does not jump. */}
+          <div className="spark-suggestions-slot">
+            {focusedSpark !== null && suggestions.length > 0 && (
+              <div className="spark-suggestions" role="group" aria-label="Sparks already in use">
+                <span className="muted">
+                  {typedInFocused.trim() === "" ? "Popular sparks:" : "Already in use:"}
+                </span>
+                {suggestions.map((s) => (
+                  <button
+                    type="button"
+                    key={s.word}
+                    className="spark-suggestion"
+                    // Keep the cursor in the box so it does not close the list before the click lands.
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => pickSuggestion(focusedSpark, s.word)}
+                  >
+                    {displayWord(s.word)} <span className="muted">({fireCount(s.count)})</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           {existingFires.length > 0 && !sparkProblem && (
-            <p className="hint spark-existing" role="status">
+            <p className="spark-existing" role="status">
               {existingFires.length === 1 ? "A fire with these three sparks is already lit. " : "Fires with these three sparks are already lit. "}
               {existingFires.map((id, i) => (
                 <span key={id}>
                   {i > 0 && ", "}
-                  <Link href={`/fires/${id}`}>{existingFires.length === 1 ? "See it" : `See fire ${i + 1}`}</Link>
+                  <Link href={`/fires/${id}`} target="_blank" rel="noopener">
+                    {existingFires.length === 1 ? "See that fire" : `See fire ${i + 1}`}
+                  </Link>
                 </span>
               ))}
               . You can still light yours.
@@ -279,7 +284,7 @@ function LightAFireForm() {
               )}
             </div>
           )}
-          {sparks.some((s) => s.trim() !== "") && (
+          {!sparkProblem && sparks.some((s) => s.trim() !== "") && (
             <p className="hint">Sparks are matched exactly, so check your spelling.</p>
           )}
 

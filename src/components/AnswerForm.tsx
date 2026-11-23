@@ -17,6 +17,8 @@ import type { RequestItem } from "@/lib/requests";
 import { getCategory } from "@/lib/categories";
 
 function Counter({ used, max }: { used: number; max: number }) {
+  // Only worth showing once there is something to count.
+  if (used === 0) return null;
   return (
     <span className="counter" aria-hidden="true">
       {used} of {max} characters

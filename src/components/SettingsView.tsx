@@ -181,9 +181,11 @@ function BioCard({ bio, save }: { bio: string; save: (bio: string) => Promise<vo
         <div className="field">
           <label className="label" htmlFor="account-bio">
             Bio{" "}
-            <span className="counter" aria-hidden="true">
-              {value.length} of {BIO_MAX} characters
-            </span>
+            {value.length > 0 && (
+              <span className="counter" aria-hidden="true">
+                {value.length} of {BIO_MAX} characters
+              </span>
+            )}
           </label>
           <textarea
             id="account-bio"
