@@ -204,7 +204,6 @@ export default function PostRequestForm() {
                     sparkProblem?.index === index ? "input input-spark input-error" : "input input-spark"
                   }
                   type="text"
-                  maxLength={30}
                   autoComplete="off"
                   placeholder={["Statue", "Time", "Glowing"][index]}
                   value={value}

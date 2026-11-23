@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getDb } from "@/lib/firebase";
 import { getCategory } from "@/lib/categories";
 import { cloudSize, displayWord, fireCount, popularSparks, type SparkSuggestion } from "@/lib/spark-suggestions";
-import { normaliseSpark } from "@/lib/sparks";
+import { SPARK_MAX_LENGTH, normaliseSpark } from "@/lib/sparks";
 import { useSparkSuggestions } from "@/lib/use-spark-suggestions";
 import { matchHeading, parseSparks, searchLibrary, type LibraryResult } from "@/lib/library";
 
@@ -126,7 +126,7 @@ export default function LibraryView() {
                 id={`library-spark-${index}`}
                 className="input input-spark"
                 type="text"
-                maxLength={30}
+                maxLength={SPARK_MAX_LENGTH}
                 autoComplete="off"
                 placeholder={PLACEHOLDERS[index]}
                 value={value}

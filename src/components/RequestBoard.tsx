@@ -26,33 +26,37 @@ import {
 } from "@/lib/requests";
 
 type Filter = "all" | RequestKind;
-type Sort = "trending" | "top" | "new";
+type Sort = "trending" | "top" | "new" | "unanswered";
+
+const PAGE_SIZE = 30;
 
 const SORTS: { value: Sort; label: string }[] = [
   { value: "trending", label: "Trending" },
   { value: "top", label: "Most stoked" },
   { value: "new", label: "New" },
+  { value: "unanswered", label: "Unanswered" },
 ];
 
 const EMPTY: Record<Sort, string> = {
   trending: "Nothing's trending yet. Stoke a fire you'd like answered, or upvote an answer you like.",
   top: "No fire has been stoked yet. Stoke one you'd like to see answered.",
   new: "Nothing is burning yet. Be the first to light a fire.",
+  unanswered: "Every fire has an answer. Nice work.",
 };
 
 /** One query per tab, so only the tab being looked at is read. */
-function boardQuery(sort: Sort) {
+function boardQuery(sort: Sort, max: number) {
   const requests = collection(getDb(), "requests");
   switch (sort) {
     case "trending":
-      return query(requests, where("moderation", "==", "ok"), orderBy("trendRank", "desc"), limit(30));
+      return query(requests, where("moderation", "==", "ok"), orderBy("trendRank", "desc"), limit(max));
     case "top":
       return query(
         requests,
         where("moderation", "==", "ok"),
         orderBy("stokeCount", "desc"),
         orderBy("createdAt", "desc"),
-        limit(30),
+        limit(max),
       );
     case "new":
       return query(
@@ -61,18 +65,29 @@ function boardQuery(sort: Sort) {
         // Every status, so the existing index (moderation, status, createdAt) serves this.
         where("status", "in", ["open", "voting", "revealed", "closed"]),
         orderBy("createdAt", "desc"),
-        limit(30),
+        limit(max),
+      );
+    case "unanswered":
+      // Newest first. A fire stops being listed here as soon as it gets an answer.
+      return query(
+        requests,
+        where("moderation", "==", "ok"),
+        where("answerCount", "==", 0),
+        orderBy("createdAt", "desc"),
+        limit(max),
       );
   }
 }
 
-
-
 export default function RequestBoard() {
   const [sort, setSort] = useState<Sort>("trending");
   // Which tab the list belongs to, so switching tabs shows "Loading" instead of the old list.
-  const [loaded, setLoaded] = useState<{ sort: Sort; items: RequestItem[] } | null>(null);
+  // `max` is how many fires were asked for, and `full` says the list came back full (so there may be more).
+  const [loaded, setLoaded] = useState<{ sort: Sort; max: number; full: boolean; items: RequestItem[] } | null>(null);
+  const [max, setMax] = useState(PAGE_SIZE);
   const items = loaded && loaded.sort === sort ? loaded.items : null;
+  // Asking for more keeps the fires already on screen until the longer list arrives.
+  const loadingMore = loaded !== null && loaded.sort === sort && loaded.max !== max;
   // Until someone picks a tab, an empty Trending falls back to New.
   const chosen = useRef(false);
   const [failed, setFailed] = useState(false);
@@ -81,7 +96,7 @@ export default function RequestBoard() {
 
   useEffect(() => {
     return onSnapshot(
-      boardQuery(sort),
+      boardQuery(sort, max),
       (snapshot) => {
         const list = snapshot.docs
           .map((d) =>
@@ -94,7 +109,7 @@ export default function RequestBoard() {
           setSort("new");
           return;
         }
-        setLoaded({ sort, items: list });
+        setLoaded({ sort, max, full: snapshot.size >= max, items: list });
         setFailed(false);
       },
       (err) => {
@@ -102,7 +117,7 @@ export default function RequestBoard() {
         setFailed(true);
       },
     );
-  }, [sort]);
+  }, [sort, max]);
 
   // Only offer types that have open requests right now (an empty filter makes the
   // board look dead), and only once there are enough types to be worth filtering.
@@ -138,6 +153,7 @@ export default function RequestBoard() {
               onClick={() => {
                 chosen.current = true;
                 setFailed(false);
+                setMax(PAGE_SIZE);
                 setSort(s.value);
               }}
             >
@@ -225,6 +241,18 @@ export default function RequestBoard() {
             </li>
           ))}
         </ul>
+      )}
+      {!failed && items !== null && loaded?.full && (
+        <div className="show-more">
+          <button
+            type="button"
+            className="btn btn-outline"
+            disabled={loadingMore}
+            onClick={() => setMax((m) => m + PAGE_SIZE)}
+          >
+            {loadingMore ? "Loading…" : "Show more"}
+          </button>
+        </div>
       )}
     </section>
     </>

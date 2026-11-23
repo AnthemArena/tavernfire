@@ -498,7 +498,8 @@ a:hover {
    Sort always sits left and the filter right, whichever tab is open. */
 .sort-tabs {
   display: flex;
-  gap: 24px;
+  flex-wrap: wrap;
+  gap: 0 20px;
 }
 .sort-tab {
   min-height: 44px;
@@ -2359,4 +2360,10 @@ a:hover {
 }
 .cloud-2 {
   font-size: 24px;
+}
+
+.show-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
 }

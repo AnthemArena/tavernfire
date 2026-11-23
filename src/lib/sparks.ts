@@ -8,7 +8,7 @@
 //   pairKeys    "a|b", "a|c", "b|c" for two-of-three lookup
 
 export const SPARK_COUNT = 3;
-export const SPARK_MAX_LENGTH = 30;
+export const SPARK_MAX_LENGTH = 24;
 
 export type SparkFields = {
   /** The words as the author typed them (trimmed), for display. */

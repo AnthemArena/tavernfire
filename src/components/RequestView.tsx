@@ -182,7 +182,7 @@ export default function RequestView({ id }: { id: string }) {
           {lighterId && (
             <>
               {" "}
-              <RankBadge xp={lighterXp} size={18} iconOnly />
+              <RankBadge xp={lighterXp} size={18} />
             </>
           )}
           {" · "}

@@ -33,7 +33,7 @@ test("rejects empty, duplicate, multi-word and over-long sparks", () => {
   assert.throws(() => buildSparkFields(["a", "b", ""]), /needs a word/);
   assert.throws(() => buildSparkFields(["Time", "time", "Glowing"]), /different/);
   assert.throws(() => buildSparkFields(["ice cream", "b", "c"]), /more than one word/);
-  assert.throws(() => buildSparkFields(["a".repeat(31), "b", "c"]), /30 characters/);
+  assert.throws(() => buildSparkFields(["a".repeat(25), "b", "c"]), /24 characters/);
   assert.throws(() => buildSparkFields(["a", "b"]), /three sparks/);
 });
 

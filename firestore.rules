@@ -25,7 +25,7 @@ service cloud.firestore {
     }
 
     function validWord(v) {
-      return v is string && v.size() >= 1 && v.size() <= 30;
+      return v is string && v.size() >= 1 && v.size() <= 24;
     }
 
     // Display names. A person picks one public name, needed only when they
