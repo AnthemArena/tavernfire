@@ -351,7 +351,7 @@ a:hover {
 }
 
 .hero-compact {
-  padding: 16px 0 8px;
+  padding: 32px 0 8px;
 }
 .hero-compact h1 {
   font-size: clamp(24px, 3.4vw, 30px);
@@ -524,8 +524,8 @@ a:hover {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 4px 12px;
+  justify-content: flex-start;
+  gap: 4px 24px;
   margin-bottom: 20px;
 }
 
@@ -554,9 +554,6 @@ a:hover {
 .sort-tab[aria-pressed="true"] {
   color: var(--ink);
   border-bottom-color: var(--accent);
-}
-.board-head > :last-child:not(.sort-tabs) {
-  margin-left: auto;
 }
 
 .section-title {
@@ -2606,7 +2603,8 @@ a:hover {
 .hero-example .sparks + .hint {
   margin-bottom: 14px;
 }
-.hero-featured-author { margin: 0; font-size: 14px; font-weight: 600; color: var(--gold, inherit); }
+.hero-featured-author { margin: 0 0 16px; font-size: 14px; font-weight: 600; color: var(--gold, inherit); }
+.hero-example-lit { margin: 0 0 4px; }
 .hero-featured-name {
   margin: 16px 0 4px;
   font-family: var(--font-serif);
@@ -2799,4 +2797,30 @@ a.spark-link:focus-visible {
   textarea.input {
     font-size: 16px;
   }
+}
+
+/* A card that opens the fire, with the spark chips on top of it still clickable. */
+.request-card-linked {
+  position: relative;
+}
+.request-card-linked:has(.card-cover:hover) {
+  border-color: var(--accent);
+}
+.request-card-linked:has(.card-cover:focus-visible) {
+  border-color: var(--accent);
+}
+.card-cover {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 14px;
+}
+.card-cover:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.request-card-linked .spark-link,
+.request-card-linked .by-line a {
+  position: relative;
+  z-index: 1;
 }

@@ -13,6 +13,7 @@ import {
   where,
 } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
+import { normaliseSpark } from "@/lib/sparks";
 import { useNow } from "@/lib/use-now";
 import { useAuth } from "@/lib/auth-context";
 import { AnswerCountLabel } from "@/components/AnswerCount";
@@ -213,13 +214,19 @@ export default function RequestBoard() {
 function RequestCard({ request: r, now }: { request: RequestItem; now: Date }) {
   const { user } = useAuth();
   return (
-    <Link href={`/fires/${r.id}`} className="request-card">
+    <div className="request-card request-card-linked">
+      <Link href={`/fires/${r.id}`} className="card-cover" aria-label={`Open the fire ${r.sparks.join(", ")}`} />
       <div className="request-card-top">
         <div className="sparks">
           {r.sparks.map((s) => (
-            <span className="spark" key={s}>
+            <Link
+              className="spark spark-link"
+              href={`/library?s=${encodeURIComponent(normaliseSpark(s))}`}
+              title={`See fires with the spark ${s}`}
+              key={s}
+            >
               {s}
-            </span>
+            </Link>
           ))}
         </div>
       </div>
@@ -246,6 +253,6 @@ function RequestCard({ request: r, now }: { request: RequestItem; now: Date }) {
         </span>
       </div>
       {r.topAnswer && <TopAnswer name={r.topAnswer.name} snippet={r.topAnswer.snippet} />}
-    </Link>
+    </div>
   );
 }

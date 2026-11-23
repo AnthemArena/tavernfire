@@ -50,8 +50,12 @@ export default function HomeHero() {
         <div className="hero-copy">
           {!member && <p className="kicker">Where game tables trade ideas</p>}
           <h1>Three sparks in. Something for your table out.</h1>
-          <p className="hero-lede">Give three one-word sparks. Get an NPC, location, item or creature back.</p>
-          {!member && <p className="hero-made">Every answer is written by a person.</p>}
+          <p className="hero-lede">
+            Give three one-word sparks.
+            <br />
+            Get an NPC, location, item or creature back.
+          </p>
+          {!member && <p className="hero-made">Made by people.</p>}
           {member ? (
             <Link className="btn btn-primary hero-cta" href="/fires/new">
               Light a fire
@@ -150,15 +154,15 @@ function HeroPanel() {
             </span>
           ))}
         </div>
-        <p className="hero-featured-name">{top.name}</p>
-        {top.snippet && <p className="hero-featured-note">{top.snippet}</p>}
-        {top.author && <p className="hero-featured-author">Answered by {top.author}</p>}
         <p className="hint hero-example-meta">
           <span className="badge">{kindLabel(fire.kind)}</span>
         </p>
-        <p className="hint">
-          Lit by {fire.requesterName}, {describeAge(fire.createdAt, now)}
+        <p className="hint hero-example-lit">
+          Lit by {fire.requesterName}, <span className="nowrap">{describeAge(fire.createdAt, now)}</span>
         </p>
+        <p className="hero-featured-name">{top.name}</p>
+        {top.snippet && <p className="hero-featured-note">{top.snippet}</p>}
+        {top.author && <p className="hero-featured-author">Answered by {top.author}</p>}
         <Link className="btn btn-outline" href={`/fires/${fire.id}`}>
           See this fire
         </Link>

@@ -231,16 +231,25 @@ export default function LibraryView() {
             <ul className="request-list">
               {group.items.map(({ fire }) => (
                 <li key={fire.id}>
-                  <Link href={`/fires/${fire.id}`} className="request-card">
+                  <div className="request-card request-card-linked">
+                    <Link
+                      href={`/fires/${fire.id}`}
+                      className="card-cover"
+                      aria-label={`Open the fire ${fire.sparks.join(", ")}`}
+                    />
                     <div className="request-card-top">
                       <div className="sparks">
                         {fire.sparks.map((s) => (
-                          <span
-                            className={searched.includes(normaliseSpark(s)) ? "spark spark-hit" : "spark"}
+                          <Link
+                            className={
+                              searched.includes(normaliseSpark(s)) ? "spark spark-hit spark-link" : "spark spark-link"
+                            }
+                            href={`/library?s=${encodeURIComponent(normaliseSpark(s))}`}
+                            title={`See fires with the spark ${s}`}
                             key={s}
                           >
                             {s}
-                          </span>
+                          </Link>
                         ))}
                       </div>
                     </div>
@@ -268,7 +277,7 @@ export default function LibraryView() {
                       </span>
                     </div>
                     {fire.topAnswer && <TopAnswer name={fire.topAnswer.name} snippet={fire.topAnswer.snippet} lines={1} />}
-                  </Link>
+                  </div>
                 </li>
               ))}
             </ul>
