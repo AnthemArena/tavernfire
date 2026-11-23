@@ -184,6 +184,14 @@ a:hover {
   cursor: not-allowed;
 }
 
+/* A disabled primary button is plainly grey, not a faded copy of the enabled one, in both themes. */
+.btn-primary:disabled {
+  background: var(--disabled-bg);
+  color: var(--muted);
+  border-color: var(--border);
+  opacity: 1;
+}
+
 .btn-block {
   width: 100%;
   min-height: 48px;
