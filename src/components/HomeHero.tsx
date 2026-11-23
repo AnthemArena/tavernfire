@@ -50,7 +50,7 @@ export default function HomeHero() {
         <div className="hero-copy">
           <p className="kicker">Where game tables trade ideas</p>
           <h1>Three sparks in. Something for your table out.</h1>
-          <p className="hero-lede">Give three sparks. Get an NPC, place, item or creature for your table.</p>
+          <p className="hero-lede">Give three one-word sparks. Get an NPC, location, item or creature back.</p>
           {!member && <p className="hero-made">Every answer is written by a person.</p>}
           {member ? (
             <Link className="btn btn-primary hero-cta" href="/fires/new">
@@ -61,9 +61,9 @@ export default function HomeHero() {
               <Link className="btn btn-primary" href="/fires/new">
                 Light a fire
               </Link>
-              <a className="btn btn-outline" href="#open-requests">
-                Browse fires
-              </a>
+              <Link className="btn btn-outline" href="/answers">
+                Browse answers
+              </Link>
             </div>
           )}
         </div>
@@ -151,7 +151,7 @@ function HeroPanel() {
         {top.snippet && <p className="hero-featured-note">{top.snippet}</p>}
         {top.author && <p className="hero-featured-author">Answer by {top.author}</p>}
         <p className="hint">
-          {kindLabel(fire.kind)} · Fire lit by {fire.requesterName}, {describeAge(fire.createdAt, now)}
+          {kindLabel(fire.kind)} · Lit by {fire.requesterName}, {describeAge(fire.createdAt, now)}
         </p>
         <Link className="btn btn-outline" href={`/fires/${fire.id}`}>
           See this fire

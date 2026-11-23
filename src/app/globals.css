@@ -314,10 +314,8 @@ a:hover {
 }
 
 .kicker {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
   color: var(--teal);
   margin: 0 0 16px;
 }
@@ -656,10 +654,8 @@ a:hover {
 }
 
 .how-note-title {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
   color: var(--teal);
   margin: 0 0 10px;
 }
@@ -2588,4 +2584,14 @@ a.spark-link:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.fire-type {
+  margin: 0 0 12px;
+}
+.write-answer {
+  margin: 12px 0 0;
+}
+#write-answer {
+  scroll-margin-top: 80px;
 }

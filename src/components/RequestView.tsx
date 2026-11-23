@@ -153,7 +153,9 @@ export default function RequestView({ id }: { id: string }) {
         ← Back to Fires
       </Link>
 
-      <p className="kicker">The three sparks for <span className="kicker-type">{getCategory(r.kind).answer.needed}</span></p>
+      <p className="fire-type">
+        <span className="badge">{getCategory(r.kind).label}</span>
+      </p>
       <h1 className="visually-hidden">
         Fire: {r.sparks.join(", ")}
       </h1>
@@ -219,6 +221,13 @@ export default function RequestView({ id }: { id: string }) {
           </button>
         )}
       </div>
+      {!isOwnFire && r.answerCount === 0 && (
+        <p className="write-answer">
+          <a className="btn btn-primary" href="#write-answer">
+            Write an answer
+          </a>
+        </p>
+      )}
       {!isOwnFire && (
         <p className="stoke-help" id="stoke-help">
           A good fire is a question worth answering.

@@ -16,7 +16,7 @@ import { getDb } from "@/lib/firebase";
 import { useNow } from "@/lib/use-now";
 import { useAuth } from "@/lib/auth-context";
 import { AnswerCountLabel } from "@/components/AnswerCount";
-import { LAUNCHED_CATEGORIES, isCompactPicker } from "@/lib/categories";
+import TypeFilter from "@/components/TypeFilter";
 import {
   describeAge,
   kindLabel,
@@ -119,18 +119,7 @@ export default function RequestBoard() {
     );
   }, [sort, max]);
 
-  // Only offer types that have open requests right now (an empty filter makes the
-  // board look dead), and only once there are enough types to be worth filtering.
-  const present = new Set((items ?? []).map((r) => r.kind));
-  const filters: { value: Filter; label: string }[] = [
-    { value: "all", label: "All types" },
-    ...LAUNCHED_CATEGORIES.filter((c) => present.has(c.id as RequestKind)).map((c) => ({
-      value: c.id as Filter,
-      label: c.filterLabel,
-    })),
-  ];
-  const showFilters = LAUNCHED_CATEGORIES.length >= 3 && filters.length > 2;
-  const activeFilter: Filter = filters.some((f) => f.value === filter) ? filter : "all";
+  const activeFilter: Filter = filter;
 
   const visible =
     items === null ? [] : items.filter((r) => activeFilter === "all" || r.kind === activeFilter);
@@ -161,45 +150,7 @@ export default function RequestBoard() {
             </button>
           ))}
         </div>
-        {items === null && (
-          // Holds the filter's place while requests load, so the list does not
-          // jump down when the filter appears with the first cards.
-          <div className="tabs-placeholder" aria-hidden="true" />
-        )}
-        {showFilters && isCompactPicker(LAUNCHED_CATEGORIES.length) && (
-          <div className="board-select">
-            <label className="board-select-label" htmlFor="board-show">
-              Type
-            </label>
-            <select
-              id="board-show"
-              className="input select board-select-input"
-              value={activeFilter}
-              onChange={(e) => setFilter(e.target.value as Filter)}
-            >
-              {filters.map((f) => (
-                <option key={f.value} value={f.value}>
-                  {f.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-        {showFilters && !isCompactPicker(LAUNCHED_CATEGORIES.length) && (
-        <div className="tabs board-filter" role="group" aria-label="Filter fires">
-          {filters.map((f) => (
-            <button
-              key={f.value}
-              type="button"
-              className="tab"
-              aria-pressed={activeFilter === f.value}
-              onClick={() => setFilter(f.value)}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-        )}
+        <TypeFilter value={filter} onChange={setFilter} label="Filter fires" idPrefix="board" />
       </div>
 
       {failed ? (

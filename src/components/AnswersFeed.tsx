@@ -11,6 +11,7 @@ import { signInHref } from "@/lib/next-path";
 import { normaliseSpark } from "@/lib/sparks";
 import { shownUpvotes, upvoteId, type PendingUpvote } from "@/lib/upvotes";
 import UpArrow from "@/components/UpArrow";
+import TypeFilter, { type TypeFilterValue } from "@/components/TypeFilter";
 import VerifyEmailNotice from "@/components/VerifyEmailNotice";
 import { useNow } from "@/lib/use-now";
 import { toEntryItem, type EntryItem } from "@/lib/entries";
@@ -35,6 +36,7 @@ function answersQuery(sort: Sort, max: number) {
 /** A feed of answers, each with the fire it answers. Clicking goes to that answer on its fire's page. */
 export default function AnswersFeed() {
   const [sort, setSort] = useState<Sort>("top");
+  const [filter, setFilter] = useState<TypeFilterValue>("all");
   const [max, setMax] = useState(PAGE_SIZE);
   const [loaded, setLoaded] = useState<{ sort: Sort; max: number; full: boolean; items: EntryItem[] } | null>(null);
   // The fires the answers belong to, looked up once each. A fire that can't be read (hidden) is null.
@@ -134,7 +136,8 @@ export default function AnswersFeed() {
 
   // Hold the list back until each answer's fire has been looked up, so cards do not pop in one by one.
   const ready = items !== null && items.every((e) => e.requestId in fires);
-  const visible = ready ? items.filter((e) => fires[e.requestId] != null) : [];
+  const withFire = ready ? items.filter((e) => fires[e.requestId] != null) : [];
+  const visible = withFire.filter((e) => filter === "all" || e.kind === filter);
 
   return (
     <section aria-labelledby="answers-feed-title">
@@ -157,6 +160,7 @@ export default function AnswersFeed() {
           </button>
         ))}
       </div>
+      <TypeFilter value={filter} onChange={setFilter} label="Filter answers" idPrefix="answers" />
 
       {signInPrompt && !user && (
         <p className="notice notice-plain" role="status">
@@ -180,7 +184,7 @@ export default function AnswersFeed() {
         </p>
       ) : visible.length === 0 ? (
         <div className="empty">
-          <p>No answers yet. Find a fire and be the first.</p>
+          <p>{withFire.length === 0 ? "No answers yet. Find a fire and be the first." : "No answers of that type yet."}</p>
           <Link className="btn btn-primary" href="/">
             Browse fires
           </Link>

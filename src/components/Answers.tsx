@@ -273,7 +273,7 @@ export default function Answers({ request }: { request: RequestItem }) {
           {entries.length === 0 && showingForm && !isRequester && (
             <p className="answers-first">No answers yet. Be the first.</p>
           )}
-          {action}
+          <div id="write-answer">{action}</div>
           {entries.length === 0 && !showingForm && !isRequester && (
             <p className="empty">
               No answers yet. Be the first.

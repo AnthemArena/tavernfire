@@ -35,7 +35,7 @@ export default function PostRequestForm() {
   // Arriving from a search that found nothing fills in the words that were searched (?s=a,b).
   const params = useSearchParams();
   const [sparks, setSparks] = useState(() => sparksFromParam(params.get("s")));
-  const [kind, setKind] = useState<RequestKind>("npc");
+  const [kind, setKind] = useState<RequestKind | null>(null);
   const [note, setNote] = useState("");
   // Asked for once, the first time someone posts a request.
   const [nameInput, setNameInput] = useState("");
@@ -90,6 +90,10 @@ export default function PostRequestForm() {
       } else {
         setError(err instanceof Error ? err.message : "Check your sparks and try again.");
       }
+      return;
+    }
+    if (kind === null) {
+      setError("Choose what you need: an NPC, a location, an item or a creature.");
       return;
     }
 
@@ -266,10 +270,13 @@ export default function PostRequestForm() {
               <select
                 id="kind"
                 className="input select"
-                value={kind}
+                value={kind ?? ""}
                 aria-describedby="kind-description"
                 onChange={(e) => setKind(e.target.value as RequestKind)}
               >
+                <option value="" disabled>
+                  Choose a type
+                </option>
                 {groupedCategories(LAUNCHED_CATEGORIES).map((g) => (
                   <optgroup key={g.group} label={g.group}>
                     {g.items.map((c) => (
@@ -281,7 +288,7 @@ export default function PostRequestForm() {
                 ))}
               </select>
               <p className="hint kind-description" id="kind-description" aria-live="polite">
-                {getCategory(kind).description}
+                {kind ? getCategory(kind).description : ""}
               </p>
             </div>
           ) : (
@@ -322,7 +329,7 @@ export default function PostRequestForm() {
               className="input textarea"
               rows={3}
               maxLength={NOTE_MAX}
-              placeholder={getCategory(kind).notePlaceholder ?? DEFAULT_NOTE_PLACEHOLDER}
+              placeholder={(kind ? getCategory(kind).notePlaceholder : undefined) ?? DEFAULT_NOTE_PLACEHOLDER}
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
