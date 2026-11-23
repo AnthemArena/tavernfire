@@ -183,7 +183,7 @@ still show if a request has been revealed.
 ## Library search (fires)
 
 - `/library?s=statue,time,glowing` searches **fires** by spark (`src/lib/library.ts`, `src/components/LibraryView.tsx`). One to three sparks; fires with all of them first, then two shared, then one; most stoked first within each group. Up to 30 fires per query. With nothing searched it shows a search box and a cloud of the most used sparks (from the `sparks` list).
-- Each result shows its answer count and best answer. Those come from fields on the fire, `answerCount` and `topAnswer`, kept by the `countAnswers` Cloud Function (it recomputes whenever an answer is written, including when upvotes change). The app never writes them.
+- Each result shows its answer count and best answer. Those come from fields on the fire, `answerCount` and `topAnswer` (name, snippet and the answer author's name), kept by the `countAnswers` Cloud Function (it recomputes whenever an answer is written, including when upvotes change). The app never writes them.
 - New fires start with `stokeCount: 0` and new answers with `upvoteCount: 0` (the rules require both). Firestore leaves out documents that lack a field you sort by, so without these they would be missing from sorted queries. Fires and answers written before this change lack them: they are test data and will not show in the Library until deleted or backfilled.
 - Indexes: three on `requests` (`moderation`, one of `sparkKey` / `pairKeys` / `sparksNorm`, `stokeCount`). Deploy with `firebase deploy --only "firestore:rules,firestore:indexes,functions"`.
 - Not built yet: search by trait, filter the Library by type, paging past the first 30 Library results.

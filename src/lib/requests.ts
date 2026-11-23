@@ -33,7 +33,7 @@ export type RequestItem = {
   /** How many people have stoked it ("good fire"). Kept by a Cloud Function. */
   stokeCount: number;
   /** The most upvoted answer so far, kept by a Cloud Function. Null when there are no answers. */
-  topAnswer: { name: string; snippet: string } | null;
+  topAnswer: { name: string; snippet: string; author: string | null } | null;
   status: RequestStatus;
   /** People who picked favourites; set when the results are revealed. */
   ballotCount: number | null;
@@ -43,8 +43,9 @@ export type RequestItem = {
 
 function toTopAnswer(raw: unknown): RequestItem["topAnswer"] {
   if (typeof raw !== "object" || raw === null) return null;
-  const { name, snippet } = raw as { name?: unknown; snippet?: unknown };
-  return typeof name === "string" && typeof snippet === "string" ? { name, snippet } : null;
+  const { name, snippet, author } = raw as { name?: unknown; snippet?: unknown; author?: unknown };
+  if (typeof name !== "string" || typeof snippet !== "string") return null;
+  return { name, snippet, author: typeof author === "string" && author !== "" ? author : null };
 }
 
 /**

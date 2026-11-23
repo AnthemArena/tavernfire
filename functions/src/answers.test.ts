@@ -25,3 +25,8 @@ test("no answers, or unusable ones, give no top answer", () => {
   assert.equal(pickTop([]), null);
   assert.equal(pickTop([{ name: 3, concept: "x", upvoteCount: 1, createdMs: 1 }]), null);
 });
+
+test("the top answer carries its author, or null when there is none", () => {
+  assert.equal(pickTop([{ name: "A", concept: "x", upvoteCount: 1, createdMs: 1, authorName: "LightReign" }])?.author, "LightReign");
+  assert.equal(pickTop([{ name: "A", concept: "x", upvoteCount: 1, createdMs: 1 }])?.author, null);
+});

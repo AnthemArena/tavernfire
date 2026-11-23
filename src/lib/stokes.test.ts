@@ -33,6 +33,7 @@ test("a request carries its top answer only when it is well formed", () => {
   assert.deepEqual(toRequestItem("r", { ...base, topAnswer: { name: "Vhane", snippet: "A keeper." } })?.topAnswer, {
     name: "Vhane",
     snippet: "A keeper.",
+    author: null,
   });
   assert.equal(toRequestItem("r", { ...base, topAnswer: { name: 3 } })?.topAnswer, null);
 });

@@ -68,49 +68,64 @@ export default function HomeHero() {
           )}
         </div>
 
-        <HeroPanel member={member} />
+        <HeroPanel />
       </div>
     </section>
   );
 }
 
 /** How many of the trending fires to pick from. */
-const FEATURE_POOL = 10;
+const FEATURE_POOL = 20;
+
+function toFires(snapshot: { docs: { id: string; data: (o: { serverTimestamps: "estimate" }) => Record<string, unknown> }[] }) {
+  return snapshot.docs
+    .map((d) => toRequestItem(d.id, d.data({ serverTimestamps: "estimate" })))
+    .filter((f): f is RequestItem => f !== null && f.topAnswer !== null);
+}
 
 /**
- * The panel beside the headline: a showcase of one fire and its top answer, from the fires that are
- * trending and already have an answer. The same fire all day (it changes at midnight UTC). With none to show,
- * a visitor sees an example of three sparks, and a member sees nothing extra.
+ * The panel beside the headline: a showcase of one fire and its top answer, the same for everyone.
+ * It picks from the trending fires that have an answer, one per day (it changes at midnight UTC).
+ * If none qualify it uses the newest fire with an answer, and if there are none at all it invites
+ * people to light the first one.
  */
-function HeroPanel({ member }: { member: boolean }) {
+function HeroPanel() {
   const [state, setState] = useState<{ fire: RequestItem; now: Date } | "none" | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    getDocs(
-      query(
-        collection(getDb(), "requests"),
-        where("moderation", "==", "ok"),
-        orderBy("trendRank", "desc"),
-        limit(FEATURE_POOL),
-      ),
-    )
-      .then((snapshot) => {
-        if (cancelled) return;
-        const fires = snapshot.docs
-          .map((d) => toRequestItem(d.id, d.data({ serverTimestamps: "estimate" })))
-          .filter((f): f is RequestItem => f !== null && f.topAnswer !== null);
-        if (fires.length === 0) {
-          setState("none");
-          return;
-        }
-        const now = new Date();
-        const day = Math.floor(now.getTime() / 86_400_000);
-        setState({ fire: fires[day % fires.length], now });
-      })
-      .catch(() => {
-        if (!cancelled) setState("none");
-      });
+    (async () => {
+      const db = getDb();
+      const now = new Date();
+      let fires = toFires(
+        await getDocs(
+          query(collection(db, "requests"), where("moderation", "==", "ok"), orderBy("trendRank", "desc"), limit(FEATURE_POOL)),
+        ),
+      );
+      if (fires.length === 0) {
+        fires = toFires(
+          await getDocs(
+            query(
+              collection(db, "requests"),
+              where("moderation", "==", "ok"),
+              where("answerCount", ">", 0),
+              orderBy("answerCount"),
+              orderBy("createdAt", "desc"),
+              limit(10),
+            ),
+          ),
+        );
+      }
+      if (cancelled) return;
+      if (fires.length === 0) {
+        setState("none");
+        return;
+      }
+      const day = Math.floor(now.getTime() / 86_400_000);
+      setState({ fire: fires[day % fires.length], now });
+    })().catch(() => {
+      if (!cancelled) setState("none");
+    });
     return () => {
       cancelled = true;
     };
@@ -134,8 +149,9 @@ function HeroPanel({ member }: { member: boolean }) {
         </div>
         <p className="hero-featured-name">{top.name}</p>
         {top.snippet && <p className="hero-featured-note">{top.snippet}</p>}
+        {top.author && <p className="hero-featured-author">Answer by {top.author}</p>}
         <p className="hint">
-          {kindLabel(fire.kind)} · Lit by {fire.requesterName}, {describeAge(fire.createdAt, now)}
+          {kindLabel(fire.kind)} · Fire lit by {fire.requesterName}, {describeAge(fire.createdAt, now)}
         </p>
         <Link className="btn btn-outline" href={`/fires/${fire.id}`}>
           See this fire
@@ -144,18 +160,14 @@ function HeroPanel({ member }: { member: boolean }) {
     );
   }
 
-  if (member) return null;
-
   return (
-    <div className="card hero-example" role="group" aria-label="An example of three sparks">
-      <p className="kicker">A little creative challenge</p>
-      <div className="sparks hero-example-sparks">
-        <span className="spark">Ancient</span>
-        <span className="spark">Glowing</span>
-        <span className="spark">Forgotten</span>
-      </div>
-      <p className="hero-example-question">What would you make from these?</p>
-      <p className="hint">An NPC, a place, an item or a creature. Light a fire with your own three, or answer someone else&apos;s.</p>
+    <div className="card hero-example" role="group" aria-label="Light the first fire">
+      <p className="kicker">From the community</p>
+      <p className="hero-example-question">No fires have been answered yet.</p>
+      <p className="hint">Light one with three sparks, and the first answer will show up here.</p>
+      <Link className="btn btn-outline" href="/fires/new">
+        Light a fire
+      </Link>
     </div>
   );
 }

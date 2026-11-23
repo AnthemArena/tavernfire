@@ -2426,6 +2426,7 @@ a:hover {
 .hero-example .sparks + .hint {
   margin-bottom: 14px;
 }
+.hero-featured-author { margin: 0; font-size: 14px; font-weight: 600; color: var(--gold, inherit); }
 .hero-featured-name {
   margin: 16px 0 4px;
   font-family: var(--font-serif);
