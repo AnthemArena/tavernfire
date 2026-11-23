@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signInHref } from "@/lib/next-path";
@@ -79,6 +79,19 @@ export default function Answers({ request }: { request: RequestItem }) {
       },
     );
   }, [request.id]);
+
+  // A link like /fires/abc#entry-xyz scrolls to that answer once the list has loaded, and marks it.
+  const scrolledToHash = useRef(false);
+  useEffect(() => {
+    if (entries === null || scrolledToHash.current) return;
+    scrolledToHash.current = true;
+    const hash = window.location.hash;
+    if (!hash.startsWith("#entry-")) return;
+    const card = document.getElementById(hash.slice(1))?.closest("article");
+    if (!card) return;
+    card.scrollIntoView({ block: "center" });
+    card.classList.add("entry-target");
+  }, [entries]);
 
   // My private answer marker, if any. Only I can read it. It names my entry id.
   useEffect(() => {

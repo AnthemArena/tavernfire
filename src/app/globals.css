@@ -2446,3 +2446,81 @@ a:hover {
   color: var(--ink);
   overflow-wrap: anywhere;
 }
+
+/* Answers page */
+.answer-feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.answer-feed-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.answer-feed-card .hint {
+  margin: 0;
+}
+.answer-feed-name {
+  margin: 0;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 22px;
+  line-height: 1.25;
+}
+.answer-feed-name a {
+  color: inherit;
+  text-decoration: none;
+}
+.answer-feed-name a:hover {
+  text-decoration: underline;
+}
+.answer-feed-sparks {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.answer-feed-concept {
+  margin: 0;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+.answer-feed-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.answer-feed-author {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.answer-feed-author a {
+  color: inherit;
+  text-decoration: none;
+}
+.answer-feed-votes {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.answer-feed-link {
+  align-self: flex-start;
+  font-weight: 600;
+}
+
+/* The answer a link from the Answers page points at */
+.entry-target {
+  outline: 2px solid var(--gold, #d4a72c);
+  outline-offset: 2px;
+}
