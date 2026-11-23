@@ -1733,6 +1733,10 @@ a:hover {
 }
 
 /* Suggestions of sparks already in use, under the three spark boxes */
+.spark-existing a {
+  color: var(--accent);
+  font-weight: 600;
+}
 .spark-suggestions {
   display: flex;
   flex-wrap: wrap;

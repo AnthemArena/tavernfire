@@ -10,6 +10,7 @@ import { SparkError, buildSparkFields } from "@/lib/sparks";
 import { sparksFromParam } from "@/lib/library";
 import { displayWord, fireCount } from "@/lib/spark-suggestions";
 import { useSparkSuggestions } from "@/lib/use-spark-suggestions";
+import { useExistingFires } from "@/lib/use-existing-fires";
 import { NAME_CHANGE_DAYS, NAME_MAX, NameError } from "@/lib/names";
 import type { RequestKind } from "@/lib/requests";
 import {
@@ -61,6 +62,9 @@ export default function PostRequestForm() {
     suggestions,
     typed: typedInFocused,
   } = useSparkSuggestions(sparks);
+
+  // Fires that already use these exact three sparks. A warning, not a block.
+  const existingFires = useExistingFires(sparks);
 
   function pickSuggestion(index: number, word: string) {
     setSpark(index, displayWord(word));
@@ -238,6 +242,18 @@ export default function PostRequestForm() {
                 </button>
               ))}
             </div>
+          )}
+          {existingFires.length > 0 && !sparkProblem && (
+            <p className="hint spark-existing" role="status">
+              {existingFires.length === 1 ? "A fire with these three sparks is already lit. " : "Fires with these three sparks are already lit. "}
+              {existingFires.map((id, i) => (
+                <span key={id}>
+                  {i > 0 && ", "}
+                  <Link href={`/fires/${id}`}>{existingFires.length === 1 ? "See it" : `See fire ${i + 1}`}</Link>
+                </span>
+              ))}
+              . You can still light yours.
+            </p>
           )}
           {sparkProblem && (
             <div className="error spark-problem" id="spark-problem" role="alert">
