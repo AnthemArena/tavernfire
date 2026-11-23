@@ -16,7 +16,7 @@ export default function LightAFirePage() {
       <section className="page-intro">
         <h1 className="section-title">Light a fire</h1>
         <p className="hero-lede">
-          Choose three single words and say what you need. Answers should fit
+          Write three one-word sparks and say what you need. Answers should fit
           all three.
         </p>
       </section>

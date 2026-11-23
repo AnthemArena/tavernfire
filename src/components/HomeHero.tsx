@@ -152,9 +152,12 @@ function HeroPanel() {
         </div>
         <p className="hero-featured-name">{top.name}</p>
         {top.snippet && <p className="hero-featured-note">{top.snippet}</p>}
-        {top.author && <p className="hero-featured-author">Answer by {top.author}</p>}
+        {top.author && <p className="hero-featured-author">Answered by {top.author}</p>}
+        <p className="hint hero-example-meta">
+          <span className="badge">{kindLabel(fire.kind)}</span>
+        </p>
         <p className="hint">
-          {kindLabel(fire.kind)} · Lit by {fire.requesterName}, {describeAge(fire.createdAt, now)}
+          Lit by {fire.requesterName}, {describeAge(fire.createdAt, now)}
         </p>
         <Link className="btn btn-outline" href={`/fires/${fire.id}`}>
           See this fire

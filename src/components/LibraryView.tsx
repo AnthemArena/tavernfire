@@ -223,6 +223,11 @@ export default function LibraryView() {
         return (
           <section key={group.matched} className="library-group" aria-label={heading}>
             <h2 className="library-heading">{heading}</h2>
+            {searched.length === 1 && (
+              <p className="hint">
+                <Link href={`/fires/new?s=${encodeURIComponent(searched[0])}`}>Light a fire with this spark</Link>
+              </p>
+            )}
             <ul className="request-list">
               {group.items.map(({ fire }) => (
                 <li key={fire.id}>

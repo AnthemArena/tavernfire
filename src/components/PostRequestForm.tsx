@@ -273,10 +273,9 @@ export default function PostRequestForm() {
               )}
             </div>
           )}
-          <p className="hint">
-            Broad words invite surprises. Narrow words get you closer to what
-            you need. Check your spelling: sparks are matched exactly.
-          </p>
+          {sparks.some((s) => s.trim() !== "") && (
+            <p className="hint">Sparks are matched exactly, so check your spelling.</p>
+          )}
 
           {isCompactPicker(LAUNCHED_CATEGORIES.length) ? (
             <div className="field">
@@ -336,9 +335,11 @@ export default function PostRequestForm() {
           <div className="field">
             <label className="label" htmlFor="note">
               Anything the table should know (optional){" "}
-              <span className="counter" aria-hidden="true">
-                {note.length} of {NOTE_MAX} characters
-              </span>
+              {note.length > 0 && (
+                <span className="counter" aria-hidden="true">
+                  {note.length} of {NOTE_MAX} characters
+                </span>
+              )}
             </label>
             <textarea
               id="note"
@@ -430,7 +431,7 @@ export default function PostRequestForm() {
           )}
 
           <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
-            {busy ? "Lighting…" : "Light the fire"}
+            {busy ? "Lighting…" : "Light this fire"}
           </button>
         </form>
       )}

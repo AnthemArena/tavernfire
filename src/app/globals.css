@@ -136,7 +136,7 @@ a:hover {
 }
 
 .container.narrow {
-  padding-top: 56px;
+  padding-top: 40px;
   padding-bottom: 64px;
 }
 
@@ -353,6 +353,7 @@ a:hover {
 }
 
 .hero-lede {
+  text-wrap: balance;
   font-size: 18px;
   line-height: 1.55;
   color: var(--body);
@@ -1160,7 +1161,13 @@ a:hover {
 
 .kind-options {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+}
+@media (max-width: 480px) {
+  .kind-options {
+    grid-template-columns: 1fr;
+  }
 }
 
 .kind-option {
@@ -1176,11 +1183,19 @@ a:hover {
 }
 
 .kind-option input {
+  appearance: none;
+  -webkit-appearance: none;
   margin: 3px 0 0;
   width: 18px;
   height: 18px;
   flex: none;
-  accent-color: var(--accent);
+  border: 2px solid var(--control-border);
+  border-radius: 50%;
+  background: transparent;
+}
+.kind-option input:checked {
+  border-color: var(--accent);
+  background: radial-gradient(circle, var(--accent) 0 4px, transparent 5px);
 }
 
 .kind-option-selected {
@@ -1283,7 +1298,7 @@ a:hover {
   font-size: 30px;
   line-height: 1.2;
   color: var(--ink);
-  margin: 8px 0 20px;
+  margin: 0 0 20px;
 }
 .account {
   display: flex;
@@ -1395,7 +1410,7 @@ a:hover {
 }
 
 .page-intro {
-  margin: 8px 0 28px;
+  margin: 0 0 28px;
 }
 
 .page-intro .section-title {
@@ -1870,7 +1885,8 @@ a:hover {
 /* Search boxes: hints look like hints, not like typed words */
 .input-spark::placeholder {
   color: var(--muted);
-  opacity: 1;
+  font-style: italic;
+  opacity: 0.8;
 }
 .lit-by {
   margin: 20px 0 8px;
@@ -2483,13 +2499,19 @@ a:hover {
 .hero-example {
   flex: 1 1 340px;
   min-width: 0;
-  text-align: center;
+  text-align: left;
+}
+.hero-example .btn {
+  margin-top: 16px;
+}
+.hero-example-meta {
+  margin: 8px 0 4px;
 }
 .hero-example .kicker {
   margin-bottom: 14px;
 }
 .hero-example-sparks {
-  justify-content: center;
+  justify-content: flex-start;
 }
 .hero-example-question {
   margin: 16px 0 6px;
