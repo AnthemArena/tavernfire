@@ -20,7 +20,7 @@ export default function Home() {
         <div className="hero-copy">
           <p className="kicker">Where game tables trade ideas</p>
           <h1>Three sparks in. Something for your table out.</h1>
-          <p className="hero-lede">A spark is a single word that starts an idea.</p>
+          <p className="hero-lede">Give three sparks. Get an NPC, place, item or creature for your table.</p>
           <Link className="btn btn-primary hero-cta" href="/fires/new">
             Light a fire
           </Link>
