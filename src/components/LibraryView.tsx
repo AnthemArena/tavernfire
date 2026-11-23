@@ -23,7 +23,8 @@ const PLACEHOLDERS = ["Statue", "Time", "Glowing"];
 export default function LibraryView() {
   const router = useRouter();
   const params = useSearchParams();
-  const searched = parseSparks(params.get("s") ?? "");
+  // One spark at a time: an older link with several sparks searches the first.
+  const searched = parseSparks(params.get("s") ?? "").slice(0, 1);
   const searchedKey = searched.join(",");
 
   // What is in the three boxes. After a search (or a click on a spark in the cloud) the boxes show
@@ -32,7 +33,7 @@ export default function LibraryView() {
   const boxes =
     typedBoxes && typedBoxes.key === searchedKey
       ? typedBoxes.boxes
-      : [0, 1, 2].map((i) => (searched[i] ? displayWord(searched[i]) : ""));
+      : [searched[0] ? displayWord(searched[0]) : ""];
   const setBoxes = (update: (cur: string[]) => string[]) => setTypedBoxes({ key: searchedKey, boxes: update(boxes) });
   const [state, setState] = useState<State>({ status: "idle" });
   const { focused, setFocused, suggestions, typed } = useSparkSuggestions(boxes);
@@ -101,13 +102,13 @@ export default function LibraryView() {
     <>
       <form onSubmit={onSubmit} noValidate className="library-search">
         <p className="label" id="library-sparks-label">
-          Sparks
+          Search by spark
         </p>
-        <div className="form-row" role="group" aria-labelledby="library-sparks-label">
+        <div className="library-search-row" role="group" aria-labelledby="library-sparks-label">
           {boxes.map((value, index) => (
             <div className="field field-spark" key={index}>
               <label className="visually-hidden" htmlFor={`library-spark-${index}`}>
-                Spark {index + 1} of 3
+                Spark
               </label>
               <input
                 id={`library-spark-${index}`}
@@ -123,6 +124,9 @@ export default function LibraryView() {
               />
             </div>
           ))}
+          <button type="submit" className="btn btn-primary">
+            Search
+          </button>
         </div>
         {focused !== null && suggestions.length > 0 && (
           <div className="spark-suggestions" role="group" aria-label="Sparks already in use">
@@ -140,10 +144,7 @@ export default function LibraryView() {
             ))}
           </div>
         )}
-        <button type="submit" className="btn btn-primary">
-          Search
-        </button>
-        <p className="hint">Search one, two or three sparks.</p>
+        <p className="hint">One word, like Statue or Lantern.</p>
       </form>
 
       {!searching && cloud.length > 0 && (
@@ -186,7 +187,7 @@ export default function LibraryView() {
         <div className="empty">
           <p className="empty-line">No fires with those sparks yet.</p>
           <Link href={`/fires/new?s=${encodeURIComponent(searched.join(","))}`} className="btn btn-dark">
-            Light a fire with these sparks
+            Light a fire with this spark
           </Link>
         </div>
       )}

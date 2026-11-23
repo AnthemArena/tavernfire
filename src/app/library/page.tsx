@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function LibraryPage() {
   return (
-    <main className="container narrow">
+    <main className="container narrow library-page">
       <section className="page-intro">
         <h1 className="section-title">Library</h1>
         <p className="hero-lede">

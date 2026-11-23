@@ -2283,3 +2283,22 @@ a:hover {
     width: 100%;
   }
 }
+
+/* Library: wider than the form pages, one search box beside its button */
+.container.library-page {
+  max-width: 720px;
+}
+.library-search-row {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  margin-bottom: 4px;
+}
+.library-search-row .field-spark {
+  flex: 1 1 auto;
+}
+@media (max-width: 480px) {
+  .library-search-row {
+    flex-direction: column;
+  }
+}
