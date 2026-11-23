@@ -2377,3 +2377,37 @@ a:hover {
   justify-content: center;
   margin-top: 24px;
 }
+
+/* Front page, signed out: the line about people, the two buttons and the example card */
+.hero-made {
+  margin: 10px 0 0;
+  font-weight: 600;
+  color: var(--ink);
+}
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+.hero-example {
+  flex: 1 1 340px;
+  min-width: 0;
+  text-align: center;
+}
+.hero-example .kicker {
+  margin-bottom: 14px;
+}
+.hero-example-sparks {
+  justify-content: center;
+}
+.hero-example-question {
+  margin: 16px 0 6px;
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.hero-example .hint {
+  margin: 0;
+}
