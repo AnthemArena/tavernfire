@@ -140,7 +140,7 @@ export default function AnswersFeed() {
   const visible = withFire.filter((e) => filter === "all" || e.kind === filter);
 
   return (
-    <section aria-labelledby="answers-feed-title">
+    <section className="answers-feed" aria-labelledby="answers-feed-title">
       <h2 id="answers-feed-title" className="visually-hidden">
         Answers
       </h2>

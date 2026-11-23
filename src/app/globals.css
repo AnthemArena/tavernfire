@@ -333,6 +333,17 @@ a:hover {
   margin-bottom: 12px;
 }
 
+.hero-compact {
+  padding: 16px 0 8px;
+}
+.hero-compact h1 {
+  font-size: clamp(24px, 3.4vw, 30px);
+  margin-bottom: 6px;
+}
+.hero-compact .hero-lede {
+  font-size: 16px;
+}
+
 .hero-lede {
   font-size: 18px;
   line-height: 1.55;
@@ -2469,6 +2480,13 @@ a:hover {
 }
 
 /* Answers page */
+.answers-feed .sort-tabs {
+  margin-bottom: 12px;
+}
+.answers-feed .board-filter,
+.answers-feed .board-select {
+  margin-bottom: 24px;
+}
 .answer-feed {
   list-style: none;
   margin: 0;

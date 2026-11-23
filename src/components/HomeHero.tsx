@@ -45,10 +45,10 @@ export default function HomeHero() {
   }, [user, loading]);
 
   return (
-    <section className="hero">
+    <section className={member ? "hero hero-compact" : "hero"}>
       <div className="hero-grid">
         <div className="hero-copy">
-          <p className="kicker">Where game tables trade ideas</p>
+          {!member && <p className="kicker">Where game tables trade ideas</p>}
           <h1>Three sparks in. Something for your table out.</h1>
           <p className="hero-lede">Give three one-word sparks. Get an NPC, location, item or creature back.</p>
           {!member && <p className="hero-made">Every answer is written by a person.</p>}
@@ -68,7 +68,7 @@ export default function HomeHero() {
           )}
         </div>
 
-        <HeroPanel />
+        {!member && <HeroPanel />}
       </div>
     </section>
   );
