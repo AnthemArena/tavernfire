@@ -140,6 +140,23 @@ describe("requests: create", () => {
     );
   });
 
+  test("a spark can be up to 24 characters, not 25", async () => {
+    const db = env.authenticatedContext("alice").firestore();
+    // Built by hand, because buildSparkFields refuses an over-long spark before the rules see it.
+    const withSpark = (word: string) => {
+      const norm = [word, "time", "glowing"].sort();
+      const [a, b, c] = norm;
+      return {
+        sparks: [word, "Time", "Glowing"],
+        sparksNorm: norm,
+        sparkKey: `${a}|${b}|${c}`,
+        pairKeys: [`${a}|${b}`, `${a}|${c}`, `${b}|${c}`],
+      };
+    };
+    await assertSucceeds(addDoc(collection(db, "requests"), newRequest("alice", withSpark("a".repeat(24)))));
+    await assertFails(addDoc(collection(db, "requests"), newRequest("alice", withSpark("a".repeat(25)))));
+  });
+
   test("rejects repeated sparks", async () => {
     const db = env.authenticatedContext("alice").firestore();
     await assertFails(
