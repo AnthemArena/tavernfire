@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 
 // Runs before the page paints so the saved theme never flashes the wrong colours.
 // Dark is the default.
-const THEME_SCRIPT = `try{var t=localStorage.getItem("tf-theme");document.documentElement.dataset.theme=t==="light"?"light":"dark"}catch(e){document.documentElement.dataset.theme="dark"}`;
+const THEME_SCRIPT = `try{var t=localStorage.getItem("tf-theme");var l=t==="light"||(t==="system"&&window.matchMedia("(prefers-color-scheme: light)").matches);document.documentElement.dataset.theme=l?"light":"dark"}catch(e){document.documentElement.dataset.theme="dark"}`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

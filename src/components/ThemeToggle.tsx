@@ -1,9 +1,10 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 export const THEME_KEY = "tf-theme";
-type Theme = "dark" | "light";
+/** What the person picked. "system" follows the computer's own light or dark setting. */
+type Choice = "dark" | "light" | "system";
 
 const listeners = new Set<() => void>();
 function subscribe(listener: () => void) {
@@ -12,20 +13,38 @@ function subscribe(listener: () => void) {
     listeners.delete(listener);
   };
 }
-// The page script has already put the saved theme on <html> before React runs.
-function getTheme(): Theme {
-  return document.documentElement.dataset.theme === "light" ? "light" : "dark";
-}
-function getServerTheme(): Theme {
+function getChoice(): Choice {
+  try {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved === "light" || saved === "system") return saved;
+  } catch {
+    // storage blocked: fall through to the default
+  }
   return "dark";
 }
+function getServerChoice(): Choice {
+  return "dark";
+}
+function apply(choice: Choice) {
+  const light = choice === "light" || (choice === "system" && window.matchMedia("(prefers-color-scheme: light)").matches);
+  document.documentElement.dataset.theme = light ? "light" : "dark";
+}
 
-/** Dark is the default. The choice is remembered in this browser only. */
+/** Dark is the default for a first visit. The choice is remembered in this browser only. */
 export default function ThemeToggle() {
-  const theme = useSyncExternalStore(subscribe, getTheme, getServerTheme);
+  const choice = useSyncExternalStore(subscribe, getChoice, getServerChoice);
 
-  function choose(next: Theme) {
-    document.documentElement.dataset.theme = next;
+  // While following the system, switch when the computer's setting changes.
+  useEffect(() => {
+    if (choice !== "system") return;
+    const query = window.matchMedia("(prefers-color-scheme: light)");
+    const onChange = () => apply("system");
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, [choice]);
+
+  function choose(next: Choice) {
+    apply(next);
     try {
       localStorage.setItem(THEME_KEY, next);
     } catch {
@@ -40,11 +59,14 @@ export default function ThemeToggle() {
         Theme
       </span>
       <div className="theme-switch-group">
-        <button type="button" aria-pressed={theme === "dark"} onClick={() => choose("dark")}>
+        <button type="button" aria-pressed={choice === "dark"} onClick={() => choose("dark")}>
           Dark
         </button>
-        <button type="button" aria-pressed={theme === "light"} onClick={() => choose("light")}>
+        <button type="button" aria-pressed={choice === "light"} onClick={() => choose("light")}>
           Light
+        </button>
+        <button type="button" aria-pressed={choice === "system"} onClick={() => choose("system")}>
+          System
         </button>
       </div>
     </div>

@@ -1409,6 +1409,11 @@ a:hover {
   background: var(--tab-bg);
   color: var(--tab-fg);
 }
+/* In the dark theme the chosen side is a solid accent pill, like the dark pill in light. */
+:root:not([data-theme="light"]) .theme-switch-group button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--on-accent);
+}
 
 /* Fires: the call to action and the Light a fire page */
 .hero-cta {
