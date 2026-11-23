@@ -124,7 +124,7 @@ test("a fire's answer count and top answer follow its answers", async () => {
   assert.equal(await recomputeFireAnswers(db, "f1"), 2); // twice changes nothing
   const fire = await db.collection("requests").doc("f1").get();
   assert.equal(fire.get("answerCount"), 2);
-  assert.deepEqual(fire.get("topAnswer"), { name: "Loved", snippet: "About Loved" });
+  assert.deepEqual(fire.get("topAnswer"), { name: "Loved", snippet: "About Loved", author: null });
 
   // With no visible answers left, the top answer goes away.
   await db.collection("entries").doc("fa1").update({ moderation: "hidden" });
