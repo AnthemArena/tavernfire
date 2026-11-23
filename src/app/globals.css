@@ -77,9 +77,9 @@
   --warn-border: #a8741a;
   --brand: #211d18;
   --spark-border: transparent;
-  --tab-bg: #211d18;
-  --tab-fg: #f4eee1;
-  --tab-border: #211d18;
+  --tab-bg: #f6e0d8;
+  --tab-fg: #7e2d18;
+  --tab-border: #a93f24;
   --warn-text: #8a3b1f;
 }
 
@@ -2177,6 +2177,8 @@ a:hover {
 }
 .bell-item-unread {
   color: var(--ink);
+  background: var(--tint-accent, var(--chip));
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 .bell-text {
   display: grid;

@@ -77,7 +77,10 @@ export default function NotificationBell() {
                       <NotificationIcon type={n.type} />
                     </span>
                     <span className="bell-text">
-                      {n.text}
+                      <span>
+                        {!n.read && <span className="visually-hidden">Unread. </span>}
+                        {n.text}
+                      </span>
                       {n.createdAt && <span className="bell-time">{describeAge(n.createdAt, now)}</span>}
                     </span>
                   </Link>

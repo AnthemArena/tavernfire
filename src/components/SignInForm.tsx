@@ -84,7 +84,7 @@ export default function SignInForm() {
       <p className="auth-lede">
         {isSignUp
           ? "Join to light fires and answer other people\u2019s fires."
-          : "Sign in to light fires and answer them."}
+          : "Light fires and answer other people\u2019s fires."}
       </p>
       {isSignUp && (
         <p className="hint">

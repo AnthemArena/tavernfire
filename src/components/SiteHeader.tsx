@@ -46,7 +46,7 @@ function SignInButton() {
   const pathname = usePathname();
   if (pathname === "/signin") return null;
   return (
-    <Link className="btn btn-dark" href={signInHref(pathname)}>
+    <Link className="btn btn-outline" href={signInHref(pathname)}>
       Sign in
     </Link>
   );

@@ -8,10 +8,8 @@ import { useEffect } from "react";
 export function useDocumentTitle(title: string | null) {
   useEffect(() => {
     if (title === null) return;
-    const previous = document.title;
+    // Not put back on leaving: the next page sets its own title, and restoring the old one
+    // here could land after it and leave a stale title in the tab.
     document.title = `${title} – Tavernfire`;
-    return () => {
-      document.title = previous;
-    };
   }, [title]);
 }

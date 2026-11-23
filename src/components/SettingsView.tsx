@@ -1,5 +1,6 @@
 "use client";
 
+import { useDocumentTitle } from "@/lib/use-document-title";
 import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
@@ -14,13 +15,14 @@ import { NAME_CHANGE_DAYS, NAME_MAX, NameError } from "@/lib/names";
 export default function SettingsView() {
   const { user, displayName, bio, chooseBio, avatar, avatarChangedAt, chooseAvatar, chooseName, nameChangeOn, signOut, loading, emailVerified, resendVerification, refreshVerification } =
     useAuth();
+  useDocumentTitle("Settings");
 
   if (loading) return <p className="muted page-note">Loading…</p>;
   if (!user) {
     return (
       <div className="card">
         <h1 className="card-title">Settings</h1>
-        <p className="card-lede">Sign in to see your settings and your fires.</p>
+        <p className="card-lede">Sign in to see your settings.</p>
         <Link className="btn btn-primary btn-block" href="/signin?next=%2Fsettings">
           Sign in
         </Link>
