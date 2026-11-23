@@ -251,7 +251,7 @@ export default function EntryCard({
           user &&
           (reported ? (
             <span className="entry-reported" role="status">
-              Reported. A moderator will take a look.
+              Reported. A moderator will look.
             </span>
           ) : (
             !reporting && (
@@ -266,10 +266,10 @@ export default function EntryCard({
           ))}
       </div>
 
+      </div>
       {reporting && !reported && (
         <ReportForm entryId={entry.id} onClose={() => setReporting(false)} />
       )}
-      </div>
     </article>
   );
 }

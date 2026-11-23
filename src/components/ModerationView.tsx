@@ -7,11 +7,14 @@ import { httpsCallable } from "firebase/functions";
 import { getCloudFunctions, getDb } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import { REPORT_REASON_LABELS, toEntryItem, type EntryItem, type ReportReason } from "@/lib/entries";
+import { describeAge, kindLabel } from "@/lib/requests";
+import { isCategoryId } from "@/lib/categories";
 import { groupReports, type ReportRow } from "@/lib/moderation";
 
 type Item = {
   entry: EntryItem;
   sparks: string[];
+  kind: string;
   authorName: string;
   reports: ReportRow[];
 };
@@ -30,6 +33,9 @@ export default function ModerationView() {
   const [state, setState] = useState<State>({ status: "loading" });
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  // The answer whose Hide button is waiting for a second tap.
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [now] = useState(() => new Date());
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -62,6 +68,7 @@ export default function ModerationView() {
         items.push({
           entry,
           sparks,
+          kind: isCategoryId(fire.get("kind")) ? kindLabel(fire.get("kind")) : "",
           authorName: entry.author?.name ?? "Unknown author",
           reports: group.reports,
         });
@@ -81,6 +88,7 @@ export default function ModerationView() {
 
   async function act(entryId: string, action: "hide" | "dismiss") {
     setBusyId(entryId);
+    setConfirmId(null);
     setActionError(null);
     try {
       await httpsCallable(getCloudFunctions(), "moderateAnswer")({ entryId, action });
@@ -128,8 +136,8 @@ export default function ModerationView() {
 
   return (
     <div className="moderation">
-      <RecountXp />
-      <h1 className="page-title">Reported answers</h1>
+      <h1 className="section-title">Moderation</h1>
+      <h2 className="page-title">Reported answers</h2>
       <p className="hint">
         <strong>Hide</strong> removes the answer from the site. <strong>Dismiss</strong> clears the reports and lets
         the author edit again. Nothing is deleted, and an author is never penalised automatically.
@@ -140,16 +148,18 @@ export default function ModerationView() {
         </p>
       )}
       {state.items.length === 0 ? (
-        <p className="empty">Nothing to review. No open reports.</p>
+        <p className="empty">No open reports.</p>
       ) : (
         <ul className="request-list">
-          {state.items.map(({ entry, sparks, authorName, reports }) => (
+          {state.items.map(({ entry, sparks, kind, authorName, reports }) => (
             <li key={entry.id} className="card moderation-item">
               <p className="muted">
                 Answer to{" "}
                 <Link href={`/fires/${entry.requestId}`}>{sparks.length > 0 ? sparks.join(", ") : "this fire"}</Link>{" "}
                 by{" "}
                 {entry.author ? <Link href={`/profile/${entry.author.id}`}>{authorName}</Link> : authorName}
+                {kind && <> · {kind} fire</>}
+                {entry.createdAt && <> · answered {describeAge(entry.createdAt, now)}</>}
               </p>
               <h2 className="my-answer-name">{entry.name}</h2>
               <p className="entry-concept">{entry.concept}</p>
@@ -161,31 +171,51 @@ export default function ModerationView() {
                   <li key={r.id}>
                     <strong>{REPORT_REASON_LABELS[r.reason as ReportReason] ?? r.reason}</strong>
                     {r.details && <span>: {r.details}</span>}
+                    {r.createdMs > 0 && <span className="muted"> ({describeAge(new Date(r.createdMs), now)})</span>}
                   </li>
                 ))}
               </ul>
-              <div className="form-actions">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  disabled={busyId === entry.id}
-                  onClick={() => void act(entry.id, "hide")}
-                >
-                  Hide answer
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  disabled={busyId === entry.id}
-                  onClick={() => void act(entry.id, "dismiss")}
-                >
-                  Dismiss reports
-                </button>
-              </div>
+              {confirmId === entry.id ? (
+                <div className="form-actions">
+                  <p className="hint">Hide this answer from the site? It can&apos;t be restored from this page.</p>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={busyId === entry.id}
+                    onClick={() => void act(entry.id, "hide")}
+                  >
+                    Yes, hide it
+                  </button>
+                  <button type="button" className="btn btn-outline" onClick={() => setConfirmId(null)}>
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div className="form-actions">
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    disabled={busyId === entry.id}
+                    onClick={() => setConfirmId(entry.id)}
+                  >
+                    Hide answer
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    disabled={busyId === entry.id}
+                    onClick={() => void act(entry.id, "dismiss")}
+                  >
+                    Dismiss reports
+                  </button>
+                </div>
+              )}
             </li>
           ))}
         </ul>
       )}
+      <h2 className="page-title maintenance-title">Maintenance</h2>
+      <RecountXp />
     </div>
   );
 }
@@ -195,7 +225,10 @@ function RecountXp() {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
+  const [confirming, setConfirming] = useState(false);
+
   async function run() {
+    setConfirming(false);
     setBusy(true);
     setResult(null);
     try {
@@ -215,9 +248,21 @@ function RecountXp() {
         Works out everyone&apos;s XP, rank and achievements again from their posts. Run it once after the XP functions are
         first deployed, or after changing the points.
       </p>
-      <button type="button" className="btn btn-outline" disabled={busy} onClick={() => void run()}>
-        {busy ? "Counting…" : "Recount XP for everyone"}
-      </button>
+      {confirming ? (
+        <div className="form-actions">
+          <p className="hint">This rewrites everyone&apos;s XP. Go ahead?</p>
+          <button type="button" className="btn btn-primary" onClick={() => void run()}>
+            Yes, recount
+          </button>
+          <button type="button" className="btn btn-outline" onClick={() => setConfirming(false)}>
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <button type="button" className="btn btn-outline" disabled={busy} onClick={() => setConfirming(true)}>
+          {busy ? "Counting…" : "Recount XP for everyone"}
+        </button>
+      )}
       {result && (
         <p className="hint" role="status">
           {result}

@@ -1634,12 +1634,19 @@ a:hover {
 /* Upvotes on answers */
 .entry-card-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 18px;
   align-items: flex-start;
 }
 
+/* The report form runs the full width of the card, under the vote tile and the answer. */
+.entry-card-row > .report-form {
+  flex: 0 0 100%;
+  box-sizing: border-box;
+}
+
 .entry-body {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-width: 0;
 }
 
@@ -2760,4 +2767,8 @@ a.spark-link:focus-visible {
 
 .nowrap {
   white-space: nowrap;
+}
+
+.maintenance-title {
+  margin-top: 48px;
 }
