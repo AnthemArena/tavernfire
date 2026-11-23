@@ -93,7 +93,10 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/displayNames/$(request.resource.data.nameKey)).data.uid == uid
         && get(/databases/$(database)/documents/displayNames/$(request.resource.data.nameKey)).data.displayName
              == request.resource.data.displayName
-        && request.resource.data.nameChangedAt == request.time
+        // The very first choice does not start the 7-day lock, so a typo can be fixed once.
+        && (resource.data.displayName == null
+              ? !('nameChangedAt' in request.resource.data)
+              : request.resource.data.nameChangedAt == request.time)
         && nameFree(resource.data);
 
       // Choosing or changing the avatar: one of the preset ids, at least an hour

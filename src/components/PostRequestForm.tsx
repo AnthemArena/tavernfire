@@ -26,7 +26,13 @@ const NOTE_MAX = 300;
 const SLOW_AFTER_MS = 8_000;
 const NOTICE_DELAY_MS = 700;
 
+/** Starts fresh whenever the ?s= spark changes, so a link with new words never shows old ones. */
 export default function PostRequestForm() {
+  const params = useSearchParams();
+  return <LightAFireForm key={params.get("s") ?? ""} />;
+}
+
+function LightAFireForm() {
   const router = useRouter();
   const { user, displayName, avatar, chooseName, nameChangeOn, loading } = useAuth();
   // True while a named person has opened the field to change their name.

@@ -111,6 +111,9 @@ function AvatarMenu() {
               Your profile
             </Link>
           )}
+          <Link href="/fires/new" className="avatar-item avatar-item-mobile" onClick={() => setOpen(false)}>
+            Light a fire
+          </Link>
           <Link href="/settings" className="avatar-item" onClick={() => setOpen(false)}>
             Settings
           </Link>

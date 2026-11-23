@@ -20,14 +20,14 @@ import UpArrow from "@/components/UpArrow";
 
 function ReportForm({ entryId, onClose }: { entryId: string; onClose: () => void }) {
   const { user } = useAuth();
-  const [reason, setReason] = useState<ReportReason>("ai_generated");
+  const [reason, setReason] = useState<ReportReason | "">("");
   const [details, setDetails] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!user || busy) return;
+    if (!user || busy || !reason) return;
     setBusy(true);
     setError(null);
     try {
@@ -69,8 +69,11 @@ function ReportForm({ entryId, onClose }: { entryId: string; onClose: () => void
           id={`reason-${entryId}`}
           className="input"
           value={reason}
-          onChange={(e) => setReason(e.target.value as ReportReason)}
+          onChange={(e) => setReason(e.target.value as ReportReason | "")}
         >
+          <option value="" disabled>
+            Choose a reason
+          </option>
           {REPORT_REASONS.map((r) => (
             <option key={r} value={r}>
               {REPORT_REASON_LABELS[r]}
@@ -97,7 +100,7 @@ function ReportForm({ entryId, onClose }: { entryId: string; onClose: () => void
         </p>
       )}
       <div className="form-actions">
-        <button type="submit" className="btn btn-outline" disabled={busy}>
+        <button type="submit" className="btn btn-outline" disabled={busy || !reason}>
           {busy ? "Sending…" : "Send report"}
         </button>
         <button type="button" className="btn-link btn-link-action" onClick={onClose} disabled={busy}>
@@ -211,7 +214,7 @@ export default function EntryCard({
               <Avatar id={entry.author.avatar} name={entry.author.name} size="sm" />
               <span>
                 Answered by <Link href={`/profile/${entry.author.id}`}>{entry.author.name}</Link>
-                {entry.createdAt && <>, {describeAge(entry.createdAt, now)}</>}
+                {entry.createdAt && <>, <span className="nowrap">{describeAge(entry.createdAt, now)}</span></>}
               </span>
             </span>
           )}

@@ -215,9 +215,21 @@ async function seedNameless(uid: string, extra: Record<string, unknown> = {}) {
 }
 
 /** Claim a name the way the app does: the lookup first, then the profile. */
-async function claim(db: ReturnType<ReturnType<RulesTestEnvironment["authenticatedContext"]>["firestore"]>, uid: string, name: string, key: string) {
+async function claim(
+  db: ReturnType<ReturnType<RulesTestEnvironment["authenticatedContext"]>["firestore"]>,
+  uid: string,
+  name: string,
+  key: string,
+  first = false,
+) {
   await setDoc(doc(db, "displayNames", key), { uid, displayName: name, createdAt: serverTimestamp() });
-  await updateDoc(doc(db, "users", uid), { displayName: name, nameKey: key, nameChangedAt: serverTimestamp() });
+  // The first choice does not start the 7-day lock; later changes do.
+  await updateDoc(
+    doc(db, "users", uid),
+    first
+      ? { displayName: name, nameKey: key }
+      : { displayName: name, nameKey: key, nameChangedAt: serverTimestamp() },
+  );
 }
 
 describe("users", () => {
@@ -256,9 +268,27 @@ describe("users", () => {
   test("choosing a first name works, and shows on a request", async () => {
     await seedNameless("eve");
     const db = env.authenticatedContext("eve").firestore();
-    await assertSucceeds(claim(db, "eve", "Dun Gan", "dungan"));
+    await assertSucceeds(claim(db, "eve", "Dun Gan", "dungan", true));
     await assertSucceeds(
       addDoc(collection(db, "requests"), newRequest("eve", { requesterName: "Dun Gan" })),
+    );
+  });
+
+  test("the first name choice starts no lock, so it can be fixed once, and the fix starts the lock", async () => {
+    await seedNameless("eve");
+    const db = env.authenticatedContext("eve").firestore();
+    await assertSucceeds(claim(db, "eve", "Dun Gan", "dungan", true));
+    // A timestamp on the first choice is refused (the lock only starts on a change).
+    await seedNameless("fay");
+    const fay = env.authenticatedContext("fay").firestore();
+    await setDoc(doc(fay, "displayNames", "fayname"), { uid: "fay", displayName: "Fay Name", createdAt: serverTimestamp() });
+    await assertFails(
+      updateDoc(doc(fay, "users", "fay"), { displayName: "Fay Name", nameKey: "fayname", nameChangedAt: serverTimestamp() }),
+    );
+    // The fix works at once, then the 7-day lock is on.
+    await assertSucceeds(claim(db, "eve", "Dun Gone", "dungone"));
+    await assertFails(
+      setDoc(doc(db, "displayNames", "third"), { uid: "eve", displayName: "Third", createdAt: serverTimestamp() }),
     );
   });
 
@@ -266,7 +296,7 @@ describe("users", () => {
     await seedNameless("eve");
     const db = env.authenticatedContext("eve").firestore();
     await assertFails(
-      updateDoc(doc(db, "users", "eve"), { displayName: "Dun Gan", nameKey: "dungan", nameChangedAt: serverTimestamp() }),
+      updateDoc(doc(db, "users", "eve"), { displayName: "Dun Gan", nameKey: "dungan" }),
     );
     await env.withSecurityRulesDisabled(async (ctx) => {
       await setDoc(doc(ctx.firestore(), "displayNames", "dungan"), {
@@ -283,7 +313,7 @@ describe("users", () => {
   test("two people cannot hold names that differ only by capitals or punctuation", async () => {
     await seedNameless("eve");
     await seedNameless("fay");
-    await assertSucceeds(claim(env.authenticatedContext("eve").firestore(), "eve", "Dun Gan", "dungan"));
+    await assertSucceeds(claim(env.authenticatedContext("eve").firestore(), "eve", "Dun Gan", "dungan", true));
     const fay = env.authenticatedContext("fay").firestore();
     await assertFails(
       setDoc(doc(fay, "displayNames", "dungan"), { uid: "fay", displayName: "DUNGAN", createdAt: serverTimestamp() }),

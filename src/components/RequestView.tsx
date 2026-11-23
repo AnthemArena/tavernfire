@@ -194,7 +194,7 @@ export default function RequestView({ id }: { id: string }) {
             </>
           )}
           {" · "}
-          {describeAge(r.createdAt, now)}
+          <span className="nowrap">{describeAge(r.createdAt, now)}</span>
         </span>
       </p>
 

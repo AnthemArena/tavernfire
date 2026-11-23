@@ -1115,17 +1115,39 @@ a:hover {
   font-weight: 600;
 }
 
-/* Keep brand, nav and the account button on one row at 360px */
-@media (max-width: 400px) {
+/* On a phone the header is two rows: brand and account on top, the three pages below. */
+@media (max-width: 640px) {
   .site-header .container {
-    flex-wrap: nowrap;
-    gap: 12px;
+    gap: 4px 12px;
+    padding-top: 12px;
+    padding-bottom: 4px;
   }
   .brand {
-    font-size: 22px;
+    order: 1;
   }
-  .nav {
-    gap: 16px;
+  .header-actions {
+    order: 2;
+    margin-left: auto;
+  }
+  .header-actions .btn {
+    white-space: nowrap;
+  }
+  .site-header .nav {
+    order: 3;
+    flex: 0 0 100%;
+    justify-content: space-between;
+    gap: 0;
+  }
+  .site-header .nav a {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* Keep brand and the account buttons on one row at 360px */
+@media (max-width: 400px) {
+  .brand {
+    font-size: 22px;
   }
   .header-actions .btn {
     padding-left: 12px;
@@ -1143,9 +1165,6 @@ a:hover {
 @media (max-width: 340px) {
   .brand {
     font-size: 20px;
-  }
-  .nav {
-    gap: 12px;
   }
   .header-actions .btn {
     white-space: nowrap;
@@ -1513,6 +1532,17 @@ a:hover {
 .avatar-item:hover {
   background: var(--chip);
   color: var(--ink);
+}
+
+/* The header button is hidden on a phone, so the menu carries Light a fire there. */
+.avatar-item-mobile {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .avatar-item-mobile {
+    display: flex;
+  }
 }
 
 /* Public profile */
@@ -2726,4 +2756,8 @@ a.spark-link:focus-visible {
   align-items: center;
   min-width: 56px;
   justify-content: center;
+}
+
+.nowrap {
+  white-space: nowrap;
 }

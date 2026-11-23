@@ -67,12 +67,15 @@ export async function claimName(uid: string, raw: string, current: Profile): Pro
       throw new NameError("Couldn't save that name. Check your connection and try again.");
     }
   }
+  // The very first choice does not start the 7-day lock, so a typo can be fixed once.
+  const first = current.displayName === null;
   try {
-    await updateDoc(doc(db, "users", uid), {
-      displayName: name,
-      nameKey: key,
-      nameChangedAt: serverTimestamp(),
-    });
+    await updateDoc(
+      doc(db, "users", uid),
+      first
+        ? { displayName: name, nameKey: key }
+        : { displayName: name, nameKey: key, nameChangedAt: serverTimestamp() },
+    );
   } catch {
     throw new NameError("Couldn't save that name. Try again.");
   }
@@ -80,7 +83,7 @@ export async function claimName(uid: string, raw: string, current: Profile): Pro
     // Best effort: a leftover old claim only holds a name nobody is using.
     await deleteDoc(doc(db, "displayNames", current.nameKey)).catch(() => {});
   }
-  return { ...current, displayName: name, nameKey: key, nameChangedAt: new Date() };
+  return { ...current, displayName: name, nameKey: key, nameChangedAt: first ? null : new Date() };
 }
 
 export class AvatarError extends Error {}
