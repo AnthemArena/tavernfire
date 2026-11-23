@@ -1830,7 +1830,13 @@ a:hover {
 }
 .lit-by .rank-badge {
   margin-left: 2px;
-  vertical-align: middle;
+  /* Sit the name on the same baseline as the words around it, with the icon centred on the text. */
+  align-items: baseline;
+  vertical-align: baseline;
+}
+.lit-by .rank-badge svg {
+  position: relative;
+  top: 3px;
 }
 
 /* Avatars: sit inline beside a name */
@@ -1928,8 +1934,11 @@ a:hover {
 }
 .rank-progress {
   display: grid;
-  gap: 8px;
+  gap: 12px;
   margin: 8px 0 4px;
+}
+.rank-progress + .profile-since {
+  margin-top: 14px;
 }
 .rank-bar {
   height: 8px;

@@ -33,7 +33,7 @@ export function RankBadge({ xp, size = 20, iconOnly = false }: { xp: number; siz
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        strokeWidth={1.8}
+        strokeWidth={size >= 24 ? 2.2 : 1.8}
         strokeLinecap="round"
         strokeLinejoin="round"
         role={iconOnly ? "img" : undefined}
