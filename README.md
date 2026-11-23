@@ -29,7 +29,7 @@ There is deliberately no contest, deadline or reveal for ordinary fires: the sit
 ## Discovery
 
 - **Fires page:** Trending, Most stoked and New, with a filter by type.
-- **Library:** search fires by spark at `/library`. Search one, two or all three sparks; exact matches rank first, then fires that share two, then one, most stoked first. Each result shows its answer count and best answer. With nothing searched it shows a cloud of the most used sparks and the most stoked fires.
+- **Library:** search fires by spark at `/library`. Search one spark at a time (type it, or tap one in the cloud). Fires with that spark are listed, most stoked first, each with its answer count and top answer. With nothing searched it shows the search box and a cloud of the most used sparks.
 - **By trait (on hold, see Traits above):** author-chosen, capped at about five per answer, with suggestions drawn from existing traits to avoid near-duplicates (Ancient, Old, Aged).
 
 If traits return, sparks rank above them in search, and the interface keeps the two visibly separate.

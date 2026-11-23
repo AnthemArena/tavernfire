@@ -2314,3 +2314,11 @@ a:hover {
   font-weight: 600;
   color: var(--ink);
 }
+
+/* Search box and button are the same height (the field's bottom margin made the button taller). */
+.library-search-row .field {
+  margin-bottom: 0;
+}
+.library-search-row .btn {
+  min-height: 48px;
+}
