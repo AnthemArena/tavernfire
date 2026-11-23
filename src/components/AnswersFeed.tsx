@@ -125,12 +125,18 @@ export default function AnswersFeed() {
             return (
               <li key={e.id} className="card answer-feed-card">
                 <p className="hint">
-                  <span className="badge">{kindLabel(e.kind)}</span> Answer to a fire
+                  <span className="badge">{kindLabel(e.kind)}</span>
                 </p>
                 <h3 className="answer-feed-name">
                   <Link href={`/fires/${e.requestId}#entry-${e.id}`}>{e.name}</Link>
                 </h3>
-                <p className="answer-feed-sparks">{fire.sparks.join(" · ")}</p>
+                <p className="answer-feed-sparks">
+                  {fire.sparks.join(" · ")}
+                  <span className="answer-feed-lit">
+                    {" "}
+                    · fire lit by {fire.requesterName}, {describeAge(fire.createdAt, now)}
+                  </span>
+                </p>
                 <p className="answer-feed-concept">{e.concept}</p>
                 <div className="answer-feed-foot">
                   {e.author && (
@@ -143,9 +149,6 @@ export default function AnswersFeed() {
                     ↑ {e.upvoteCount}
                   </span>
                 </div>
-                <p className="hint">
-                  Fire lit by {fire.requesterName}, {describeAge(fire.createdAt, now)}
-                </p>
                 <Link className="answer-feed-link" href={`/fires/${e.requestId}#entry-${e.id}`}>
                   View in the fire →
                 </Link>

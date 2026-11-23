@@ -205,7 +205,8 @@ export default function Answers({ request }: { request: RequestItem }) {
     ) : justSubmitted ? (
       <p className="notice notice-success" role="status">
         <span className="notice-title">Your answer is in.</span> You can edit
-        it for up to {ENTRY_EDIT_WINDOW_HOURS} hours.
+        it for up to {ENTRY_EDIT_WINDOW_HOURS} hours.{" "}
+        <Link href="/#open-requests">Find another fire that needs a spark →</Link>
       </p>
     ) : null;
   } else if (entries !== null && (unfinished || entries.length === 0 || formOpen)) {
