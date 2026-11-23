@@ -137,8 +137,8 @@ export default function ProfileView({ uid }: { uid: string }) {
   const upvotes = answers.reduce((sum, a) => sum + a.entry.upvoteCount, 0);
   const stokes = fires.reduce((sum, f) => sum + f.stokeCount, 0);
   const isMe = user?.uid === uid;
-  // Open on the tab that has something in it.
-  const shownTab = tab ?? (answers.length === 0 && fires.length > 0 ? "fires" : "answers");
+  // Always open on Answers: it is the made-by-people work, and the order stays the same.
+  const shownTab = tab ?? "answers";
   const since = profile.since
     ? profile.since.toLocaleDateString("en-GB", { month: "long", year: "numeric" })
     : null;
@@ -148,17 +148,31 @@ export default function ProfileView({ uid }: { uid: string }) {
       <aside className="profile-card" aria-label="About this person">
         <Avatar id={profile.avatar} name={profile.name} size="lg" eager />
         <div>
-          <h1 className="profile-name">{profile.name}</h1>
+          <div className="profile-name-row">
+            <h1 className="profile-name">{profile.name}</h1>
+            {isMe && (
+              <Link className="profile-edit" href="/settings">
+                Edit profile
+              </Link>
+            )}
+          </div>
           {isMe ? <RankProgress xp={profile.xp} /> : <RankBadge xp={profile.xp} />}
           {isMe && <p className="hint profile-xp-note">Lighting fires and answering earns XP. Upvotes and stokes earn more.</p>}
           {since && <p className="profile-since">Member since {since}</p>}
-          {isMe && (
-            <Link className="profile-edit" href="/settings">
-              Edit profile
-            </Link>
-          )}
         </div>
-        {profile.bio && <p className="profile-bio">{profile.bio}</p>}
+        <dl className="profile-stats">
+          <Stat label="Upvotes received" value={upvotes} />
+          <Stat label="Stokes received" value={stokes} />
+        </dl>
+        {profile.bio ? (
+          <p className="profile-bio">{profile.bio}</p>
+        ) : (
+          isMe && (
+            <p className="profile-bio">
+              <Link href="/settings">Add a bio</Link>
+            </p>
+          )
+        )}
         {profile.achievements.some((id) => achievementById(id)) && (
           <div>
           <p className="achievements-label">Achievements</p>
@@ -174,10 +188,6 @@ export default function ProfileView({ uid }: { uid: string }) {
           </ul>
           </div>
         )}
-        <dl className="profile-stats">
-          <Stat label="Upvotes received" value={upvotes} />
-          <Stat label="Stokes received" value={stokes} />
-        </dl>
       </aside>
 
       <section className="profile-content" aria-label="Fires and answers">

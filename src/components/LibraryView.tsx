@@ -119,7 +119,7 @@ export default function LibraryView() {
         <p className="hint cloud-hint">Pick a spark to see its fires.</p>
         <nav className="spark-cloud" aria-label="Popular sparks">
           {[...cloud]
-            .sort((a, b) => a.word.localeCompare(b.word, "en"))
+            .sort((a, b) => b.count - a.count || a.word.localeCompare(b.word, "en"))
             .map((s) => (
               <Link
                 key={s.word}

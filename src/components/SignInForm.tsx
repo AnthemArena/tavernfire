@@ -10,7 +10,10 @@ import { friendlyAuthError } from "@/lib/auth-errors";
 
 export default function SignInForm() {
   const router = useRouter();
-  const next = safeNext(useSearchParams().get("next"));
+  const params = useSearchParams();
+  const next = safeNext(params.get("next"));
+  // Create account has its own address (?mode=signup), so Back and shared links work.
+  const mode: "signin" | "signup" = params.get("mode") === "signup" ? "signup" : "signin";
   const {
     user,
     loading,
@@ -20,7 +23,7 @@ export default function SignInForm() {
     sendPasswordReset,
   } = useAuth();
 
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -80,9 +83,15 @@ export default function SignInForm() {
       <h1 className="auth-title">{isSignUp ? "Create your account" : "Sign in"}</h1>
       <p className="auth-lede">
         {isSignUp
-          ? "Join to light fires and answer other people's."
-          : "Welcome back. Sign in to light fires and answer other people's."}
+          ? "Join to light fires and answer other people\u2019s fires."
+          : "Sign in to light fires and answer them."}
       </p>
+      {isSignUp && (
+        <p className="hint">
+          By creating an account you agree to the <Link href="/terms">terms</Link>,{" "}
+          <Link href="/rules">rules</Link> and <Link href="/privacy">privacy policy</Link>.
+        </p>
+      )}
 
       <button
         type="button"
@@ -92,6 +101,7 @@ export default function SignInForm() {
       >
         Continue with Google
       </button>
+      {!isSignUp && <p className="hint">Creates an account if you are new.</p>}
 
       <div className="divider" role="separator">
         <span>or use email</span>
@@ -116,14 +126,24 @@ export default function SignInForm() {
           <label className="label" htmlFor="password">
             Password
           </label>
-          <input
-            id="password"
-            className="input"
-            type="password"
-            autoComplete={isSignUp ? "new-password" : "current-password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="password-wrap">
+            <input
+              id="password"
+              className="input"
+              type={showPassword ? "text" : "password"}
+              autoComplete={isSignUp ? "new-password" : "current-password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              className="btn-link password-toggle"
+              aria-pressed={showPassword}
+              onClick={() => setShowPassword((v) => !v)}
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
           {isSignUp ? (
             <p className="hint">Use at least 8 characters.</p>
           ) : (
@@ -149,14 +169,7 @@ export default function SignInForm() {
 
         {isSignUp && (
           <p className="hint">
-            We&apos;ll email you a link to verify your address. You&apos;ll need it to stoke fires and
-            upvote answers.
-          </p>
-        )}
-        {isSignUp && (
-          <p className="hint">
-            By creating an account you agree to the <Link href="/terms">terms</Link> and{" "}
-            <Link href="/rules">rules</Link>. See the <Link href="/privacy">privacy page</Link>.
+            We&apos;ll email a link to verify your address. You need it to stoke and upvote.
           </p>
         )}
 
@@ -172,7 +185,11 @@ export default function SignInForm() {
           className="btn-link"
           onClick={() => {
             setError(null);
-            setMode(isSignUp ? "signin" : "signup");
+            const q = new URLSearchParams(params.toString());
+            if (isSignUp) q.delete("mode");
+            else q.set("mode", "signup");
+            const qs = q.toString();
+            router.push(qs ? `/signin?${qs}` : "/signin");
           }}
         >
           {isSignUp ? "Sign in" : "Create an account"}

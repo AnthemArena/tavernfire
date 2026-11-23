@@ -101,7 +101,10 @@ function AvatarCard({
         Avatar
       </h2>
       <p className="hint">Shown next to your name on your fires and answers.</p>
-      <div className="tabs" role="group" aria-label="Avatar packs">
+      <p className="label" id="avatar-set-label">
+        Avatar set
+      </p>
+      <div className="tabs" role="group" aria-labelledby="avatar-set-label">
         {PACKS.map((p) => (
           <button key={p.id} type="button" className="tab" aria-pressed={pack === p.id} onClick={() => setPack(p.id)}>
             {p.label}
@@ -335,6 +338,7 @@ function NameCard({
       <h2 className="card-title" id="name-heading">
         Display name
       </h2>
+      {displayName && <p className="label">Current name</p>}
       <p className="account-name">
         {displayName ? <strong>{displayName}</strong> : <span className="muted">You haven&apos;t chosen a display name yet.</span>}
       </p>
@@ -345,10 +349,15 @@ function NameCard({
       </p>
 
       {waitUntil ? (
-        <p className="hint">
-          You can change your display name again on{" "}
-          {waitUntil.toLocaleDateString(undefined, { day: "numeric", month: "long" })}.
-        </p>
+        <div className="name-cooldown">
+          <button type="button" className="btn btn-outline" disabled>
+            Change name
+          </button>
+          <span className="hint">
+            You can change it again on{" "}
+            {waitUntil.toLocaleDateString(undefined, { day: "numeric", month: "long" })}.
+          </span>
+        </div>
       ) : (
         <form onSubmit={onSubmit} noValidate>
           <div className="field">

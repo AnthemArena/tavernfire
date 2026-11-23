@@ -97,11 +97,14 @@ function HeroPanel() {
     (async () => {
       const db = getDb();
       const now = new Date();
-      let fires = toFires(
-        await getDocs(
-          query(collection(db, "requests"), where("moderation", "==", "ok"), orderBy("trendRank", "desc"), limit(FEATURE_POOL)),
-        ),
+      const trending = await getDocs(
+        query(collection(db, "requests"), where("moderation", "==", "ok"), orderBy("trendRank", "desc"), limit(FEATURE_POOL)),
       );
+      let fires = toFires(trending);
+      // The first Trending card sits right below this panel, so show a different fire when there is one.
+      const boardFirst = trending.docs[0]?.id;
+      const others = fires.filter((f) => f.id !== boardFirst);
+      if (others.length > 0) fires = others;
       if (fires.length === 0) {
         fires = toFires(
           await getDocs(
