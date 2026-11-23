@@ -1,113 +1,101 @@
 # Tavernfire: design notes
 
-Carried over from the concept mockup so the real build matches it. Working name: Tavernfire.
+How the site looks and reads, matched to what is built. If this and the code disagree, the code wins; fix this file. Tokens live at the top of `src/app/globals.css`. Screens use tokens only, so a new colour is added to both themes.
+
+## The model in one paragraph
+
+Members **light a fire**: three one-word **sparks** plus a **type** (NPC, Location, Item or Creature) and an optional note. Other members **answer** the fire (a name, a description, up to five traits). People **stoke** fires they want answered and **upvote** answers they like. Upvotes and stokes earn XP and ranks. The **Library** searches fires by spark. The **Answers** page lists answers across all fires. Fires is the front door; Answers is the content.
 
 ## Look and feel
 
-**Dark is the default theme** (near-black with gold accents), with the parchment look below as a light theme. A Dark/Light switch in the footer remembers the choice in the browser. Both themes are defined as tokens at the top of `globals.css` (`:root` is dark, `:root[data-theme="light"]` is light); screens use the tokens only, so a new colour is added to both. The light description follows.
+Dark is the default theme: near-black with gold accents. A light parchment theme is the alternative, switched from the footer or Settings > Appearance and remembered in the browser (`:root` is dark, `:root[data-theme="light"]` is light). Friendly and readable, not an over-the-top fantasy interface. It is a tool for people who play fantasy games, not an in-game screen.
 
-Warm parchment background, dark serif headings, muted colours and terracotta buttons. Friendly and readable, not an over-the-top fantasy interface. It is a tool for people who play fantasy games, not an in-game screen.
+## Colour tokens
 
-## Colours
+| Token | Dark (default) | Light |
+| --- | --- | --- |
+| `--parchment` page background | #131211 | #F4EEE1 |
+| `--surface` card | #1D1B18 | #FBF8F1 |
+| `--border` card border | #36322B | #D9CFB8 |
+| `--chip` spark chip | #2B2721 (hairline #5A4A22) | #E8DFCB |
+| `--ink` / `--body` / `--muted` | #F2EBDC / #D9D1C0 / #A99F8D | #211D18 / #3F382F / #5E564B |
+| `--control-border` | #8C8068 | #8A7D60 |
+| `--accent` links, primary buttons, focus | #D4AF37 (hover #E6C35C) | #A93F24 (hover #7E2D18) |
+| `--on-accent` text on accent | #14110C | #FFFFFF |
+| `--teal` labels, type badges, success | #7FC8BD | #1D5A57 |
+| `--error` | #FF9B86 | #9B2C1A |
+| `--warn-text` | #E8B4A0 | #8A3B1F |
 
-| Role | Hex |
-| --- | --- |
-| Page background (parchment) | #F4EEE1 |
-| Card surface | #FBF8F1 |
-| Card border | #D9CFB8 |
-| Spark chip background | #E8DFCB |
-| Ink (main text) | #211D18 |
-| Body text | #3F382F |
-| Muted text | #5E564B |
-| Input border | #B8AC90 |
-| Accent (buttons, links) | #A93F24 |
-| Accent hover | #7E2D18 |
-| Teal (labels, type badges) | #1D5A57 |
-| Dark panel | #211D18 with text #F4EEE1 |
-
-All text pairs above meet at least 4.5:1 contrast on their backgrounds; keep it that way.
+Gold is the one action colour in dark; terracotta is the light theme's. Text pairs meet 4.5:1 and form control borders 3:1; check any new pair in both themes. Decorative card borders use `--border`; controls (inputs, tabs, outline buttons) use `--control-border`. Placeholder text uses `--muted` at full opacity.
 
 ## Type
 
-- Headings, spark chips, entry names: Fraunces (serif), weights 500 and 700
+- Headings, spark chips, answer names, card titles: Fraunces (serif), weights 500 and 700
 - Body and UI: Inter, weights 400, 500, 600
-- Google Fonts; load only the weights above
+- Load only those weights
+- Eyebrow labels and kickers are 15px sentence case, never all caps
 
 ## Layout
 
-- Pages are fluid, with a centred container up to 1120px and 32px side padding
-- Two columns on desktop (main content, then a 280px sidebar), stacking on narrow screens
-- Touch targets at least 44px high
-- Cards: `.card` 16px radius and 28px padding (20px on screens 480px and narrower); `.request-card` and the how-note 14px radius. Card titles are Fraunces weight 500
+- One frame for every page: a centred container up to 1120px with 32px side padding (20px on phones), the same as the header, so the left edge matches across pages.
+- Inside the frame, content keeps a readable column, left aligned: form pages (Light a fire, Settings, sign-in) 520px; Library and Answers 720px; fire page and profile use the wide frame.
+- The Fires board is two columns on desktop (list, then a "How a fire works" side box) and stacks under 940px, where the side box folds above the list.
+- Touch targets at least 44px high.
+- Cards: `.card` 16px radius and 28px padding (20px at 480px and under); board cards 14px radius.
+- Spacing on list pages: tabs, then type filter, then the list, each with its own gap (the pills never touch the first card).
 
-## Screens built in the mockup
+## Screens
 
-1. **Request board (home):** header, hero with the post-a-request form, open requests list with filters (All, NPCs, Locations), sidebar with "How a request works" and "Browse sparks".
-2. **Request page:** the three sparks large, requester note, answers in random order, add-your-answer form, sidebar with "Close matches" and "Made by people".
+1. **Fires (home):** header, hero, then the board. Sorts as underlined text tabs on the left (Trending, Most stoked, New, Unanswered); the type filter as pills on the right (All types, NPCs, Locations, Items, Creatures). A compact select replaces the pills on phones. The hero is full for visitors (heading, one line, "Light a fire" and "Browse answers", plus a showcase card with the day's featured answer and its author) and compact for signed-in members (smaller heading and one line, no showcase). A member hint in localStorage stops either from flashing.
+2. **Fire page:** back link, type badge, the three sparks (chips that open the Library), note, "Lit by X, age", stoke control, "Write an answer" button when there are no answers, the answers, the answer form.
+3. **Light a fire:** three spark boxes, a type choice with nothing preselected, an optional 300-character note with a counter in its label, "Posting as X. Change".
+4. **Answers:** "What people have made for other tables." Sort tabs (Most upvoted, New), type filter, then answer cards in a 720px column, 30 at a time with "Show more".
+5. **Library:** one spark per search, suggestions with fire counts, results as fire cards, and the "Popular sparks" cloud (with counts) which stays under results.
+6. **Profile:** avatar, name, rank and progress, stats (Upvotes received, Stokes received), Fires and Answers lists, Achievements.
+7. **Settings:** display name, avatar, Appearance (Dark/Light), sign out. Sign-in and email-action pages use the form frame.
+8. **Moderation:** for moderators only; hides, clears and restores answers, with a log.
 
-## Key components
+## Components
 
-- **Spark chip:** large serif word on a #E8DFCB background, three per request
-- **Request card:** three spark chips, type badge, note, answer count, requester, time left
-- **Entry card:** name, description, trait pills, "Used in N games", buttons (Save to collection, I used this, Report entry), vote button
-- **Hidden during voting:** author name and vote totals (say "Author hidden" for now; restore "Author revealed after voting" when voting ships)
+- **Spark chip:** Fraunces word on `--chip`, three per fire. On the fire page and Answers cards it is a link to the Library (`a.spark-link`); on whole-card links (board, Library results) it is plain text because links cannot nest.
+- **Type badge:** teal label (NPC, Location, Item, Creature).
+- **Fire card (board):** the whole card is one link. Three chips, type, note clamped to two lines, top answer (name and a two-line snippet), counts at the right edge (stokes only above 0, then answers; only the flame is gold), "Lit by X, age".
+- **Answer card (Answers page):** left column with the boxed upvote control; body with type badge, name (links to `/fires/<id>#entry-<answerId>`), spark chips, description (65ch, three-line clamp), footer "Author, age" and "See this fire", then "Fire lit by X, age".
+- **Entry card (fire page):** name, description, trait pills, "by Author, age", the upvote control, report link. Your own answer is pinned first with a "Your entry" badge, says "You wrote this", and can be edited for 24 hours (or until answers close). It has a static upvote control that says "You can't upvote your own answer". After the window: "Entries are locked 24 hours after posting."
+- **Upvote and stoke controls:** one boxed control. Signed out, pressing it shows "Sign in to upvote" or "Sign in to stoke fires" in place (no redirect). Unverified email shows the verify notice.
+- **Top-answer snippet (`TopAnswer`):** name plus snippet, clamped to 2 lines on the board and 1 in the Library. Snippets never end in punctuation before the ellipsis.
+- **Trait pills:** 13px Inter 500, teal on a teal tint with a border. Small and rounded so they never read as spark chips.
+- **Rank badge and progress:** ranks are Cinderling 0, Flamebearer 50, Pyromancer 150, Blazewalker 400, Phoenix Ascendant 1000 XP. Progress reads "45 XP, 5 more to Flamebearer". Rank and the XP sentence live on the own profile, not in Settings.
+- **Notifications:** bell with an unread count, unread items marked, "Mark all as read". Answer and upvote notifications open the answer on its fire page. Achievement text is `Achievement unlocked: "Name"`. Toasts group repeated events.
+- **How-note:** light note with a serif title and numbered steps; folded above the list under 940px.
+- **Time pill:** shown while a fire is accepting answers; turns warm under 24 hours left.
+- **Skeleton cards** while the board loads; empty states always offer a way forward (a "Light a fire" or "Browse fires" button).
+
+## Forms
+
+- Spark errors mark the box that is wrong (error border, `aria-invalid`), move focus to it, name the word, and offer a one-tap hyphen fix ("Use 3-Heads"). Sparks are single words up to 24 characters.
+- Answer form: name (60), description (600), traits (Enter or comma adds one, up to five, each with a 44px remove area), live counters beside each label ("n of 60"). The button reads "Post answer" / "Posting…". Placeholders differ by type.
+- Nobody can answer their own fire; requesters see "This is your fire".
+- States covered: signed out, requester, already answered, answers closed, none, one, many, reported, saving, refused save (the typed text is kept).
 
 ## Wording
 
-- A **spark** is a single word that starts an idea; a request has three
-- **Traits** are the author-chosen descriptors on an entry (separate from sparks)
-- Use "Report entry", not "Flag as AI"
-- Use "I used this" for the self-reported usage counter
+- A **spark** is a single word that starts an idea; a fire has three.
+- A **fire** is the request; to **light** one, to **stoke** one you want answered.
+- An **answer** is what someone writes back (the code and data call it an entry).
+- **Traits** are author-chosen descriptors on an answer, separate from sparks.
+- "Lit by X, 2 days ago" on fires; "by X, 2 days ago" on answers.
+- "Report entry", never "Flag as AI".
+- Back link: "Back to Fires". Empty answers: "No answers yet. Be the first."
+- Sentence case everywhere; no all-caps labels.
 
-## Tokens added after the design review
+## Accessibility
 
-- `--error` #9B2C1A for error text
-- Warning notice: background #F6E9D3, border #A8741A
-- `--control-border` #8A7D60 for input, tab and outline-button borders (meets the 3:1 contrast needed for form controls on parchment and surface). Decorative card borders keep `--border`
-- Placeholder text uses `--muted` at full opacity
+- Route-aware `aria-current` in the header; visible focus ring in `--focus`.
+- Status messages use `role="status"`; focus returns to the trigger after editing.
+- Type and sort controls are real buttons with `aria-pressed`; own-answer controls have a title and an aria label saying why they are disabled.
+- Still to check: contrast on muted text in the light theme, the notification panel's Escape, focus and phone behaviour, 44px targets on every link-style button.
 
-## Small components
+## Not built yet
 
-- **Time pill (`.time-left`):** shows time left on a request; turns `.time-left-soon` (#F6E0D8 background, accent text, 4.84:1) when under 24 hours remain
-- **How-note (`.how-note`):** light note with a serif title and four numbered steps; replaces the dark card
-- **Spark errors:** the box that is wrong gets an error border and `aria-invalid`, focus moves to it, the message names the word, and joined words offer a one-tap "Use 3-Heads" fix.
-- **Signed-out example:** a labelled "Example request" with three non-interactive spark chips (Statue, Time, Glowing) above "Sign in to post". Replaced the disabled inputs after round 2b
-
-## Deviations from the design review
-
-See `claude/lead-agent-response-2026-11-18.md` in the Project. In short: header search, the phase strip and board sorting are deferred until the library, lifecycle functions and extra pages exist; the "Request posted" notice is kept but delayed 700ms so it only shows if opening the request is slow.
-
-## Answers (Slice A)
-
-- **Entry card:** name (Fraunces 700, 22px), description (16px, 65ch max, line breaks kept), trait pills, then a footer with "Author hidden" (to become "Author revealed after voting" when voting ships) and a quiet "Report entry" (muted, underlined, 44px tall). Your own entry is pinned first with a "Your entry" badge, says "You wrote this", and has no report link. After submitting, a "Your answer is in. You can edit it for up to 24 hours, or until answers close." notice appears.
-- **Trait pills:** 13px Inter 500, teal #1D5A57 on #E6EFE9 with a teal border (6.7:1). Deliberately small and rounded so they never read as spark chips.
-- **Answer form:** name, description, traits (Enter or comma adds a pill; each pill has a remove button with a 44px tap area), no "How a GM could use it" field; live counters at the top right of each label ("n of 60", "n of 600", "n of 5"); NPC and Location have different placeholders.
-- **States:** signed out ("Sign in to answer"), requester ("This is your request"), already answered (form gone, entry pinned), answers closed, none (form shown directly), one, many, reported.
-- **Left out on purpose until they work:** vote button, Save to collection, I used this, "Used in N games".
-- Order is random per viewer and fixed for the session; "in random order" shows only with 2 or more entries.
-- Everything under "Answers" shares one 720px column. On phones (480px and narrower): the signed-in name is hidden so the header fits one row, board cards drop "Posted by", and the Submit button is full width. The board card folds the type badge into the meta row.
-- Time left is clamped to the 3-day window, so a device clock slightly behind the server never shows "4 days left".
-
-## Editing your own answer
-
-- Your own card shows a quiet "Edit · 23 hours left" link. It opens the answer form, pre-filled, in place of the card, with "Save changes" and "Cancel" and the same counters; "Saved" then appears in the footer line ("You wrote this · Edited · Saved", announced to screen readers). Focus moves to the first field when the form opens and returns to the Edit link after Save or Cancel. If a save is refused, the form keeps the typed text and says "This entry can't be edited right now."
-- The window is 24 hours from the original posting (editing never restarts it) and ends early when the request stops accepting answers. After it ends the link is replaced by "Entries are locked 24 hours after posting."
-- Only name, description and traits can change. An edited entry shows a small muted "· Edited" after the author line, to everyone.
-- Reporting an entry locks it against edits (the author is not told it was reported; a refused save just says it can no longer be edited).
-
-
-## Dark theme (default)
-
-| Role | Hex |
-| --- | --- |
-| Page background | #131211 |
-| Card surface | #1D1B18 |
-| Card border | #36322B |
-| Spark chip | #2B2721 (hairline #5A4A22) |
-| Ink / body / muted | #F2EBDC / #D9D1C0 / #A99F8D |
-| Control border | #8C8068 |
-| Gold accent (links, primary buttons, focus ring, brand) | #D4AF37, hover #E6C35C, text on gold #14110C |
-| Teal (labels, type badges, picked, success) | #7FC8BD |
-| Error | #FF9B86 |
-
-Measured contrast: ink 14.5:1 on the card, muted 6.6:1, gold 8.2:1, text on gold 9:1, control border 4.4:1 on the card. Gold is the one action colour in dark; terracotta is the light theme's action colour.
+Fires board cards and Library results have no chip links or "Write an answer" button (whole-card links). No search of answers by spark, no fire page sidebar, no copy-with-credit button, no duels. See `claude/lead-agent-response-claude-agent-ui-review-2026-11-23.md` in the Project for the running list.
