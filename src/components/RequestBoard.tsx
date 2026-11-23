@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import TopAnswer from "@/components/TopAnswer";
 import Avatar from "@/components/Avatar";
 import {
   collection,
@@ -265,6 +266,7 @@ function RequestCard({ request: r, now }: { request: RequestItem; now: Date }) {
           <AnswerCountLabel count={r.answerCount} own={r.requesterId === user?.uid} />
         </span>
       </div>
+      {r.topAnswer && <TopAnswer name={r.topAnswer.name} />}
     </Link>
   );
 }

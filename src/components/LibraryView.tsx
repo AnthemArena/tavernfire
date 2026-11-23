@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
+import TopAnswer from "@/components/TopAnswer";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getDb } from "@/lib/firebase";
 import { getCategory } from "@/lib/categories";
@@ -234,13 +235,7 @@ export default function LibraryView() {
                         </span>
                       </span>
                     </div>
-                    {fire.topAnswer && (
-                      <div className="top-answer">
-                        <p className="top-answer-label">Top answer</p>
-                        <p className="my-answer-name">{fire.topAnswer.name}</p>
-                        <p className="library-concept">{fire.topAnswer.snippet}</p>
-                      </div>
-                    )}
+                    {fire.topAnswer && <TopAnswer name={fire.topAnswer.name} />}
                   </Link>
                 </li>
               ))}
