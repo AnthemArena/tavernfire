@@ -86,8 +86,12 @@ export default function LibraryView() {
     router.push(`/library?s=${encodeURIComponent(sparks.join(","))}`);
   }
 
-  function pick(index: number, word: string) {
-    setBoxes((cur) => cur.map((b, i) => (i === index ? displayWord(word) : b)));
+  // With one box, choosing a suggested spark is the search: no second click on Search.
+  function pick(word: string) {
+    const norm = normaliseSpark(word);
+    setBoxes(() => [displayWord(word)]);
+    setFocused(null);
+    router.push(`/library?s=${encodeURIComponent(norm)}`);
   }
 
   // Only show an outcome that belongs to the sparks now in the address (back and forward change them).
@@ -145,7 +149,7 @@ export default function LibraryView() {
                 key={s.word}
                 className="spark-suggestion"
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => pick(focused, s.word)}
+                onClick={() => pick(s.word)}
               >
                 {displayWord(s.word)} <span className="muted">· {fireCount(s.count)}</span>
               </button>
